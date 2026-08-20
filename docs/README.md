@@ -4,7 +4,10 @@ This directory contains the documentation for the **Voyana** project.
 
 ## Current Documents
 
-* **Business Requirements Document (BRD)** – Detailed requirements specifications for all modules (VPM-18).
+* **Requirements Analysis Specification (`docs/requirements_analysis.md`)** – Detailed functional and non-functional requirements decomposition from the BRD (VPM-16).
+* **System Architecture & SCA Design (`docs/system_architecture.md`)** – Software Component Architecture and system design specifications (VPM-13).
+* **Architecture Review & Quality Assessment (`docs/architecture_review.md`)** – Architectural review, modularity, security, and performance evaluation (VPM-25).
+* **Business Requirements Document (BRD)** – Comprehensive requirements specifications for all modules (VPM-18).
 * **Database & ER Diagrams** – Entity relationship models and system data architecture in [docs/diagrams/er-diagram.md](file:///d:/Voyana/docs/diagrams/er-diagram.md) (VPM-26).
 * **Project Proposal** – Provides an overview of the project, including the problem statement, objectives, features, technology stack, team roles, and development timeline.
 * **Project Proposal V2** – Updated version of the project proposal with the latest project details and refinements.
