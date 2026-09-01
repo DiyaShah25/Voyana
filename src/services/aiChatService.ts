@@ -1,3 +1,9 @@
+/**
+ * VPM-5 / VPM-38 / VPM-46: AI Travel Chatbot & Contextual Response Generation Engine
+ * Assignee: Jagrat Kumar (202512079)
+ * Provides context-aware AI travel reasoning, citation tracking, and action suggestions.
+ */
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant' | 'system';
