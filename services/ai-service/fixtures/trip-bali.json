@@ -1,0 +1,239 @@
+{
+  "id": "trip-bali-001",
+  "title": "Bali Island Exploration & Cultural Retreat",
+  "destination": "Bali, Indonesia",
+  "startDate": "2026-10-10",
+  "endDate": "2026-10-16",
+  "totalBudget": 4500,
+  "currency": "USD",
+  "budgetBreakdown": {
+    "accommodation": 1800,
+    "transport": 600,
+    "food": 1100,
+    "activities": 800,
+    "emergencyFund": 200
+  },
+  "members": [
+    {
+      "id": "usr-01",
+      "name": "Diya Shah",
+      "role": "creator",
+      "preferences": {
+        "dietary": "Vegetarian",
+        "pace": "moderate",
+        "interests": ["culture", "photography", "temples"]
+      }
+    },
+    {
+      "id": "usr-02",
+      "name": "Alex Chen",
+      "role": "editor",
+      "preferences": {
+        "dietary": "No restrictions",
+        "pace": "active",
+        "interests": ["surfing", "water sports", "nightlife"]
+      }
+    },
+    {
+      "id": "usr-03",
+      "name": "Sarah Miller",
+      "role": "editor",
+      "preferences": {
+        "dietary": "Vegan",
+        "pace": "relaxed",
+        "interests": ["yoga", "wellness", "cafes"]
+      }
+    },
+    {
+      "id": "usr-04",
+      "name": "Rohan Gupta",
+      "role": "viewer",
+      "preferences": {
+        "dietary": "Halal",
+        "pace": "active",
+        "interests": ["hiking", "snorkeling", "adventure"]
+      }
+    },
+    {
+      "id": "usr-05",
+      "name": "Elena Rostova",
+      "role": "viewer",
+      "preferences": {
+        "dietary": "Pescatarian",
+        "pace": "moderate",
+        "interests": ["local markets", "cooking classes", "nature"]
+      }
+    }
+  ],
+  "itineraryDays": [
+    {
+      "day": 1,
+      "date": "2026-10-10",
+      "title": "Arrival & Seminyak Sunset Welcome",
+      "activities": [
+        {
+          "time": "14:00",
+          "title": "Check-in at Seminyak Beach Villa",
+          "category": "accommodation",
+          "estimatedCost": 260
+        },
+        {
+          "time": "17:30",
+          "title": "Sunset drinks and welcome dinner at La Plancha Beach Club",
+          "category": "food",
+          "estimatedCost": 120
+        }
+      ]
+    },
+    {
+      "day": 2,
+      "date": "2026-10-11",
+      "title": "Southern Coast & Uluwatu Cliff Temple",
+      "activities": [
+        {
+          "time": "09:00",
+          "title": "Morning surfing lessons at Padang Padang Beach",
+          "category": "adventure",
+          "estimatedCost": 150
+        },
+        {
+          "time": "16:00",
+          "title": "Visit Uluwatu Temple and watch Kecak Fire Dance",
+          "category": "culture",
+          "estimatedCost": 100
+        },
+        {
+          "time": "19:30",
+          "title": "Seafood BBQ dinner on Jimbaran Bay",
+          "category": "food",
+          "estimatedCost": 160
+        }
+      ]
+    },
+    {
+      "day": 3,
+      "date": "2026-10-12",
+      "title": "Transfer to Ubud & Cultural Immersion",
+      "activities": [
+        {
+          "time": "10:00",
+          "title": "Scenic drive to Ubud via Tegenungan Waterfall",
+          "category": "nature",
+          "estimatedCost": 50
+        },
+        {
+          "time": "14:00",
+          "title": "Explore Sacred Monkey Forest Sanctuary",
+          "category": "nature",
+          "estimatedCost": 60
+        },
+        {
+          "time": "16:30",
+          "title": "Balinese Traditional Cooking Class for all diets",
+          "category": "food",
+          "estimatedCost": 140
+        }
+      ]
+    },
+    {
+      "day": 4,
+      "date": "2026-10-13",
+      "title": "Mount Batur Sunrise Trek & Hot Springs",
+      "activities": [
+        {
+          "time": "03:00",
+          "title": "Early sunrise hike up Mount Batur Volcano",
+          "category": "adventure",
+          "estimatedCost": 180
+        },
+        {
+          "time": "08:30",
+          "title": "Thermal bath recovery at Batur Natural Hot Spring",
+          "category": "relaxation",
+          "estimatedCost": 75
+        },
+        {
+          "time": "13:00",
+          "title": "Organic lunch at Akasa Kintamani overlooking Lake Batur",
+          "category": "food",
+          "estimatedCost": 90
+        }
+      ]
+    },
+    {
+      "day": 5,
+      "date": "2026-10-14",
+      "title": "Tegalalang Rice Terraces & Spiritual Cleansing",
+      "activities": [
+        {
+          "time": "08:30",
+          "title": "Walk the Tegalalang Rice Terraces & Jungle Swing",
+          "category": "photography",
+          "estimatedCost": 80
+        },
+        {
+          "time": "11:30",
+          "title": "Holy water purification ritual (Melukat) at Tirta Empul Temple",
+          "category": "culture",
+          "estimatedCost": 50
+        },
+        {
+          "time": "15:00",
+          "title": "Group Yoga and sound healing session in Pyramids of Chi",
+          "category": "relaxation",
+          "estimatedCost": 110
+        }
+      ]
+    },
+    {
+      "day": 6,
+      "date": "2026-10-15",
+      "title": "Nusa Penida Island Day Trip",
+      "activities": [
+        {
+          "time": "07:00",
+          "title": "Fast boat from Sanur to Nusa Penida",
+          "category": "transport",
+          "estimatedCost": 120
+        },
+        {
+          "time": "09:30",
+          "title": "Snorkeling with Manta Rays at Manta Point and Crystal Bay",
+          "category": "adventure",
+          "estimatedCost": 170
+        },
+        {
+          "time": "14:00",
+          "title": "Kelingking Beach viewpoint and cliffside photo stop",
+          "category": "nature",
+          "estimatedCost": 30
+        }
+      ]
+    },
+    {
+      "day": 7,
+      "date": "2026-10-16",
+      "title": "Ubud Craft Markets & Departure",
+      "activities": [
+        {
+          "time": "09:30",
+          "title": "Souvenir shopping at Ubud Traditional Art Market",
+          "category": "culture",
+          "estimatedCost": 70
+        },
+        {
+          "time": "12:30",
+          "title": "Farewell lunch at Alchemy Ubud (Plant-based & organic)",
+          "category": "food",
+          "estimatedCost": 85
+        },
+        {
+          "time": "16:00",
+          "title": "Private airport transfer to Ngurah Rai International Airport (DPS)",
+          "category": "transport",
+          "estimatedCost": 40
+        }
+      ]
+    }
+  ]
+}
