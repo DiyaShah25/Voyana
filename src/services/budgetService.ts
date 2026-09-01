@@ -7,6 +7,8 @@ export type ExpenseCategory =
   | 'Shopping'
   | 'Miscellaneous';
 
+export type PaymentMethod = 'Credit Card' | 'Debit Card / UPI' | 'Cash' | 'Bank Transfer';
+
 export interface TripExpense {
   id: string;
   title: string;
@@ -16,6 +18,7 @@ export interface TripExpense {
   date: string;
   paidBy: string; // e.g. 'Diya', 'Tirth', 'Jagrat'
   splitAmong: string[]; // members splitting this
+  paymentMethod?: PaymentMethod;
   notes?: string;
   receiptUrl?: string;
   createdAt: string;
@@ -358,3 +361,177 @@ export function generateAiBudgetAnalysis(budget: TripBudget): AiBudgetReport {
     recommendations,
   };
 }
+
+/**
+ * VPM-57: Generate AI Budget Plan
+ * Intelligently generates category allocations based on destination, travel style, duration, and traveler count.
+ */
+export interface GenerateBudgetPlanOptions {
+  destination: string;
+  totalBudget?: number;
+  travelersCount?: number;
+  durationDays?: number;
+  style?: 'budget' | 'moderate' | 'luxury';
+  currency?: string;
+}
+
+export function generateAiBudgetPlan(options: GenerateBudgetPlanOptions): {
+  budget: TripBudget;
+  dailyPerPerson: number;
+  allocations: BudgetCategoryAllocation[];
+  insights: string[];
+} {
+  const {
+    destination = 'Paris',
+    travelersCount = 3,
+    durationDays = 5,
+    style = 'moderate',
+    currency = 'USD',
+  } = options;
+
+  // Base daily per-person rates by style & destination tier
+  const isTier1 = ['paris', 'tokyo', 'new york', 'london', 'zurich', 'dubai'].some((d) =>
+    destination.toLowerCase().includes(d)
+  );
+
+  let dailyBase = style === 'budget' ? 80 : style === 'luxury' ? 380 : 170;
+  if (isTier1) dailyBase = Math.round(dailyBase * 1.25);
+
+  const calculatedTotal = options.totalBudget && options.totalBudget > 0
+    ? options.totalBudget
+    : dailyBase * durationDays * travelersCount;
+
+  // Category percentage distribution based on travel style
+  let ratios: Record<ExpenseCategory, number>;
+  if (style === 'budget') {
+    ratios = {
+      Flights: 0.35,
+      Accommodations: 0.28,
+      'Food & Dining': 0.18,
+      Activities: 0.08,
+      Transport: 0.06,
+      Shopping: 0.03,
+      Miscellaneous: 0.02,
+    };
+  } else if (style === 'luxury') {
+    ratios = {
+      Flights: 0.30,
+      Accommodations: 0.35,
+      'Food & Dining': 0.18,
+      Activities: 0.10,
+      Transport: 0.04,
+      Shopping: 0.02,
+      Miscellaneous: 0.01,
+    };
+  } else {
+    // Moderate
+    ratios = {
+      Flights: 0.33,
+      Accommodations: 0.29,
+      'Food & Dining': 0.18,
+      Activities: 0.10,
+      Transport: 0.05,
+      Shopping: 0.03,
+      Miscellaneous: 0.02,
+    };
+  }
+
+  const categoryColors: Record<ExpenseCategory, string> = {
+    Flights: '#635BFF',
+    Accommodations: '#00D4B2',
+    'Food & Dining': '#FF9900',
+    Activities: '#EC4899',
+    Transport: '#3B82F6',
+    Shopping: '#8B5CF6',
+    Miscellaneous: '#64748B',
+  };
+
+  const allocations: BudgetCategoryAllocation[] = (Object.keys(ratios) as ExpenseCategory[]).map((cat) => ({
+    category: cat,
+    allocated: Math.round(calculatedTotal * ratios[cat]),
+    color: categoryColors[cat],
+  }));
+
+  // Ensure sum equals calculatedTotal
+  const currentSum = allocations.reduce((s, a) => s + a.allocated, 0);
+  const diff = calculatedTotal - currentSum;
+  if (diff !== 0 && allocations.length > 0) {
+    allocations[0].allocated += diff;
+  }
+
+  const current = getTripBudget();
+  const updatedBudget: TripBudget = {
+    ...current,
+    destination,
+    totalBudget: calculatedTotal,
+    currency,
+    allocations,
+  };
+
+  saveTripBudget(updatedBudget);
+
+  const dailyPerPerson = Math.round(calculatedTotal / (durationDays * travelersCount));
+
+  const insights = [
+    `Recommended target: $${calculatedTotal.toLocaleString()} for ${travelersCount} travelers over ${durationDays} days (~$${dailyPerPerson}/person/day).`,
+    `Largest allocation: Accommodations & Flights account for ${Math.round((ratios.Flights + ratios.Accommodations) * 100)}% of the total budget.`,
+    `Dining & Activities buffer: $${(allocations.find((a) => a.category === 'Food & Dining')?.allocated || 0) + (allocations.find((a) => a.category === 'Activities')?.allocated || 0)} reserved for local experiences.`,
+  ];
+
+  return {
+    budget: updatedBudget,
+    dailyPerPerson,
+    allocations,
+    insights,
+  };
+}
+
+/**
+ * VPM-85: Settle a peer-to-peer balance
+ */
+export function settleDebtTransfer(from: string, to: string, amount: number): TripBudget {
+  const current = getTripBudget();
+  const settlementExpense: TripExpense = {
+    id: `settle-${Date.now()}`,
+    title: `Debt Settlement: ${from} → ${to}`,
+    amount,
+    currency: current.currency,
+    category: 'Miscellaneous',
+    date: new Date().toISOString().split('T')[0],
+    paidBy: from,
+    splitAmong: [to],
+    notes: `Settlement payment to clear balance`,
+    paymentMethod: 'Bank Transfer',
+    createdAt: new Date().toISOString(),
+  };
+
+  const updated: TripBudget = {
+    ...current,
+    expenses: [settlementExpense, ...current.expenses],
+  };
+
+  saveTripBudget(updated);
+  return updated;
+}
+
+/**
+ * VPM-70 / VPM-88: Export expenses to CSV
+ */
+export function exportExpensesCsv(budget: TripBudget): string {
+  const headers = ['ID', 'Date', 'Description', 'Category', 'Paid By', 'Split Among', 'Amount', 'Currency', 'Payment Method', 'Notes'];
+  const rows = budget.expenses.map((e) => [
+    `"${e.id}"`,
+    `"${e.date}"`,
+    `"${e.title.replace(/"/g, '""')}"`,
+    `"${e.category}"`,
+    `"${e.paidBy}"`,
+    `"${e.splitAmong.join(', ')}"`,
+    e.amount,
+    `"${e.currency}"`,
+    `"${e.paymentMethod || 'Credit Card'}"`,
+    `"${(e.notes || '').replace(/"/g, '""')}"`,
+  ]);
+
+  return [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+}
+
