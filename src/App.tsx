@@ -21,6 +21,7 @@ import AuthLayout from '@/pages/AuthLayout';
 import LoginPage from '@/pages/LoginPage';
 import SignupPage from '@/pages/SignupPage';
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
+import AlertsPanel from '@/components/Alerts/AlertsPanel';
 
 type Route = 'home' | 'login' | 'signup' | 'forgot-password';
 
@@ -208,6 +209,7 @@ function App() {
           ))}
         </nav>
         <div className="account-actions">
+          <AlertsPanel />
           <button className="login-button" onClick={() => { window.location.hash = '/login'; }}>Sign In</button>
           <button className="signup-button" onClick={() => { window.location.hash = '/signup'; }}>Sign Up</button>
           <button className="menu-button" onClick={() => setMobileOpen((value) => !value)} aria-label="Toggle navigation">
