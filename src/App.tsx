@@ -22,6 +22,7 @@ import LoginPage from '@/pages/LoginPage';
 import SignupPage from '@/pages/SignupPage';
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
 import AlertsPanel from '@/components/Alerts/AlertsPanel';
+import FlightBookingModal from '@/components/Booking/FlightBookingModal';
 
 type Route = 'home' | 'login' | 'signup' | 'forgot-password';
 
@@ -121,6 +122,8 @@ function App() {
   const [suggestions, setSuggestions] = useState<GlobeLocation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [flightModalOpen, setFlightModalOpen] = useState(false);
+  const [flightModalDestination, setFlightModalDestination] = useState<string | undefined>(undefined);
   const globeRef = useRef<VoyanaGlobeHandle>(null);
 
   useEffect(() => {
@@ -207,6 +210,13 @@ function App() {
               {item === 'AI Planner' && <Sparkles size={13} />}
             </a>
           ))}
+          <button
+            onClick={() => { setFlightModalDestination(undefined); setFlightModalOpen(true); }}
+            style={{ background: 'rgba(99,91,255,0.15)', border: '1px solid rgba(99,91,255,0.35)', borderRadius: '9px', padding: '6px 14px', fontSize: '14px', fontWeight: 600, color: '#a5a0ff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
+            aria-label="Book a flight"
+          >
+            <Plane size={14} /> Flights
+          </button>
         </nav>
         <div className="account-actions">
           <AlertsPanel />
@@ -311,7 +321,16 @@ function App() {
                 <h2>{content.place}</h2>
                 <p>{content.city}, {content.country}</p>
                 <span className="description">{content.description}</span>
-                <button className="explore-button">Explore <ArrowRight size={17} /></button>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  <button className="explore-button">Explore <ArrowRight size={17} /></button>
+                  <button
+                    onClick={() => { setFlightModalDestination(content.city); setFlightModalOpen(true); }}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '10px 18px', borderRadius: '12px', background: 'rgba(99,91,255,0.2)', border: '1px solid rgba(99,91,255,0.4)', color: '#c4c0ff', fontWeight: 600, fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s' }}
+                    aria-label={`Book flight to ${content.city}`}
+                  >
+                    <Plane size={15} /> Book Flight
+                  </button>
+                </div>
               </div>
             </article>
             <div className="secondary-list">
@@ -339,6 +358,11 @@ function App() {
           </button>
         </div>
       </footer>
+      <FlightBookingModal
+        isOpen={flightModalOpen}
+        onClose={() => setFlightModalOpen(false)}
+        initialDestination={flightModalDestination}
+      />
     </main>
   );
 }
