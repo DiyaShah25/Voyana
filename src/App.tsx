@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   ArrowRight,
+  Building2,
   Compass,
   Globe2,
   MapPin,
@@ -23,6 +24,7 @@ import SignupPage from '@/pages/SignupPage';
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
 import AlertsPanel from '@/components/Alerts/AlertsPanel';
 import FlightBookingModal from '@/components/Booking/FlightBookingModal';
+import HotelBookingModal from '@/components/Booking/HotelBookingModal';
 
 type Route = 'home' | 'login' | 'signup' | 'forgot-password';
 
@@ -124,6 +126,8 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [flightModalOpen, setFlightModalOpen] = useState(false);
   const [flightModalDestination, setFlightModalDestination] = useState<string | undefined>(undefined);
+  const [hotelModalOpen, setHotelModalOpen] = useState(false);
+  const [hotelModalDestination, setHotelModalDestination] = useState<string | undefined>(undefined);
   const globeRef = useRef<VoyanaGlobeHandle>(null);
 
   useEffect(() => {
@@ -216,6 +220,13 @@ function App() {
             aria-label="Book a flight"
           >
             <Plane size={14} /> Flights
+          </button>
+          <button
+            onClick={() => { setHotelModalDestination(undefined); setHotelModalOpen(true); }}
+            style={{ background: 'rgba(99,91,255,0.15)', border: '1px solid rgba(99,91,255,0.35)', borderRadius: '9px', padding: '6px 14px', fontSize: '14px', fontWeight: 600, color: '#a5a0ff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
+            aria-label="Search and book hotels"
+          >
+            <Building2 size={14} /> Hotels
           </button>
         </nav>
         <div className="account-actions">
@@ -330,6 +341,13 @@ function App() {
                   >
                     <Plane size={15} /> Book Flight
                   </button>
+                  <button
+                    onClick={() => { setHotelModalDestination(content.city); setHotelModalOpen(true); }}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '10px 18px', borderRadius: '12px', background: 'rgba(99,91,255,0.2)', border: '1px solid rgba(99,91,255,0.4)', color: '#c4c0ff', fontWeight: 600, fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s' }}
+                    aria-label={`Book hotel in ${content.city}`}
+                  >
+                    <Building2 size={15} /> Book Hotel
+                  </button>
                 </div>
               </div>
             </article>
@@ -362,6 +380,11 @@ function App() {
         isOpen={flightModalOpen}
         onClose={() => setFlightModalOpen(false)}
         initialDestination={flightModalDestination}
+      />
+      <HotelBookingModal
+        isOpen={hotelModalOpen}
+        onClose={() => setHotelModalOpen(false)}
+        initialDestination={hotelModalDestination}
       />
     </main>
   );
