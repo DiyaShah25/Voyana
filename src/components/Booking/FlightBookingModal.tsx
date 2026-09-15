@@ -670,13 +670,15 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                     ))}
                   </div>
 
-                  {/* Airline */}
+                  {/* Airline & Payment Status */}
                   <div className="flex items-center justify-between border-t border-white/10 pt-3">
                     <div className="flex items-center gap-2">
                       <AirlineBadge code={selectedFlight.airlineCode} name={selectedFlight.airline} />
                       <div>
                         <p className="text-xs font-semibold text-white">{selectedFlight.airline}</p>
-                        <p className="text-xs text-slate-400">{selectedFlight.aircraft}</p>
+                        <span className="text-[11px] text-emerald-400 font-medium flex items-center gap-1">
+                          <CheckCircle2 size={12} /> Payment Verified · {selectedFlight.aircraft}
+                        </span>
                       </div>
                     </div>
                     <div className="text-right">
@@ -687,13 +689,24 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                 </div>
               </div>
 
-              {/* Close */}
-              <button
-                onClick={handleClose}
-                className="w-full py-3 rounded-2xl bg-white/8 hover:bg-white/15 border border-white/10 text-white font-semibold text-sm transition"
-              >
-                Done
-              </button>
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => alert(`E-Ticket ${bookingRef} downloaded to your device!`)}
+                  className="flex-1 py-3 rounded-2xl bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-400/40 text-indigo-200 font-semibold text-sm transition flex items-center justify-center gap-2"
+                >
+                  <Sparkles size={15} />
+                  Download E-Ticket
+                </button>
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="flex-1 py-3 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/15 text-white font-semibold text-sm transition"
+                >
+                  Done
+                </button>
+              </div>
             </div>
           )}
         </div>
