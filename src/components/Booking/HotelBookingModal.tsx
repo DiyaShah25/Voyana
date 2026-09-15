@@ -15,9 +15,10 @@ import {
   type RoomType,
   type GuestDetails,
 } from '@/services/hotelService';
+import { PaymentView } from '@/components/Payment/PaymentModal';
 
 // ─── Step types ─────────────────────────────────────────────────────────────
-type Step = 'search' | 'results' | 'guest' | 'confirming' | 'success';
+type Step = 'search' | 'results' | 'guest' | 'payment' | 'confirming' | 'success';
 
 // ─── Room Type Config ───────────────────────────────────────────────────────
 const ROOM_TYPES: { value: RoomType; label: string; icon: string; desc: string }[] = [
@@ -238,22 +239,9 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
     return Object.keys(errs).length === 0;
   };
 
-  const handleConfirmBooking = async () => {
+  const handleProceedToPayment = () => {
     if (!selectedHotel || !validateGuest()) return;
-    setStep('confirming');
-    const result = await bookHotel(
-      selectedHotel,
-      guest,
-      checkInDate,
-      checkOutDate,
-      roomType,
-      rooms,
-      guests
-    );
-    if (result.success && result.bookingReference) {
-      setBookingRef(result.bookingReference);
-      setStep('success');
-    }
+    setStep('payment');
   };
 
   const handleClose = () => {
@@ -284,6 +272,7 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                 {step === 'search' && 'Search Hotels & Resorts'}
                 {step === 'results' && 'Available Accommodations'}
                 {step === 'guest' && 'Guest & Reservation Details'}
+                {step === 'payment' && 'Payment & Checkout'}
                 {step === 'confirming' && 'Securing Hotel Reservation...'}
                 {step === 'success' && 'Hotel Reservation Confirmed!'}
               </h2>
@@ -291,6 +280,7 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                 {step === 'search' && 'Handpicked luxury and boutique stays across the globe'}
                 {step === 'results' && `${sortedHotels.length} properties found · ${formatDateRange(checkInDate, checkOutDate)}`}
                 {step === 'guest' && `${selectedHotel?.name} · ${roomType}`}
+                {step === 'payment' && `Pay securely for your stay at ${selectedHotel?.name}`}
                 {step === 'confirming' && 'Locking in your room and dates...'}
                 {step === 'success' && 'Your luxury stay is confirmed and voucher issued'}
               </p>
@@ -298,9 +288,13 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            {(step === 'results' || step === 'guest') && (
+            {(step === 'results' || step === 'guest' || step === 'payment') && (
               <button
-                onClick={() => setStep(step === 'guest' ? 'results' : 'search')}
+                onClick={() => {
+                  if (step === 'payment') setStep('guest');
+                  else if (step === 'guest') setStep('results');
+                  else setStep('search');
+                }}
                 className="text-xs text-slate-400 hover:text-white transition px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10"
               >
                 ← Back
@@ -634,12 +628,39 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
 
               <button
                 type="button"
-                onClick={handleConfirmBooking}
+                onClick={handleProceedToPayment}
                 className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold text-sm tracking-wide hover:from-indigo-500 hover:to-violet-500 transition-all shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2"
               >
-                <CheckCircle2 size={17} />
-                Confirm Hotel Stay — ${((selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate) * nights * rooms).toLocaleString()}
+                <span>Continue to Payment</span>
+                <ArrowRight size={17} />
               </button>
+            </div>
+          )}
+
+          {/* ─── STEP: PAYMENT ─── */}
+          {step === 'payment' && selectedHotel && (
+            <div className="p-5">
+              <PaymentView
+                bookingId={selectedHotel.id}
+                bookingReference={bookingRef || `VYN-HT${selectedHotel.id.replace(/\D/g, '').slice(-4) || '9231'}`}
+                bookingType="hotel"
+                title={selectedHotel.name}
+                subtitle={`${roomType} · ${formatDateRange(checkInDate, checkOutDate)} (${nights} night${nights > 1 ? 's' : ''}, ${rooms} room${rooms > 1 ? 's' : ''})`}
+                amount={(selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate) * nights * rooms}
+                currency="USD"
+                lineItems={[
+                  {
+                    label: `${roomType} (${nights} night${nights > 1 ? 's' : ''} × ${rooms} room${rooms > 1 ? 's' : ''})`,
+                    amount: (selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate) * nights * rooms,
+                  },
+                  { label: 'City Occupancy Tax & Service Charges', amount: 0 },
+                ]}
+                onCancel={() => setStep('guest')}
+                onPaymentSuccess={({ transactionReference }) => {
+                  setBookingRef(transactionReference.replace('TXN', 'VYN'));
+                  setStep('success');
+                }}
+              />
             </div>
           )}
 
