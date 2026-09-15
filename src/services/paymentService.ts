@@ -4,7 +4,7 @@ import { createAlert } from './alertService';
 // ---------------------------------------------------------------------------
 // Types & Interfaces
 // ---------------------------------------------------------------------------
-export type PaymentMethod = 'credit_card' | 'apple_pay' | 'google_pay' | 'paypal';
+export type PaymentMethod = 'credit_card' | 'apple_pay' | 'google_pay' | 'paypal' | 'upi_qr';
 export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded';
 
 export interface PaymentRecord {
