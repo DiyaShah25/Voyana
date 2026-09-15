@@ -1,3 +1,9 @@
+/**
+ * VPM-41 / VPM-67 / VPM-78: Trip Budget Planner, Transaction History & Expense Recording Service
+ * Assignee: Jagrat Kumar (202512079)
+ * Manages category allocations, multi-member expense tracking, transaction ledger, and debt settlement.
+ */
+
 export type ExpenseCategory =
   | 'Flights'
   | 'Accommodations'
