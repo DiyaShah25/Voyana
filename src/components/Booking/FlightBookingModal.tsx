@@ -18,9 +18,10 @@ import {
   type CabinClass,
   type PassengerDetails,
 } from '@/services/flightService';
+import { PaymentView } from '@/components/Payment/PaymentModal';
 
 // ─── Step types ─────────────────────────────────────────────────────────────
-type Step = 'search' | 'results' | 'passenger' | 'confirming' | 'success';
+type Step = 'search' | 'results' | 'passenger' | 'payment' | 'confirming' | 'success';
 
 // ─── Cabin Badge ─────────────────────────────────────────────────────────────
 const CABIN_COLORS: Record<CabinClass, string> = {
@@ -243,14 +244,9 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
     return Object.keys(errors).length === 0;
   };
 
-  const handleConfirmBooking = async () => {
+  const handleProceedToPayment = () => {
     if (!selectedFlight || !validatePassenger()) return;
-    setStep('confirming');
-    const result = await createFlightBooking(selectedFlight, passenger, cabin, passengers);
-    if (result.success && result.bookingReference) {
-      setBookingRef(result.bookingReference);
-      setStep('success');
-    }
+    setStep('payment');
   };
 
   const handleClose = () => {
@@ -281,6 +277,7 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                 {step === 'search' && 'Search Flights'}
                 {step === 'results' && 'Available Flights'}
                 {step === 'passenger' && 'Passenger Details'}
+                {step === 'payment' && 'Payment & Checkout'}
                 {step === 'confirming' && 'Confirming Booking...'}
                 {step === 'success' && 'Booking Confirmed!'}
               </h2>
@@ -288,6 +285,7 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                 {step === 'search' && 'Find the best fares worldwide'}
                 {step === 'results' && `${sortedFlights.length} flights found · ${formatDate(departureDate)}`}
                 {step === 'passenger' && `${selectedFlight?.airline} ${selectedFlight?.flightNumber}`}
+                {step === 'payment' && `Pay securely for ${selectedFlight?.airline} ${selectedFlight?.flightNumber}`}
                 {step === 'confirming' && 'Securing your reservation...'}
                 {step === 'success' && 'Bon voyage! Your ticket is ready'}
               </p>
@@ -295,9 +293,13 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            {(step === 'results' || step === 'passenger') && (
+            {(step === 'results' || step === 'passenger' || step === 'payment') && (
               <button
-                onClick={() => setStep(step === 'passenger' ? 'results' : 'search')}
+                onClick={() => {
+                  if (step === 'payment') setStep('passenger');
+                  else if (step === 'passenger') setStep('results');
+                  else setStep('search');
+                }}
                 className="text-xs text-slate-400 hover:text-white transition px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10"
               >
                 ← Back
@@ -553,12 +555,36 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
               </div>
 
               <button
-                onClick={handleConfirmBooking}
+                onClick={handleProceedToPayment}
                 className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold text-sm tracking-wide hover:from-indigo-500 hover:to-violet-500 transition-all shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2"
               >
-                <CheckCircle2 size={17} />
-                Confirm Booking — ${(selectedFlight.prices[cabin] * passengers).toLocaleString()}
+                <span>Continue to Payment</span>
+                <ArrowRight size={17} />
               </button>
+            </div>
+          )}
+
+          {/* ─── STEP: PAYMENT ─── */}
+          {step === 'payment' && selectedFlight && (
+            <div className="p-5">
+              <PaymentView
+                bookingId={selectedFlight.id}
+                bookingReference={bookingRef || `VYN-FL${selectedFlight.flightNumber.replace(/\D/g, '').slice(-4) || '8841'}`}
+                bookingType="flight"
+                title={`${selectedFlight.airline} · Flight ${selectedFlight.flightNumber}`}
+                subtitle={`${selectedFlight.originAirport.city} (${selectedFlight.originAirport.code}) → ${selectedFlight.destinationAirport.city} (${selectedFlight.destinationAirport.code}) · ${formatDate(selectedFlight.departureTime)}`}
+                amount={selectedFlight.prices[cabin] * passengers}
+                currency="USD"
+                lineItems={[
+                  { label: `${getCabinLabel(cabin)} Fare (${passengers} passenger${passengers > 1 ? 's' : ''})`, amount: selectedFlight.prices[cabin] * passengers },
+                  { label: 'Airport Taxes & Passenger Facility Charges', amount: 0 },
+                ]}
+                onCancel={() => setStep('passenger')}
+                onPaymentSuccess={({ transactionReference }) => {
+                  setBookingRef(transactionReference.replace('TXN', 'VYN'));
+                  setStep('success');
+                }}
+              />
             </div>
           )}
 
