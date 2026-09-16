@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   Plane, MapPin, Calendar, Users, ArrowRight, Search,
   Filter, X, CheckCircle2,
-  Luggage, Wifi, Coffee,
+  Luggage, Wifi, Coffee, Sparkles,
 } from 'lucide-react';
 import {
   generateMockFlights,
