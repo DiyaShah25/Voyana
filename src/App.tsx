@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   ArrowRight,
+  Briefcase,
   Building2,
   Compass,
   Globe2,
@@ -13,6 +14,7 @@ import {
   Settings2,
   Sparkles,
   Sun,
+  Wallet,
   X,
 } from 'lucide-react';
 import VoyanaGlobe from '@/components/Globe/VoyanaGlobe';
@@ -25,6 +27,9 @@ import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
 import AlertsPanel from '@/components/Alerts/AlertsPanel';
 import FlightBookingModal from '@/components/Booking/FlightBookingModal';
 import HotelBookingModal from '@/components/Booking/HotelBookingModal';
+import ChatAssistantModal from '@/components/Chat/ChatAssistantModal';
+import BudgetPlannerModal from '@/components/Budget/BudgetPlannerModal';
+import PackingChecklistModal from '@/components/Packing/PackingChecklistModal';
 
 type Route = 'home' | 'login' | 'signup' | 'forgot-password';
 
@@ -128,6 +133,9 @@ function App() {
   const [flightModalDestination, setFlightModalDestination] = useState<string | undefined>(undefined);
   const [hotelModalOpen, setHotelModalOpen] = useState(false);
   const [hotelModalDestination, setHotelModalDestination] = useState<string | undefined>(undefined);
+  const [chatModalOpen, setChatModalOpen] = useState(false);
+  const [budgetModalOpen, setBudgetModalOpen] = useState(false);
+  const [packingModalOpen, setPackingModalOpen] = useState(false);
   const globeRef = useRef<VoyanaGlobeHandle>(null);
 
   useEffect(() => {
@@ -208,22 +216,38 @@ function App() {
           <span>VOYANA</span>
         </a>
         <nav className={mobileOpen ? 'main-nav open' : 'main-nav'} aria-label="Main navigation">
-          {['Explore', 'Trips', 'AI Planner', 'Pricing', 'About Us'].map((item) => (
-            <a href={`#${item.toLowerCase().replace(/ /g, '-')}`} key={item}>
-              {item}
-              {item === 'AI Planner' && <Sparkles size={13} />}
-            </a>
-          ))}
+          <a href="#explore">Explore</a>
+          <button
+            onClick={() => setChatModalOpen(true)}
+            style={{ background: 'rgba(99,91,255,0.2)', border: '1px solid rgba(99,91,255,0.45)', borderRadius: '9px', padding: '6px 14px', fontSize: '14px', fontWeight: 600, color: '#c4c0ff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
+            aria-label="Open AI Travel Assistant"
+          >
+            <Sparkles size={14} className="text-indigo-400" /> AI Assistant
+          </button>
+          <button
+            onClick={() => setBudgetModalOpen(true)}
+            style={{ background: 'rgba(99,91,255,0.12)', border: '1px solid rgba(99,91,255,0.3)', borderRadius: '9px', padding: '6px 14px', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
+            aria-label="Open Budget Planner"
+          >
+            <Wallet size={14} className="text-amber-400" /> Budget Planner
+          </button>
+          <button
+            onClick={() => setPackingModalOpen(true)}
+            style={{ background: 'rgba(0,212,178,0.12)', border: '1px solid rgba(0,212,178,0.3)', borderRadius: '9px', padding: '6px 14px', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
+            aria-label="Open Packing Checklist"
+          >
+            <Briefcase size={14} className="text-teal-400" /> Packing List
+          </button>
           <button
             onClick={() => { setFlightModalDestination(undefined); setFlightModalOpen(true); }}
-            style={{ background: 'rgba(99,91,255,0.15)', border: '1px solid rgba(99,91,255,0.35)', borderRadius: '9px', padding: '6px 14px', fontSize: '14px', fontWeight: 600, color: '#a5a0ff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '9px', padding: '6px 14px', fontSize: '14px', fontWeight: 600, color: '#e2e8f0', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
             aria-label="Book a flight"
           >
             <Plane size={14} /> Flights
           </button>
           <button
             onClick={() => { setHotelModalDestination(undefined); setHotelModalOpen(true); }}
-            style={{ background: 'rgba(99,91,255,0.15)', border: '1px solid rgba(99,91,255,0.35)', borderRadius: '9px', padding: '6px 14px', fontSize: '14px', fontWeight: 600, color: '#a5a0ff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '9px', padding: '6px 14px', fontSize: '14px', fontWeight: 600, color: '#e2e8f0', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
             aria-label="Search and book hotels"
           >
             <Building2 size={14} /> Hotels
@@ -385,6 +409,47 @@ function App() {
         isOpen={hotelModalOpen}
         onClose={() => setHotelModalOpen(false)}
         initialDestination={hotelModalDestination}
+      />
+
+      {/* Floating AI Assistant Trigger */}
+      {!chatModalOpen && (
+        <button
+          className="floating-ai-trigger"
+          onClick={() => setChatModalOpen(true)}
+          aria-label="Open Voyana AI Assistant"
+        >
+          <Sparkles size={17} />
+          <span>Voyana AI</span>
+        </button>
+      )}
+
+      {/* Voyana AI Chatbot (Mockup 5.4 / VPM-44 & VPM-38) */}
+      <ChatAssistantModal
+        isOpen={chatModalOpen}
+        onClose={() => setChatModalOpen(false)}
+        destination={selected?.name || query || 'Paris'}
+        onOpenBudget={() => setBudgetModalOpen(true)}
+        onOpenPacking={() => setPackingModalOpen(true)}
+      />
+
+      {/* Budget Planner & Transaction History (VPM-41, VPM-56, VPM-67, VPM-70) */}
+      <BudgetPlannerModal
+        isOpen={budgetModalOpen}
+        onClose={() => setBudgetModalOpen(false)}
+        destination={selected?.name || query || 'Paris'}
+        onOpenChatWithPrompt={(prompt) => {
+          setChatModalOpen(true);
+        }}
+      />
+
+      {/* Smart Packing Checklist & Task Assignment (VPM-42, VPM-60, VPM-191) */}
+      <PackingChecklistModal
+        isOpen={packingModalOpen}
+        onClose={() => setPackingModalOpen(false)}
+        destination={selected?.name || query || 'Paris'}
+        onOpenChatWithPrompt={(prompt) => {
+          setChatModalOpen(true);
+        }}
       />
     </main>
   );
