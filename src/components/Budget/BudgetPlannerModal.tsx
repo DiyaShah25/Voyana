@@ -1,3 +1,9 @@
+/**
+ * VPM-41: Trip Budget Planner & Category Allocation Dashboard Modal
+ * Assignee: Jagrat Kumar (202512079)
+ * Provides comprehensive budget visualization, burn rates, health scores, and expense summaries.
+ */
+
 import React, { useState, useEffect } from 'react';
 import {
   DollarSign,
@@ -96,7 +102,7 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
   const [budget, setBudget] = useState<TripBudget>(getTripBudget);
   const [activeTab, setActiveTab] = useState<'overview' | 'expenses' | 'split' | 'ai-report'>('overview');
 
-  // Expense Form State
+  // VPM-78: Record Transactions & Expense Management State
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const [expenseTitle, setExpenseTitle] = useState('');
   const [expenseAmount, setExpenseAmount] = useState('');
