@@ -1,3 +1,9 @@
+/**
+ * VPM-90: Trip Creation & Itinerary Management Engine
+ * Assignee: Megha Lalwani (202512054) <lalwani2406@gmail.com>
+ * Provides custom trip creation wizards, curated destination templates,
+ * multi-collaborator invitations, and auto-generated initial day schedules.
+ */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { createAlert } from './alertService';
 
@@ -67,6 +73,9 @@ export interface CreateTripInput {
   budgetTarget?: number;
   currency?: string;
   tags?: string[];
+  invitedEmails?: string[];
+  travelStyle?: string;
+  autoGenerateSchedule?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -309,6 +318,81 @@ export async function createTrip(
   ownerEmail: string = 'megha@voyana.com'
 ): Promise<{ success: boolean; trip?: Trip; error?: string }> {
   const newTripId = `trip-${Date.now()}`;
+  
+  // Build Initial Members
+  const initialMembers: TripMember[] = [
+    {
+      id: `mb-${Date.now()}-1`,
+      tripId: newTripId,
+      userId,
+      name: ownerName,
+      email: ownerEmail,
+      role: 'owner',
+      joinedAt: new Date().toISOString(),
+    },
+  ];
+
+  if (input.invitedEmails && input.invitedEmails.length > 0) {
+    input.invitedEmails.forEach((email, idx) => {
+      const clean = email.trim();
+      if (clean && clean !== ownerEmail) {
+        initialMembers.push({
+          id: `mb-${Date.now()}-${idx + 2}`,
+          tripId: newTripId,
+          name: clean.split('@')[0],
+          email: clean,
+          role: 'editor',
+          joinedAt: new Date().toISOString(),
+        });
+      }
+    });
+  }
+
+  // Auto-generate initial activities if requested
+  const initialActivities: TripActivity[] = [];
+  if (input.autoGenerateSchedule !== false) {
+    initialActivities.push(
+      {
+        id: `act-gen-1`,
+        tripId: newTripId,
+        dayNumber: 1,
+        timeSlot: '02:00 PM',
+        title: `Arrival & Hotel Check-in in ${input.destination}`,
+        locationName: input.destination,
+        category: 'Transport',
+        cost: 0,
+        orderIndex: 0,
+      },
+      {
+        id: `act-gen-2`,
+        tripId: newTripId,
+        dayNumber: 1,
+        timeSlot: '07:00 PM',
+        title: `Welcome Dinner & Local Cuisine Exploration`,
+        locationName: `${input.destination} Downtown`,
+        category: 'Dining',
+        cost: 60,
+        orderIndex: 1,
+      },
+      {
+        id: `act-gen-3`,
+        tripId: newTripId,
+        dayNumber: 2,
+        timeSlot: '10:00 AM',
+        title: `Historic City Highlights & Sightseeing Tour`,
+        locationName: input.destination,
+        category: 'Sightseeing',
+        cost: 45,
+        orderIndex: 0,
+      }
+    );
+  }
+
+  const tags = input.tags || [];
+  if (input.travelStyle && !tags.includes(input.travelStyle)) {
+    tags.push(input.travelStyle);
+  }
+
   const newTrip: Trip = {
     id: newTripId,
     ownerId: userId,
@@ -322,22 +406,12 @@ export async function createTrip(
     visibility: input.visibility || 'shared',
     budgetTarget: input.budgetTarget || 2000,
     currency: input.currency || 'USD',
-    tags: input.tags || ['Custom Trip'],
+    tags: tags.length > 0 ? tags : ['Custom Trip'],
     isTemplate: false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    members: [
-      {
-        id: `mb-${Date.now()}-1`,
-        tripId: newTripId,
-        userId,
-        name: ownerName,
-        email: ownerEmail,
-        role: 'owner',
-        joinedAt: new Date().toISOString(),
-      },
-    ],
-    activities: [],
+    members: initialMembers,
+    activities: initialActivities,
   };
 
   // 1. Supabase Persistence
