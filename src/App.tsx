@@ -17,6 +17,8 @@ import {
   Sun,
   Wallet,
   X,
+  Star,
+  Package,
 } from 'lucide-react';
 import VoyanaGlobe from '@/components/Globe/VoyanaGlobe';
 import type { GlobeLocation, VoyanaGlobeHandle } from '@/components/Globe/globe.types';
@@ -35,6 +37,8 @@ import TransportBookingModal from '@/components/Booking/TransportBookingModal';
 import MyBookingsModal from '@/components/Booking/MyBookingsModal';
 import TripDashboardModal from '@/components/Trips/TripDashboardModal';
 import TripWorkspaceModal from '@/components/Trips/TripWorkspaceModal';
+import TravelReviewsModal from '@/components/Reviews/TravelReviewsModal';
+import UnifiedBundleBookingModal from '@/components/Booking/UnifiedBundleBookingModal';
 import type { Trip } from '@/services/tripService';
 
 type Route = 'home' | 'login' | 'signup' | 'forgot-password';
@@ -147,6 +151,9 @@ function App() {
   const [myBookingsOpen, setMyBookingsOpen] = useState(false);
   const [tripDashboardOpen, setTripDashboardOpen] = useState(false);
   const [activeWorkspaceTrip, setActiveWorkspaceTrip] = useState<Trip | null>(null);
+  const [reviewsModalOpen, setReviewsModalOpen] = useState(false);
+  const [reviewsDestination, setReviewsDestination] = useState<string | undefined>(undefined);
+  const [bundleBookingModalOpen, setBundleBookingModalOpen] = useState(false);
   const globeRef = useRef<VoyanaGlobeHandle>(null);
 
   useEffect(() => {
@@ -282,6 +289,13 @@ function App() {
             aria-label="View and manage my travel bookings"
           >
             <Briefcase size={14} /> My Bookings
+          </button>
+          <button
+            onClick={() => { setReviewsDestination(selected?.name || 'paris'); setReviewsModalOpen(true); }}
+            style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.35)', borderRadius: '9px', padding: '6px 14px', fontSize: '14px', fontWeight: 600, color: '#fcd34d', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
+            aria-label="View travel reviews and ratings"
+          >
+            <Star size={14} className="fill-amber-400 text-amber-400" /> Reviews
           </button>
         </nav>
         <div className="account-actions">
@@ -519,6 +533,20 @@ function App() {
         isOpen={!!activeWorkspaceTrip}
         onClose={() => setActiveWorkspaceTrip(null)}
         trip={activeWorkspaceTrip}
+      />
+
+      {/* Travel Reviews & Ratings Engine (VPM-122 / Manav Vyas) */}
+      <TravelReviewsModal
+        isOpen={reviewsModalOpen}
+        onClose={() => setReviewsModalOpen(false)}
+        initialTargetId={reviewsDestination || 'paris'}
+        initialTargetTitle={reviewsDestination ? `${reviewsDestination}` : 'Paris, France'}
+      />
+
+      {/* Unified Cross-Service Booking Integration (VPM-204 / Manav Vyas) */}
+      <UnifiedBundleBookingModal
+        isOpen={bundleBookingModalOpen}
+        onClose={() => setBundleBookingModalOpen(false)}
       />
     </main>
   );
