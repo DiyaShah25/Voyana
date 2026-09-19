@@ -3,6 +3,7 @@ import {
   ArrowRight,
   Briefcase,
   Building2,
+  Car,
   Compass,
   Globe2,
   MapPin,
@@ -30,6 +31,7 @@ import HotelBookingModal from '@/components/Booking/HotelBookingModal';
 import ChatAssistantModal from '@/components/Chat/ChatAssistantModal';
 import BudgetPlannerModal from '@/components/Budget/BudgetPlannerModal';
 import PackingChecklistModal from '@/components/Packing/PackingChecklistModal';
+import TransportBookingModal from '@/components/Booking/TransportBookingModal';
 
 type Route = 'home' | 'login' | 'signup' | 'forgot-password';
 
@@ -136,6 +138,8 @@ function App() {
   const [chatModalOpen, setChatModalOpen] = useState(false);
   const [budgetModalOpen, setBudgetModalOpen] = useState(false);
   const [packingModalOpen, setPackingModalOpen] = useState(false);
+  const [transportModalOpen, setTransportModalOpen] = useState(false);
+  const [transportModalDestination, setTransportModalDestination] = useState<string | undefined>(undefined);
   const globeRef = useRef<VoyanaGlobeHandle>(null);
 
   useEffect(() => {
@@ -251,6 +255,13 @@ function App() {
             aria-label="Search and book hotels"
           >
             <Building2 size={14} /> Hotels
+          </button>
+          <button
+            onClick={() => { setTransportModalDestination(undefined); setTransportModalOpen(true); }}
+            style={{ background: 'rgba(99,91,255,0.15)', border: '1px solid rgba(99,91,255,0.35)', borderRadius: '9px', padding: '6px 14px', fontSize: '14px', fontWeight: 600, color: '#a5a0ff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
+            aria-label="Search and book ground transport"
+          >
+            <Car size={14} /> Transport
           </button>
         </nav>
         <div className="account-actions">
@@ -372,6 +383,13 @@ function App() {
                   >
                     <Building2 size={15} /> Book Hotel
                   </button>
+                  <button
+                    onClick={() => { setTransportModalDestination(content.city); setTransportModalOpen(true); }}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '10px 18px', borderRadius: '12px', background: 'rgba(99,91,255,0.2)', border: '1px solid rgba(99,91,255,0.4)', color: '#c4c0ff', fontWeight: 600, fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s' }}
+                    aria-label={`Book local transport in ${content.city}`}
+                  >
+                    <Car size={15} /> Book Transport
+                  </button>
                 </div>
               </div>
             </article>
@@ -409,6 +427,11 @@ function App() {
         isOpen={hotelModalOpen}
         onClose={() => setHotelModalOpen(false)}
         initialDestination={hotelModalDestination}
+      />
+      <TransportBookingModal
+        isOpen={transportModalOpen}
+        onClose={() => setTransportModalOpen(false)}
+        defaultDestination={transportModalDestination}
       />
 
       {/* Floating AI Assistant Trigger */}
