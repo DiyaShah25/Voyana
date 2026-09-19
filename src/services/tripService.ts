@@ -498,3 +498,38 @@ export async function deleteTrip(tripId: string): Promise<{ success: boolean }> 
 
   return { success: true };
 }
+
+// ---------------------------------------------------------------------------
+// 7. Trip Sharing & Public Invite Links (VPM-4 / VPM-8)
+// ---------------------------------------------------------------------------
+export function generateShareLink(tripId: string, role: TripMemberRole = 'editor'): string {
+  const origin = window.location.origin;
+  const token = btoa(`${tripId}:${role}:${Date.now()}`);
+  return `${origin}/#trip-share?tripId=${encodeURIComponent(tripId)}&role=${role}&token=${token}`;
+}
+
+export async function getPublicTripById(tripId: string): Promise<Trip | undefined> {
+  const list = getStoredTrips();
+  return list.find((t) => t.id === tripId);
+}
+
+export async function updateTripVisibility(
+  tripId: string,
+  visibility: TripVisibility
+): Promise<{ success: boolean; trip?: Trip }> {
+  const list = getStoredTrips();
+  const target = list.find((t) => t.id === tripId);
+  if (!target) return { success: false };
+
+  target.visibility = visibility;
+  target.updatedAt = new Date().toISOString();
+  saveStoredTrips(list);
+
+  if (supabase) {
+    try {
+      await supabase.from('trips').update({ visibility }).eq('id', tripId);
+    } catch {}
+  }
+
+  return { success: true, trip: target };
+}
