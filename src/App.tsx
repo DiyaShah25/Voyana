@@ -33,6 +33,9 @@ import BudgetPlannerModal from '@/components/Budget/BudgetPlannerModal';
 import PackingChecklistModal from '@/components/Packing/PackingChecklistModal';
 import TransportBookingModal from '@/components/Booking/TransportBookingModal';
 import MyBookingsModal from '@/components/Booking/MyBookingsModal';
+import TripDashboardModal from '@/components/Trips/TripDashboardModal';
+import TripWorkspaceModal from '@/components/Trips/TripWorkspaceModal';
+import type { Trip } from '@/services/tripService';
 
 type Route = 'home' | 'login' | 'signup' | 'forgot-password';
 
@@ -142,6 +145,8 @@ function App() {
   const [transportModalOpen, setTransportModalOpen] = useState(false);
   const [transportModalDestination, setTransportModalDestination] = useState<string | undefined>(undefined);
   const [myBookingsOpen, setMyBookingsOpen] = useState(false);
+  const [tripDashboardOpen, setTripDashboardOpen] = useState(false);
+  const [activeWorkspaceTrip, setActiveWorkspaceTrip] = useState<Trip | null>(null);
   const globeRef = useRef<VoyanaGlobeHandle>(null);
 
   useEffect(() => {
@@ -222,7 +227,13 @@ function App() {
           <span>VOYANA</span>
         </a>
         <nav className={mobileOpen ? 'main-nav open' : 'main-nav'} aria-label="Main navigation">
-          <a href="#explore">Explore</a>
+          <button
+            onClick={() => setTripDashboardOpen(true)}
+            style={{ background: 'rgba(168,85,247,0.18)', border: '1px solid rgba(168,85,247,0.45)', borderRadius: '9px', padding: '6px 14px', fontSize: '14px', fontWeight: 600, color: '#e9d5ff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
+            aria-label="Open Trip Planning & Workspaces"
+          >
+            <Compass size={14} className="text-purple-400" /> Trips & Workspace
+          </button>
           <button
             onClick={() => setChatModalOpen(true)}
             style={{ background: 'rgba(99,91,255,0.2)', border: '1px solid rgba(99,91,255,0.45)', borderRadius: '9px', padding: '6px 14px', fontSize: '14px', fontWeight: 600, color: '#c4c0ff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
@@ -491,6 +502,23 @@ function App() {
         onOpenFlightModal={() => setFlightModalOpen(true)}
         onOpenHotelModal={() => setHotelModalOpen(true)}
         onOpenTransportModal={() => setTransportModalOpen(true)}
+      />
+
+      {/* Trip Planning Dashboard & Templates (VPM-4 / Megha Lalwani) */}
+      <TripDashboardModal
+        isOpen={tripDashboardOpen}
+        onClose={() => setTripDashboardOpen(false)}
+        onOpenWorkspace={(trip) => {
+          setTripDashboardOpen(false);
+          setActiveWorkspaceTrip(trip);
+        }}
+      />
+
+      {/* Interactive Trip Workspace & Collaboration Hub (VPM-8 / Megha Lalwani) */}
+      <TripWorkspaceModal
+        isOpen={!!activeWorkspaceTrip}
+        onClose={() => setActiveWorkspaceTrip(null)}
+        trip={activeWorkspaceTrip}
       />
     </main>
   );
