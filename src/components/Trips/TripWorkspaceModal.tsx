@@ -5,7 +5,7 @@ import {
   MapPin, Clock, Send, Check, Sparkles, Share2,
   Trash2, Copy, AlertCircle, ShieldCheck, ChevronRight,
   CheckCircle2, Circle, ArrowUpRight, Tag, SlidersHorizontal,
-  Heart, Camera, Image as ImageIcon, ZoomIn, Download
+  Heart, Camera, Image as ImageIcon, ZoomIn, Download, Printer
 } from 'lucide-react';
 import type { Trip, TripActivity, TripMember } from '@/services/tripService';
 import {
@@ -16,6 +16,7 @@ import {
   calculateTripBudget,
 } from '@/services/tripService';
 import TripShareModal from './TripShareModal';
+import TripExportModal from './TripExportModal';
 import {
   getTripChatMessages,
   sendTripChatMessage,
@@ -104,9 +105,10 @@ export default function TripWorkspaceModal({
   const [expPaidBy, setExpPaidBy] = useState(currentUser.name);
   const [expCategory, setExpCategory] = useState('Dining');
 
-  // Invite Member / Share Modal
+  // Invite Member / Share / Export Modal
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<'editor' | 'viewer'>('editor');
 
@@ -400,6 +402,15 @@ export default function TripWorkspaceModal({
             >
               <Plus size={13} />
               <span>Invite / Share</span>
+            </button>
+
+            <button
+              onClick={() => setShowExportModal(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 border border-white/10 text-xs font-semibold transition-all hover:scale-105 active:scale-95"
+              title="Print itinerary & export travel pass voucher"
+            >
+              <Printer size={13} className="text-indigo-400" />
+              <span>Export Pass</span>
             </button>
 
             <button
@@ -1670,6 +1681,17 @@ export default function TripWorkspaceModal({
               trip.visibility = updatedTrip.visibility;
             }
           }}
+        />
+      )}
+
+      {/* ─── PRINTABLE ITINERARY & TRAVEL VOUCHER MODAL (VPM-4 / VPM-8) ──── */}
+      {showExportModal && (
+        <TripExportModal
+          isOpen={showExportModal}
+          onClose={() => setShowExportModal(false)}
+          trip={trip}
+          expenses={expenses}
+          debtSummary={debtSummary}
         />
       )}
     </div>
