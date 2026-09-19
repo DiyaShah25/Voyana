@@ -51,6 +51,11 @@ export default function TripDashboardModal({
   });
   const [newDescription, setNewDescription] = useState('');
   const [newBudget, setNewBudget] = useState(2500);
+  const [newCurrency, setNewCurrency] = useState('USD');
+  const [newTravelStyle, setNewTravelStyle] = useState('Friends Getaway');
+  const [newInvitedEmails, setNewInvitedEmails] = useState('');
+  const [newCoverImage, setNewCoverImage] = useState('');
+  const [newAutoSchedule, setNewAutoSchedule] = useState(true);
   const [newVisibility, setNewVisibility] = useState<'shared' | 'private' | 'public'>('shared');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -84,6 +89,11 @@ export default function TripDashboardModal({
     if (!newTitle.trim() || !newDestination.trim()) return;
 
     setIsSubmitting(true);
+    const invitedList = newInvitedEmails
+      .split(',')
+      .map((em) => em.trim())
+      .filter((em) => em.includes('@'));
+
     const input: CreateTripInput = {
       title: newTitle,
       destination: newDestination,
@@ -92,8 +102,13 @@ export default function TripDashboardModal({
       endDate: newEndDate,
       description: newDescription,
       budgetTarget: newBudget,
+      currency: newCurrency,
       visibility: newVisibility,
-      tags: ['Custom Plan', 'Group Trip'],
+      travelStyle: newTravelStyle,
+      invitedEmails: invitedList,
+      coverImage: newCoverImage || undefined,
+      autoGenerateSchedule: newAutoSchedule,
+      tags: ['Custom Plan', newTravelStyle],
     };
 
     const res = await createTrip(input, userId);
@@ -388,20 +403,25 @@ export default function TripDashboardModal({
       {/* ─── CREATE CUSTOM TRIP MODAL ─────────────────────────────────────── */}
       {isCreating && (
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-2xl animate-fade-in overflow-y-auto">
-          <div className="relative w-full max-w-lg bg-slate-900 border border-white/15 rounded-3xl shadow-2xl p-6 overflow-hidden my-6">
+          <div className="relative w-full max-w-xl bg-slate-900 border border-white/15 rounded-3xl shadow-2xl p-6 overflow-hidden my-6 max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-white/10">
-              <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white">
-                  <Plus size={18} />
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
+                  <Compass size={20} />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">Create New Trip Workspace</h3>
-                  <p className="text-xs text-slate-400">Set destination, dates, and invite friends</p>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-bold text-white">Create Trip Workspace</h3>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                      VPM-90
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400">Set destination, travel style, budget, and invite friends</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsCreating(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10"
               >
                 <X size={18} />
               </button>
@@ -415,7 +435,7 @@ export default function TripDashboardModal({
                   required
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="e.g. Summer in Tokyo with Friends"
+                  placeholder="e.g. Cherry Blossoms & Neon Nights in Tokyo"
                   className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-400"
                 />
               </div>
@@ -444,6 +464,35 @@ export default function TripDashboardModal({
                 </div>
               </div>
 
+              {/* Travel Style Selector */}
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1.5">Travel Style & Vibe</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    'Friends Getaway',
+                    'Romantic Couple',
+                    'Solo Exploration',
+                    'Family Adventure',
+                    'Luxury & Wellness',
+                    'Budget Backpacker',
+                  ].map((style) => (
+                    <button
+                      key={style}
+                      type="button"
+                      onClick={() => setNewTravelStyle(style)}
+                      className={`p-2 rounded-xl border text-[11px] font-semibold transition-all text-center ${
+                        newTravelStyle === style
+                          ? 'bg-indigo-600 text-white border-indigo-500 shadow-md'
+                          : 'bg-white/[0.03] text-slate-300 border-white/10 hover:bg-white/[0.06]'
+                      }`}
+                    >
+                      {style}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Dates & Duration */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-slate-300 mb-1">Start Date *</label>
@@ -467,27 +516,86 @@ export default function TripDashboardModal({
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Estimated Budget Target (USD)</label>
-                <input
-                  type="number"
-                  min={0}
-                  value={newBudget}
-                  onChange={(e) => setNewBudget(Number(e.target.value))}
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-400"
-                />
+              {/* Budget & Currency */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">Budget Allocation Target</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={newBudget}
+                    onChange={(e) => setNewBudget(Number(e.target.value))}
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-400"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">Currency</label>
+                  <select
+                    value={newCurrency}
+                    onChange={(e) => setNewCurrency(e.target.value)}
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none"
+                  >
+                    <option value="USD">USD ($)</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="GBP">GBP (£)</option>
+                    <option value="JPY">JPY (¥)</option>
+                    <option value="INR">INR (₹)</option>
+                    <option value="AED">AED (AED)</option>
+                  </select>
+                </div>
               </div>
 
+              {/* Collaborators Invitation */}
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Trip Overview / Notes</label>
-                <textarea
-                  rows={2}
-                  value={newDescription}
-                  onChange={(e) => setNewDescription(e.target.value)}
-                  placeholder="What is the vision for this trip?"
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-indigo-400"
+                <label className="block text-xs font-medium text-slate-300 mb-1">Invite Collaborator Emails</label>
+                <input
+                  type="text"
+                  value={newInvitedEmails}
+                  onChange={(e) => setNewInvitedEmails(e.target.value)}
+                  placeholder="diya@voyana.com, bhavika@voyana.com, jagrat@voyana.com"
+                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-400"
                 />
+                <span className="text-[10px] text-slate-500 mt-0.5 block">Separate multiple emails with commas. They will receive Editor access.</span>
               </div>
+
+              {/* Cover Photo Presets */}
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Trip Cover Image</label>
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                  {[
+                    { label: 'Paris', url: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&auto=format&fit=crop&q=80' },
+                    { label: 'Tokyo', url: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=800&auto=format&fit=crop&q=80' },
+                    { label: 'Dubai', url: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&auto=format&fit=crop&q=80' },
+                    { label: 'Bali', url: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&auto=format&fit=crop&q=80' },
+                    { label: 'Rome', url: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800&auto=format&fit=crop&q=80' },
+                    { label: 'Alps', url: 'https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?w=800&auto=format&fit=crop&q=80' },
+                  ].map((p) => (
+                    <button
+                      key={p.label}
+                      type="button"
+                      onClick={() => setNewCoverImage(p.url)}
+                      className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg border transition-all whitespace-nowrap ${
+                        newCoverImage === p.url
+                          ? 'bg-indigo-600 text-white border-indigo-400 shadow-sm'
+                          : 'bg-white/5 text-slate-300 border-white/5 hover:bg-white/10'
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Auto-schedule checkbox */}
+              <label className="flex items-center gap-2 text-xs text-indigo-300 bg-indigo-950/40 p-3 rounded-xl border border-indigo-500/20 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={newAutoSchedule}
+                  onChange={(e) => setNewAutoSchedule(e.target.checked)}
+                  className="rounded text-indigo-600 focus:ring-indigo-500 bg-slate-950"
+                />
+                <span>Auto-generate initial recommended day-by-day sightseeing activities</span>
+              </label>
 
               <div className="pt-3 flex items-center justify-end gap-3 border-t border-white/10">
                 <button
@@ -500,9 +608,9 @@ export default function TripDashboardModal({
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white text-xs font-semibold shadow-lg shadow-indigo-500/25 flex items-center gap-2"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white text-xs font-semibold shadow-lg shadow-indigo-500/25 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
                 >
-                  {isSubmitting ? 'Creating Workspace...' : 'Create & Open Workspace'}
+                  {isSubmitting ? 'Creating Workspace...' : 'Launch Trip Workspace Hub'}
                 </button>
               </div>
             </form>
