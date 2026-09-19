@@ -76,6 +76,19 @@ export interface TripDocument {
   uploadedAt: string;
 }
 
+export interface TripMemory {
+  id: string;
+  tripId: string;
+  uploadedBy: string;
+  title: string;
+  locationName?: string;
+  caption?: string;
+  imageUrl: string;
+  date: string;
+  likes: string[];
+  tags: string[];
+}
+
 // ---------------------------------------------------------------------------
 // Mock Store in LocalStorage
 // ---------------------------------------------------------------------------
@@ -84,6 +97,7 @@ const TASKS_KEY = 'voyana.trip_tasks';
 const POLLS_KEY = 'voyana.trip_polls';
 const EXPENSES_KEY = 'voyana.trip_expenses';
 const DOCS_KEY = 'voyana.trip_docs';
+const MEMORIES_KEY = 'voyana.trip_memories';
 
 const INITIAL_CHAT: Record<string, TripChatMessage[]> = {
   'trip-user-01': [
@@ -246,6 +260,47 @@ const INITIAL_DOCS: Record<string, TripDocument[]> = {
       documentType: 'hotel_voucher',
       fileSizeKb: 680,
       uploadedAt: new Date().toISOString(),
+    },
+  ],
+};
+
+const INITIAL_MEMORIES: Record<string, TripMemory[]> = {
+  'trip-user-01': [
+    {
+      id: 'mem-01',
+      tripId: 'trip-user-01',
+      uploadedBy: 'Megha Lalwani',
+      title: 'Eiffel Tower Sunset at Trocadéro',
+      locationName: 'Place du Trocadéro, Paris',
+      caption: 'The golden hour light hitting the Eiffel tower was completely surreal! Must-do for everyone.',
+      imageUrl: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1000&auto=format&fit=crop&q=80',
+      date: '2026-10-12',
+      likes: ['Diya Shah', 'Bhavika Sainani', 'Jagrat Kumar'],
+      tags: ['Sunset', 'Sightseeing', 'MustSee'],
+    },
+    {
+      id: 'mem-02',
+      tripId: 'trip-user-01',
+      uploadedBy: 'Diya Shah',
+      title: 'Midnight Croissants in Saint-Germain',
+      locationName: 'Café de Flore, Paris',
+      caption: 'Best hot chocolate and buttery flaky croissants we ever tasted!',
+      imageUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1000&auto=format&fit=crop&q=80',
+      date: '2026-10-13',
+      likes: ['Megha Lalwani', 'Bhavika Sainani'],
+      tags: ['Food', 'Bakery', 'Nightlife'],
+    },
+    {
+      id: 'mem-03',
+      tripId: 'trip-user-01',
+      uploadedBy: 'Bhavika Sainani',
+      title: 'Louvre Pyramid Glass Reflections',
+      locationName: 'Musée du Louvre, Paris',
+      caption: 'Finally saw the Mona Lisa and the Winged Victory! Breathtaking architectural reflections.',
+      imageUrl: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=1000&auto=format&fit=crop&q=80',
+      date: '2026-10-14',
+      likes: ['Megha Lalwani', 'Diya Shah', 'Jagrat Kumar'],
+      tags: ['Museum', 'Art', 'Architecture'],
     },
   ],
 };
@@ -547,3 +602,75 @@ export async function uploadTripDocument(
   localStorage.setItem(DOCS_KEY, JSON.stringify(store));
   return newDoc;
 }
+
+// ---------------------------------------------------------------------------
+// 6. Trip Memories & Travel Journal (VPM-9)
+// ---------------------------------------------------------------------------
+export async function getTripMemories(tripId: string): Promise<TripMemory[]> {
+  try {
+    const raw = localStorage.getItem(MEMORIES_KEY);
+    const store = raw ? JSON.parse(raw) : INITIAL_MEMORIES;
+    return store[tripId] || INITIAL_MEMORIES['trip-user-01'] || [];
+  } catch {
+    return INITIAL_MEMORIES['trip-user-01'] || [];
+  }
+}
+
+export async function uploadTripMemory(
+  tripId: string,
+  memory: Omit<TripMemory, 'id' | 'tripId' | 'likes'>
+): Promise<TripMemory> {
+  const raw = localStorage.getItem(MEMORIES_KEY);
+  const store = raw ? JSON.parse(raw) : INITIAL_MEMORIES;
+
+  if (!store[tripId]) store[tripId] = [];
+
+  const newMem: TripMemory = {
+    ...memory,
+    id: `mem-${Date.now()}`,
+    tripId,
+    likes: [],
+  };
+
+  store[tripId].unshift(newMem);
+  localStorage.setItem(MEMORIES_KEY, JSON.stringify(store));
+  return newMem;
+}
+
+export async function likeTripMemory(
+  tripId: string,
+  memoryId: string,
+  userName: string
+): Promise<{ success: boolean; likes: string[] }> {
+  const raw = localStorage.getItem(MEMORIES_KEY);
+  const store = raw ? JSON.parse(raw) : INITIAL_MEMORIES;
+
+  const list: TripMemory[] = store[tripId] || [];
+  const target = list.find((m) => m.id === memoryId);
+  if (!target) return { success: false, likes: [] };
+
+  if (target.likes.includes(userName)) {
+    target.likes = target.likes.filter((u) => u !== userName);
+  } else {
+    target.likes.push(userName);
+  }
+
+  localStorage.setItem(MEMORIES_KEY, JSON.stringify(store));
+  return { success: true, likes: target.likes };
+}
+
+export async function deleteTripMemory(
+  tripId: string,
+  memoryId: string
+): Promise<{ success: boolean }> {
+  const raw = localStorage.getItem(MEMORIES_KEY);
+  const store = raw ? JSON.parse(raw) : INITIAL_MEMORIES;
+
+  if (store[tripId]) {
+    store[tripId] = store[tripId].filter((m: TripMemory) => m.id !== memoryId);
+    localStorage.setItem(MEMORIES_KEY, JSON.stringify(store));
+  }
+
+  return { success: true };
+}
+
