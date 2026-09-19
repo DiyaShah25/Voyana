@@ -2,11 +2,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   Car, Train, Bus, MapPin, Calendar, Users, ArrowRight, Search,
   Filter, X, CheckCircle2, Star, ShieldCheck, Sparkles,
-  Clock, Navigation, Shield, Check, Luggage, KeyRound
+  Clock, Navigation, Shield, Check, Luggage, KeyRound,
+  ArrowUpDown, SlidersHorizontal, RefreshCw, AlertCircle
 } from 'lucide-react';
 import {
   searchTransport,
   bookTransport,
+  cancelTransportBooking,
   getTransportTypeLabel,
   getTransportIcon,
   formatTransportDuration,
@@ -18,14 +20,14 @@ import {
 } from '@/services/transportService';
 import { PaymentView } from '@/components/Payment/PaymentModal';
 
-// ─── Step types ─────────────────────────────────────────────────────────────
-type Step = 'search' | 'results' | 'details' | 'payment' | 'confirming' | 'success';
+// ─── Step types matching FlightBookingModal & HotelBookingModal ─────────────
+type Step = 'search' | 'results' | 'passenger' | 'payment' | 'confirming' | 'success';
 
 // ─── Mode Options ───────────────────────────────────────────────────────────
 const TRANSPORT_MODES: { value: TransportModeFilter; label: string; icon: string }[] = [
-  { value: 'all', label: 'All Transport', icon: '🌐' },
+  { value: 'all', label: 'All Modes', icon: '🌐' },
   { value: 'train', label: 'High-Speed Rail', icon: '🚆' },
-  { value: 'private_transfer', label: 'Airport & City Transfer', icon: '🚘' },
+  { value: 'private_transfer', label: 'Airport & VIP Transfer', icon: '🚘' },
   { value: 'car_rental', label: 'Car Rental', icon: '🚗' },
   { value: 'bus', label: 'Coaches & Shuttles', icon: '🚌' },
 ];
@@ -65,7 +67,7 @@ function TransportCard({
       onClick={() => onSelect(item)}
       className="group relative bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-indigo-400/40 rounded-2xl overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-xl hover:shadow-indigo-500/10 flex flex-col md:flex-row"
     >
-      {/* Image Thumbnail */}
+      {/* Thumbnail */}
       {item.imageUrl && (
         <div className="relative md:w-52 h-44 md:h-auto flex-shrink-0 overflow-hidden">
           <img
@@ -84,7 +86,7 @@ function TransportCard({
         </div>
       )}
 
-      {/* Content Body */}
+      {/* Details */}
       <div className="flex-1 p-4 flex flex-col justify-between">
         <div>
           <div className="flex items-start justify-between gap-2">
@@ -106,7 +108,7 @@ function TransportCard({
             <div className="text-right">
               <p className="text-2xl font-bold text-white">${totalPrice.toLocaleString()}</p>
               <p className="text-[11px] text-slate-400">
-                {item.transportType === 'car_rental' ? 'per day' : (item.transportType === 'train' || item.transportType === 'bus' ? (passengers > 1 ? `$${item.basePrice}/person` : 'total fare') : 'all-inclusive')}
+                {item.transportType === 'car_rental' ? 'per day' : (item.transportType === 'train' || item.transportType === 'bus' ? (passengers > 1 ? `$${item.basePrice}/pax` : 'total fare') : 'all-inclusive')}
               </p>
             </div>
           </div>
@@ -126,7 +128,7 @@ function TransportCard({
             </div>
           </div>
 
-          {/* Trip Meta Badges */}
+          {/* Meta Badges */}
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1 text-xs text-slate-400 bg-white/[0.05] px-2.5 py-1 rounded-lg">
               <Clock size={12} className="text-indigo-400" />
@@ -143,7 +145,7 @@ function TransportCard({
           </div>
         </div>
 
-        {/* Amenities & Select Action */}
+        {/* Footer */}
         <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between">
           <div className="flex flex-wrap gap-1.5">
             {item.amenities.slice(0, 3).map((amenity) => (
@@ -159,7 +161,7 @@ function TransportCard({
             }}
             className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white text-xs font-semibold shadow-md transition-all group-hover:shadow-indigo-500/25"
           >
-            <span>Book Now</span>
+            <span>Reserve</span>
             <ArrowRight size={13} />
           </button>
         </div>
@@ -168,7 +170,7 @@ function TransportCard({
   );
 }
 
-// ─── Main Transport Modal ───────────────────────────────────────────────────
+// ─── Main Modal Component ───────────────────────────────────────────────────
 export interface TransportBookingModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -195,13 +197,14 @@ export default function TransportBookingModal({
   });
   const [modeFilter, setModeFilter] = useState<TransportModeFilter>('all');
   const [passengers, setPassengers] = useState(1);
+  const [sortBy, setSortBy] = useState<'price' | 'rating' | 'duration'>('price');
 
   // Results & Selection
   const [searchResults, setSearchResults] = useState<TransportItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedTransport, setSelectedTransport] = useState<TransportItem | null>(null);
 
-  // Passenger & Contact details
+  // Passenger & Lead Details
   const [passengerDetails, setPassengerDetails] = useState<TransportBookingDetails>({
     passengerName: '',
     contactEmail: '',
@@ -212,23 +215,18 @@ export default function TransportBookingModal({
     driverNotes: '',
   });
 
-  // Booking outcome
+  // Booking Result
   const [bookingResult, setBookingResult] = useState<{
     reference: string;
     bookingId: string;
   } | null>(null);
 
-  // Synchronize defaults on open
+  // Synchronize on open
   useEffect(() => {
     if (isOpen) {
       if (defaultOrigin) setOrigin(defaultOrigin);
       if (defaultDestination) setDestination(defaultDestination);
-      if (!defaultOrigin && !defaultDestination) {
-        // Auto trigger seed search
-        triggerSearch('', '', 'all');
-      } else {
-        triggerSearch(defaultOrigin, defaultDestination, 'all');
-      }
+      triggerSearch(defaultOrigin, defaultDestination, 'all');
     }
   }, [isOpen, defaultOrigin, defaultDestination]);
 
@@ -245,6 +243,15 @@ export default function TransportBookingModal({
         date,
         mode !== undefined ? mode : modeFilter
       );
+
+      // Sort
+      results.sort((a, b) => {
+        if (sortBy === 'price') return a.basePrice - b.basePrice;
+        if (sortBy === 'rating') return b.operatorRating - a.operatorRating;
+        if (sortBy === 'duration') return a.durationMinutes - b.durationMinutes;
+        return 0;
+      });
+
       setSearchResults(results);
       setStep('results');
     } catch (err) {
@@ -254,7 +261,7 @@ export default function TransportBookingModal({
     } finally {
       setIsLoading(false);
     }
-  }, [origin, destination, date, modeFilter]);
+  }, [origin, destination, date, modeFilter, sortBy]);
 
   if (!isOpen) return null;
 
@@ -264,12 +271,12 @@ export default function TransportBookingModal({
       ...prev,
       passengerCount: passengers,
     }));
-    setStep('details');
+    setStep('passenger');
   };
 
   const handleProceedToPayment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!passengerDetails.passengerName || !passengerDetails.contactEmail) return;
+    if (!passengerDetails.passengerName.trim() || !passengerDetails.contactEmail.trim()) return;
     setStep('payment');
   };
 
@@ -293,13 +300,15 @@ export default function TransportBookingModal({
   };
 
   const computedTotal = selectedTransport
-    ? selectedTransport.basePrice * (selectedTransport.transportType === 'train' || selectedTransport.transportType === 'bus' ? passengers : 1)
+    ? (selectedTransport.transportType === 'train' || selectedTransport.transportType === 'bus'
+        ? selectedTransport.basePrice * passengers
+        : selectedTransport.basePrice)
     : 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xl animate-fade-in overflow-y-auto">
       <div className="relative w-full max-w-4xl bg-slate-900/95 border border-white/10 rounded-3xl shadow-2xl overflow-hidden my-8 flex flex-col max-h-[90vh]">
-        {/* Top Header */}
+        {/* Step Flow Breadcrumb Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-slate-900/80">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
@@ -309,45 +318,85 @@ export default function TransportBookingModal({
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-bold text-white">Local Transport & Transfers</h2>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                  VPM-213
+                  VPM-215
                 </span>
               </div>
-              <p className="text-xs text-slate-400">High-speed trains, airport transfers, coaches & car rentals</p>
+              <p className="text-xs text-slate-400">High-speed rail, airport chauffeurs, car rentals & coaches</p>
             </div>
           </div>
 
-          <button
-            onClick={onClose}
-            className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition-colors"
-          >
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-4">
+            {/* Step badges */}
+            <div className="hidden sm:flex items-center gap-1.5 text-xs">
+              {(['results', 'passenger', 'payment', 'success'] as const).map((st, i) => (
+                <div key={st} className="flex items-center gap-1">
+                  <span
+                    className={`px-2 py-0.5 rounded-md font-medium capitalize ${
+                      step === st || (step === 'search' && st === 'results') || (step === 'confirming' && st === 'payment')
+                        ? 'bg-indigo-600 text-white font-semibold'
+                        : 'text-slate-500'
+                    }`}
+                  >
+                    {i + 1}. {st === 'passenger' ? 'Details' : st}
+                  </span>
+                  {i < 3 && <span className="text-slate-600">›</span>}
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={onClose}
+              className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
-        {/* Search & Mode Bar */}
+        {/* Search & Mode Filters Bar */}
         <div className="p-6 border-b border-white/10 bg-slate-950/40">
           {/* Mode Chips */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            {TRANSPORT_MODES.map((mode) => (
-              <button
-                key={mode.value}
-                onClick={() => {
-                  setModeFilter(mode.value);
-                  triggerSearch(origin, destination, mode.value);
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <div className="flex flex-wrap gap-2">
+              {TRANSPORT_MODES.map((mode) => (
+                <button
+                  key={mode.value}
+                  onClick={() => {
+                    setModeFilter(mode.value);
+                    triggerSearch(origin, destination, mode.value);
+                  }}
+                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                    modeFilter === mode.value
+                      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
+                      : 'bg-white/[0.05] text-slate-300 hover:bg-white/[0.1] border border-white/5'
+                  }`}
+                >
+                  <span>{mode.icon}</span>
+                  <span>{mode.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Sort Selector */}
+            <div className="flex items-center gap-1.5 text-xs text-slate-400">
+              <SlidersHorizontal size={13} />
+              <span>Sort:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => {
+                  setSortBy(e.target.value as any);
+                  triggerSearch(origin, destination, modeFilter);
                 }}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                  modeFilter === mode.value
-                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
-                    : 'bg-white/[0.05] text-slate-300 hover:bg-white/[0.1] border border-white/5'
-                }`}
+                className="bg-slate-900 border border-white/10 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none"
               >
-                <span>{mode.icon}</span>
-                <span>{mode.label}</span>
-              </button>
-            ))}
+                <option value="price">Lowest Price</option>
+                <option value="rating">Highest Rating</option>
+                <option value="duration">Fastest Route</option>
+              </select>
+            </div>
           </div>
 
-          {/* Input Grid */}
+          {/* Form Input Grid */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             {/* Origin */}
             <div className="relative">
@@ -393,7 +442,7 @@ export default function TransportBookingModal({
               </div>
             </div>
 
-            {/* Passengers & Search Button */}
+            {/* Passengers & Search */}
             <div className="flex items-end gap-2">
               <div className="w-28 relative">
                 <label className="block text-[11px] font-medium text-slate-400 mb-1">Passengers</label>
@@ -419,7 +468,7 @@ export default function TransportBookingModal({
                 className="flex-1 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white text-xs font-semibold py-2 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 transition-all disabled:opacity-50"
               >
                 {isLoading ? (
-                  <span className="inline-block animate-spin">⏳</span>
+                  <RefreshCw size={14} className="animate-spin" />
                 ) : (
                   <>
                     <Search size={14} />
@@ -431,26 +480,26 @@ export default function TransportBookingModal({
           </div>
         </div>
 
-        {/* Modal Body / Views */}
+        {/* Modal View Body */}
         <div className="flex-1 overflow-y-auto p-6">
           {/* STEP: RESULTS LIST */}
           {(step === 'results' || step === 'search') && (
             <div>
               <div className="flex items-center justify-between mb-4">
                 <p className="text-xs font-medium text-slate-400">
-                  Showing <span className="text-white font-semibold">{searchResults.length}</span> available options
+                  Showing <span className="text-white font-semibold">{searchResults.length}</span> curated routes
                 </p>
                 <div className="flex items-center gap-2 text-xs text-slate-400">
                   <ShieldCheck size={14} className="text-emerald-400" />
-                  <span>Instant Confirmation & Free Cancellation</span>
+                  <span>Instant Voucher · Free Cancellation</span>
                 </div>
               </div>
 
               {searchResults.length === 0 ? (
                 <div className="text-center py-12 bg-white/[0.02] border border-white/5 rounded-2xl p-6">
                   <Car size={36} className="mx-auto text-slate-600 mb-3" />
-                  <p className="text-sm font-semibold text-white">No direct ground routes found for this filter</p>
-                  <p className="text-xs text-slate-400 mt-1 mb-4">Try clearing the city filters or switching the transport mode above.</p>
+                  <p className="text-sm font-semibold text-white">No direct routes found for this filter</p>
+                  <p className="text-xs text-slate-400 mt-1 mb-4">Try clearing filters or switching the transport mode.</p>
                   <button
                     onClick={() => {
                       setOrigin('');
@@ -478,8 +527,8 @@ export default function TransportBookingModal({
             </div>
           )}
 
-          {/* STEP: PASSENGER & PICKUP DETAILS */}
-          {step === 'details' && selectedTransport && (
+          {/* STEP: PASSENGER DETAILS */}
+          {step === 'passenger' && selectedTransport && (
             <div className="max-w-2xl mx-auto">
               <button
                 onClick={() => setStep('results')}
@@ -488,7 +537,7 @@ export default function TransportBookingModal({
                 ← Back to transport options
               </button>
 
-              {/* Selected summary strip */}
+              {/* Selected Summary Card */}
               <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-4 mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{getTransportIcon(selectedTransport.transportType)}</span>
@@ -506,7 +555,7 @@ export default function TransportBookingModal({
               <form onSubmit={handleProceedToPayment} className="space-y-4 bg-white/[0.02] border border-white/5 rounded-2xl p-6">
                 <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
                   <Users size={16} className="text-indigo-400" />
-                  <span>Lead Passenger & Booking Information</span>
+                  <span>Lead Passenger & Contact Information</span>
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -564,7 +613,7 @@ export default function TransportBookingModal({
                     rows={2}
                     value={passengerDetails.driverNotes}
                     onChange={(e) => setPassengerDetails({ ...passengerDetails, driverNotes: e.target.value })}
-                    placeholder="Child seat request, excess luggage, gate pickup preference..."
+                    placeholder="Child seat request, excess luggage, terminal gate pickup preference..."
                     className="w-full bg-slate-900 border border-white/10 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-indigo-400"
                   />
                 </div>
@@ -590,7 +639,7 @@ export default function TransportBookingModal({
           {step === 'payment' && selectedTransport && (
             <div className="max-w-2xl mx-auto">
               <button
-                onClick={() => setStep('details')}
+                onClick={() => setStep('passenger')}
                 className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1 mb-4 font-medium"
               >
                 ← Back to passenger details
@@ -605,11 +654,11 @@ export default function TransportBookingModal({
                 amount={computedTotal}
                 lineItems={[
                   { label: `${getTransportTypeLabel(selectedTransport.transportType)} (${selectedTransport.vehicleClass})`, amount: selectedTransport.basePrice },
-                  { label: `Passenger Capacity / Surcharge (${passengers} pax)`, amount: computedTotal - selectedTransport.basePrice },
-                  { label: 'Tolls, Airport Surcharges & Taxes', amount: 0 },
+                  { label: `Passenger Surcharge (${passengers} pax)`, amount: computedTotal - selectedTransport.basePrice },
+                  { label: 'Tolls & Airport Surcharges', amount: 0 },
                 ]}
                 onPaymentSuccess={handlePaymentSuccess}
-                onCancel={() => setStep('details')}
+                onCancel={() => setStep('passenger')}
                 userId={userId}
               />
             </div>
@@ -620,7 +669,7 @@ export default function TransportBookingModal({
             <div className="py-16 text-center">
               <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
               <h3 className="text-lg font-bold text-white">Finalizing your transport reservation...</h3>
-              <p className="text-xs text-slate-400 mt-1">Issuing voucher & notifying your dispatch team...</p>
+              <p className="text-xs text-slate-400 mt-1">Issuing voucher & dispatching booking alert...</p>
             </div>
           )}
 
@@ -633,12 +682,12 @@ export default function TransportBookingModal({
 
               <h2 className="text-xl font-bold text-white">Transport Booking Confirmed!</h2>
               <p className="text-xs text-slate-400 mt-1">
-                Your confirmation and digital voucher have been generated.
+                Your confirmation alert has been broadcast and your digital voucher is ready.
               </p>
 
               {/* Digital Ticket Card */}
               <div className="mt-6 bg-slate-900 border border-white/15 rounded-2xl p-5 text-left shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 bg-indigo-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl">
+                <div className="absolute top-0 right-0 bg-emerald-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl">
                   CONFIRMED
                 </div>
 
