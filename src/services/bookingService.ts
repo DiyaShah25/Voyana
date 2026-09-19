@@ -1,3 +1,9 @@
+/**
+ * VPM-203: Booking Management Service
+ * Assignee: Megha Lalwani (202512054) <lalwani2406@gmail.com>
+ * Provides unified cross-service booking management, multi-service cancellation with refund tiers,
+ * date/guest/class modifications with automatic price difference adjustment and alert triggers.
+ */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { createAlert } from './alertService';
 import { initiatePayment, confirmPayment } from './paymentService';
