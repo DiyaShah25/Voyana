@@ -31,6 +31,7 @@ export interface TripActivity {
   category?: string;
   bookingReference?: string;
   orderIndex: number;
+  isCompleted?: boolean;
 }
 
 export interface Trip {
@@ -533,3 +534,174 @@ export async function updateTripVisibility(
 
   return { success: true, trip: target };
 }
+
+// ---------------------------------------------------------------------------
+// 8. Trip Activity Management & Dynamic Builder (VPM-4)
+// ---------------------------------------------------------------------------
+export async function addTripActivity(
+  tripId: string,
+  activityInput: Omit<TripActivity, 'id' | 'tripId' | 'orderIndex'>
+): Promise<{ success: boolean; activity?: TripActivity; error?: string }> {
+  const list = getStoredTrips();
+  const trip = list.find((t) => t.id === tripId);
+  if (!trip) return { success: false, error: 'Trip not found' };
+
+  if (!trip.activities) trip.activities = [];
+
+  const dayActivities = trip.activities.filter((a) => a.dayNumber === activityInput.dayNumber);
+  const nextOrderIndex = dayActivities.length > 0 ? Math.max(...dayActivities.map((a) => a.orderIndex)) + 1 : 0;
+
+  const newActivity: TripActivity = {
+    id: `act-${Date.now()}`,
+    tripId,
+    orderIndex: nextOrderIndex,
+    isCompleted: false,
+    ...activityInput,
+  };
+
+  trip.activities.push(newActivity);
+  trip.updatedAt = new Date().toISOString();
+  saveStoredTrips(list);
+
+  if (supabase) {
+    try {
+      await supabase.from('trip_activities').insert({
+        id: newActivity.id,
+        trip_id: tripId,
+        day_number: newActivity.dayNumber,
+        activity_date: newActivity.activityDate,
+        time_slot: newActivity.timeSlot,
+        title: newActivity.title,
+        location_name: newActivity.locationName,
+        description: newActivity.description,
+        cost: newActivity.cost,
+        category: newActivity.category,
+        booking_reference: newActivity.bookingReference,
+        order_index: newActivity.orderIndex,
+      });
+    } catch {}
+  }
+
+  return { success: true, activity: newActivity };
+}
+
+export async function updateTripActivity(
+  tripId: string,
+  activityId: string,
+  updates: Partial<Omit<TripActivity, 'id' | 'tripId'>>
+): Promise<{ success: boolean; activity?: TripActivity; error?: string }> {
+  const list = getStoredTrips();
+  const trip = list.find((t) => t.id === tripId);
+  if (!trip || !trip.activities) return { success: false, error: 'Trip not found' };
+
+  const act = trip.activities.find((a) => a.id === activityId);
+  if (!act) return { success: false, error: 'Activity not found' };
+
+  Object.assign(act, updates);
+  trip.updatedAt = new Date().toISOString();
+  saveStoredTrips(list);
+
+  return { success: true, activity: act };
+}
+
+export async function toggleActivityCompleted(
+  tripId: string,
+  activityId: string
+): Promise<{ success: boolean; isCompleted?: boolean }> {
+  const list = getStoredTrips();
+  const trip = list.find((t) => t.id === tripId);
+  if (!trip || !trip.activities) return { success: false };
+
+  const act = trip.activities.find((a) => a.id === activityId);
+  if (!act) return { success: false };
+
+  act.isCompleted = !act.isCompleted;
+  trip.updatedAt = new Date().toISOString();
+  saveStoredTrips(list);
+
+  return { success: true, isCompleted: act.isCompleted };
+}
+
+export async function deleteTripActivity(
+  tripId: string,
+  activityId: string
+): Promise<{ success: boolean; error?: string }> {
+  const list = getStoredTrips();
+  const trip = list.find((t) => t.id === tripId);
+  if (!trip || !trip.activities) return { success: false, error: 'Trip not found' };
+
+  trip.activities = trip.activities.filter((a) => a.id !== activityId);
+  trip.updatedAt = new Date().toISOString();
+  saveStoredTrips(list);
+
+  if (supabase) {
+    try {
+      await supabase.from('trip_activities').delete().eq('id', activityId);
+    } catch {}
+  }
+
+  return { success: true };
+}
+
+export async function reorderTripActivities(
+  tripId: string,
+  dayNumber: number,
+  reorderedActivities: TripActivity[]
+): Promise<{ success: boolean }> {
+  const list = getStoredTrips();
+  const trip = list.find((t) => t.id === tripId);
+  if (!trip || !trip.activities) return { success: false };
+
+  // Keep other days untouched
+  const otherActivities = trip.activities.filter((a) => a.dayNumber !== dayNumber);
+  // Re-index updated day
+  const updatedDay = reorderedActivities.map((act, idx) => ({
+    ...act,
+    orderIndex: idx,
+    dayNumber,
+  }));
+
+  trip.activities = [...otherActivities, ...updatedDay];
+  trip.updatedAt = new Date().toISOString();
+  saveStoredTrips(list);
+
+  return { success: true };
+}
+
+export interface TripBudgetAnalysis {
+  budgetTarget: number;
+  totalActivitiesCost: number;
+  totalExpensesCost: number;
+  remainingBudget: number;
+  percentUsed: number;
+  isOverBudget: boolean;
+  categoryBreakdown: Record<string, number>;
+}
+
+export function calculateTripBudget(
+  budgetTarget: number,
+  activities: TripActivity[] = [],
+  expensesTotal: number = 0
+): TripBudgetAnalysis {
+  const totalActivitiesCost = activities.reduce((sum, act) => sum + (act.cost || 0), 0);
+  const totalSpent = Math.max(totalActivitiesCost, expensesTotal);
+  const remainingBudget = budgetTarget - totalSpent;
+  const percentUsed = budgetTarget > 0 ? Math.round((totalSpent / budgetTarget) * 100) : 0;
+
+  const categoryBreakdown: Record<string, number> = {};
+  for (const act of activities) {
+    const cat = act.category || 'Sightseeing';
+    categoryBreakdown[cat] = (categoryBreakdown[cat] || 0) + (act.cost || 0);
+  }
+
+  return {
+    budgetTarget,
+    totalActivitiesCost,
+    totalExpensesCost: expensesTotal,
+    remainingBudget,
+    percentUsed,
+    isOverBudget: remainingBudget < 0,
+    categoryBreakdown,
+  };
+}
+
