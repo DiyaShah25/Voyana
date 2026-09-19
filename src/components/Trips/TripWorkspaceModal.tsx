@@ -3,10 +3,17 @@ import {
   Calendar, MessageSquare, CheckSquare, BarChart3,
   DollarSign, FileText, Users, Plus, X, ArrowRight,
   MapPin, Clock, Send, Check, Sparkles, Share2,
-  Trash2, Copy, AlertCircle, ShieldCheck, ChevronRight
+  Trash2, Copy, AlertCircle, ShieldCheck, ChevronRight,
+  CheckCircle2, Circle, ArrowUpRight, Tag, SlidersHorizontal
 } from 'lucide-react';
 import type { Trip, TripActivity, TripMember } from '@/services/tripService';
-import { addTripMember } from '@/services/tripService';
+import {
+  addTripMember,
+  addTripActivity,
+  deleteTripActivity,
+  toggleActivityCompleted,
+  calculateTripBudget,
+} from '@/services/tripService';
 import TripShareModal from './TripShareModal';
 import {
   getTripChatMessages,
@@ -59,7 +66,8 @@ export default function TripWorkspaceModal({
   const [newChatMessage, setNewChatMessage] = useState('');
   const [copiedLink, setCopiedLink] = useState(false);
 
-  // New Activity Form
+  // New Activity Form & Filters
+  const [selectedDayFilter, setSelectedDayFilter] = useState<number>(0); // 0 = All Days
   const [showAddActivity, setShowAddActivity] = useState(false);
   const [actTitle, setActTitle] = useState('');
   const [actTime, setActTime] = useState('10:00 AM');
@@ -67,6 +75,8 @@ export default function TripWorkspaceModal({
   const [actLocation, setActLocation] = useState('');
   const [actCategory, setActCategory] = useState('Sightseeing');
   const [actCost, setActCost] = useState(0);
+  const [actDescription, setActDescription] = useState('');
+  const [actAlsoAddExpense, setActAlsoAddExpense] = useState(false);
 
   // New Task Form
   const [showAddTask, setShowAddTask] = useState(false);
@@ -129,27 +139,75 @@ export default function TripWorkspaceModal({
   };
 
   // 2. Add Activity
-  const handleAddActivity = (e: React.FormEvent) => {
+  const handleAddActivity = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!actTitle.trim()) return;
-    const newAct: TripActivity = {
-      id: `act-${Date.now()}`,
-      tripId: trip.id,
+    
+    await addTripActivity(trip.id, {
       dayNumber: actDay,
       timeSlot: actTime,
       title: actTitle,
       locationName: actLocation,
       category: actCategory,
-      cost: actCost,
-      orderIndex: (trip.activities?.length || 0) + 1,
-    };
-    if (!trip.activities) trip.activities = [];
-    trip.activities.push(newAct);
+      cost: actCost > 0 ? actCost : undefined,
+      description: actDescription || undefined,
+    });
+
+    if (actAlsoAddExpense && actCost > 0) {
+      const membersList = trip.members?.map((m) => m.name) || [currentUser.name, 'Bhavika Sainani', 'Diya Shah', 'Jagrat Kumar'];
+      await addTripExpense(trip.id, {
+        title: `Activity: ${actTitle}`,
+        amount: actCost,
+        paidBy: currentUser.name,
+        category: actCategory === 'Dining' ? 'Dining' : actCategory === 'Transport' ? 'Transport' : 'Activities',
+        splitBetween: membersList,
+      });
+    }
+
     setShowAddActivity(false);
     setActTitle('');
     setActLocation('');
+    setActCost(0);
+    setActDescription('');
+    setActAlsoAddExpense(false);
+
     // Broadcast message in chat
-    sendTripChatMessage(trip.id, `added a new activity for Day ${actDay}: "${actTitle}"`, currentUser.name, 'activity_log');
+    sendTripChatMessage(
+      trip.id,
+      `added a new activity for Day ${actDay}: "${actTitle}"${actCost > 0 ? ` ($${actCost})` : ''}`,
+      currentUser.name,
+      'activity_log'
+    );
+    loadWorkspaceData();
+  };
+
+  const handleToggleActivity = async (actId: string) => {
+    await toggleActivityCompleted(trip.id, actId);
+    loadWorkspaceData();
+  };
+
+  const handleDeleteActivity = async (actId: string, actTitleStr: string) => {
+    await deleteTripActivity(trip.id, actId);
+    sendTripChatMessage(trip.id, `removed activity "${actTitleStr}"`, currentUser.name, 'activity_log');
+    loadWorkspaceData();
+  };
+
+  const handleConvertActivityToExpense = async (act: TripActivity) => {
+    if (!act.cost || act.cost <= 0) return;
+    const membersList = trip.members?.map((m) => m.name) || [currentUser.name, 'Bhavika Sainani', 'Diya Shah', 'Jagrat Kumar'];
+    await addTripExpense(trip.id, {
+      title: `Activity: ${act.title}`,
+      amount: act.cost,
+      paidBy: currentUser.name,
+      category: act.category === 'Dining' ? 'Dining' : act.category === 'Transport' ? 'Transport' : 'Activities',
+      splitBetween: membersList,
+    });
+    sendTripChatMessage(
+      trip.id,
+      `converted activity "${act.title}" ($${act.cost}) into a shared group expense!`,
+      currentUser.name,
+      'activity_log'
+    );
     loadWorkspaceData();
   };
 
@@ -226,9 +284,10 @@ export default function TripWorkspaceModal({
     loadWorkspaceData();
   };
 
-  // Calculate Debt Settlement
+  // Calculate Debt Settlement & Budget Tracking
   const membersList = trip.members?.map((m) => m.name) || [currentUser.name, 'Bhavika Sainani', 'Diya Shah', 'Jagrat Kumar'];
   const debtSummary = calculateDebtSettlement(expenses, membersList);
+  const budgetSummary = calculateTripBudget(trip.budgetTarget, trip.activities || [], debtSummary.totalSpent);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/90 backdrop-blur-2xl animate-fade-in overflow-y-auto">
@@ -328,66 +387,252 @@ export default function TripWorkspaceModal({
           {/* 1. ITINERARY & CALENDAR TAB */}
           {activeTab === 'itinerary' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-base font-bold text-white">Daily Itinerary & Schedule</h3>
-                  <p className="text-xs text-slate-400">Collaborative activity schedule mapped by day</p>
+              {/* Dynamic Budget Sync & Meter */}
+              <div className="bg-gradient-to-r from-slate-900/90 via-indigo-950/40 to-slate-900/90 border border-indigo-500/20 rounded-2xl p-5 shadow-xl">
+                <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 rounded-xl bg-indigo-600/30 text-indigo-400 border border-indigo-500/30">
+                      <DollarSign size={18} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                        <span>Trip Budget & Activity Cost Tracker</span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          budgetSummary.isOverBudget
+                            ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                            : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                        }`}>
+                          {budgetSummary.isOverBudget ? 'Budget Exceeded' : 'On Track'}
+                        </span>
+                      </h4>
+                      <p className="text-xs text-slate-400">
+                        Target: <strong className="text-white">${budgetSummary.budgetTarget.toLocaleString()}</strong> ·
+                        Activities Planned: <strong className="text-indigo-300">${budgetSummary.totalActivitiesCost.toLocaleString()}</strong> ·
+                        Split Bills Logged: <strong className="text-purple-300">${debtSummary.totalSpent.toLocaleString()}</strong>
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <span className="text-xs text-slate-400 block">Remaining Balance</span>
+                    <span className={`text-lg font-black ${budgetSummary.remainingBudget >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      ${budgetSummary.remainingBudget.toLocaleString()}
+                    </span>
+                  </div>
                 </div>
+
+                {/* Progress Meter */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-[11px] text-slate-400">
+                    <span>Budget Consumption</span>
+                    <span className="font-bold text-white">{budgetSummary.percentUsed}% used</span>
+                  </div>
+                  <div className="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-white/10 p-0.5">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        budgetSummary.percentUsed > 100
+                          ? 'bg-gradient-to-r from-rose-500 to-red-600'
+                          : budgetSummary.percentUsed > 75
+                          ? 'bg-gradient-to-r from-amber-500 to-indigo-500'
+                          : 'bg-gradient-to-r from-indigo-500 to-emerald-400'
+                      }`}
+                      style={{ width: `${Math.min(budgetSummary.percentUsed, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Day Filter & Controls */}
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                  <button
+                    onClick={() => setSelectedDayFilter(0)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                      selectedDayFilter === 0
+                        ? 'bg-indigo-600 text-white shadow-md'
+                        : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    All Days ({(trip.activities || []).length})
+                  </button>
+                  {[1, 2, 3, 4, 5, 6, 7].map((d) => {
+                    const count = (trip.activities || []).filter((a) => a.dayNumber === d).length;
+                    return (
+                      <button
+                        key={d}
+                        onClick={() => setSelectedDayFilter(d)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
+                          selectedDayFilter === d
+                            ? 'bg-indigo-600 text-white shadow-md'
+                            : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'
+                        }`}
+                      >
+                        Day {d} {count > 0 && <span className="opacity-75">({count})</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+
                 <button
-                  onClick={() => setShowAddActivity(true)}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-md"
+                  onClick={() => {
+                    if (selectedDayFilter > 0) setActDay(selectedDayFilter);
+                    setShowAddActivity(true);
+                  }}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-md transition-all hover:scale-105 active:scale-95 ml-auto"
                 >
                   <Plus size={14} />
                   <span>Add Activity</span>
                 </button>
               </div>
 
-              {/* Day-by-Day Timeline */}
+              {/* Day-by-Day Timeline List */}
               <div className="space-y-6">
-                {[1, 2, 3, 4, 5].map((dayNum) => {
-                  const dayActivities = trip.activities?.filter((a) => a.dayNumber === dayNum) || [];
-                  return (
-                    <div key={dayNum} className="bg-white/[0.02] border border-white/5 rounded-2xl p-5">
-                      <div className="flex items-center gap-2 mb-4 pb-2 border-b border-white/5">
-                        <span className="w-7 h-7 rounded-lg bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 flex items-center justify-center text-xs font-bold">
-                          D{dayNum}
-                        </span>
-                        <h4 className="text-sm font-bold text-white">Day {dayNum} Schedule</h4>
-                        <span className="text-xs text-slate-500">· {dayActivities.length} activities planned</span>
-                      </div>
+                {[1, 2, 3, 4, 5, 6, 7]
+                  .filter((d) => selectedDayFilter === 0 || selectedDayFilter === d)
+                  .map((dayNum) => {
+                    const dayActivities = (trip.activities || []).filter((a) => a.dayNumber === dayNum);
+                    if (selectedDayFilter !== 0 && dayActivities.length === 0 && dayNum > 5) return null;
 
-                      {dayActivities.length === 0 ? (
-                        <p className="text-xs text-slate-500 italic py-2">No activities added yet for Day {dayNum}.</p>
-                      ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {dayActivities.map((act) => (
-                            <div
-                              key={act.id}
-                              className="bg-white/[0.04] border border-white/10 rounded-xl p-3 flex items-start gap-3 hover:border-indigo-400/30 transition-all"
-                            >
-                              <div className="p-2 rounded-lg bg-indigo-950 text-indigo-400 border border-indigo-400/20">
-                                <Clock size={16} />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between gap-1">
-                                  <span className="text-[11px] font-mono text-indigo-300 font-semibold">{act.timeSlot || 'Anytime'}</span>
-                                  {act.cost ? <span className="text-xs font-bold text-white">${act.cost}</span> : null}
-                                </div>
-                                <h5 className="text-xs font-bold text-white mt-0.5 truncate">{act.title}</h5>
-                                {act.locationName && (
-                                  <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
-                                    <MapPin size={10} className="text-emerald-400 flex-shrink-0" />
-                                    <span className="truncate">{act.locationName}</span>
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          ))}
+                    return (
+                      <div key={dayNum} className="bg-white/[0.02] border border-white/5 rounded-2xl p-5 hover:border-white/10 transition-all">
+                        <div className="flex items-center justify-between mb-4 pb-2 border-b border-white/5">
+                          <div className="flex items-center gap-2">
+                            <span className="w-7 h-7 rounded-lg bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 flex items-center justify-center text-xs font-bold">
+                              D{dayNum}
+                            </span>
+                            <h4 className="text-sm font-bold text-white">Day {dayNum} Schedule</h4>
+                            <span className="text-xs text-slate-500">· {dayActivities.length} activities planned</span>
+                          </div>
+
+                          <button
+                            onClick={() => {
+                              setActDay(dayNum);
+                              setShowAddActivity(true);
+                            }}
+                            className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1"
+                          >
+                            <Plus size={12} />
+                            <span>Add to Day {dayNum}</span>
+                          </button>
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
+
+                        {dayActivities.length === 0 ? (
+                          <div className="text-center py-6 border border-dashed border-white/5 rounded-xl">
+                            <p className="text-xs text-slate-500 italic mb-2">No activities scheduled for Day {dayNum}.</p>
+                            <button
+                              onClick={() => {
+                                setActDay(dayNum);
+                                setShowAddActivity(true);
+                              }}
+                              className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold"
+                            >
+                              + Plan first activity
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {dayActivities.map((act) => {
+                              const isCompleted = act.isCompleted || false;
+                              const catColors: Record<string, string> = {
+                                Sightseeing: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30',
+                                Dining: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+                                Transport: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30',
+                                Adventure: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+                                Culture: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
+                                Relax: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+                              };
+                              const badgeStyle = catColors[act.category || 'Sightseeing'] || catColors.Sightseeing;
+
+                              return (
+                                <div
+                                  key={act.id}
+                                  className={`border rounded-xl p-3.5 flex flex-col justify-between gap-3 transition-all ${
+                                    isCompleted
+                                      ? 'bg-white/[0.01] border-white/5 opacity-60'
+                                      : 'bg-white/[0.04] border-white/10 hover:border-indigo-400/40'
+                                  }`}
+                                >
+                                  <div>
+                                    <div className="flex items-start justify-between gap-2 mb-2">
+                                      <div className="flex items-center gap-2">
+                                        <button
+                                          onClick={() => handleToggleActivity(act.id)}
+                                          className="text-slate-400 hover:text-indigo-400 transition-colors"
+                                          title={isCompleted ? 'Mark as pending' : 'Mark as done'}
+                                        >
+                                          {isCompleted ? (
+                                            <CheckCircle2 size={18} className="text-emerald-400" />
+                                          ) : (
+                                            <Circle size={18} />
+                                          )}
+                                        </button>
+                                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${badgeStyle}`}>
+                                          {act.category || 'Sightseeing'}
+                                        </span>
+                                      </div>
+
+                                      <div className="flex items-center gap-1.5">
+                                        <span className="text-[11px] font-mono text-indigo-300 font-semibold bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-500/20 flex items-center gap-1">
+                                          <Clock size={10} />
+                                          <span>{act.timeSlot || 'Anytime'}</span>
+                                        </span>
+                                        {act.cost ? (
+                                          <span className="text-xs font-bold text-emerald-300 bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                                            ${act.cost}
+                                          </span>
+                                        ) : null}
+                                      </div>
+                                    </div>
+
+                                    <h5 className={`text-xs font-bold text-white ${isCompleted ? 'line-through text-slate-400' : ''}`}>
+                                      {act.title}
+                                    </h5>
+
+                                    {act.locationName && (
+                                      <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-1">
+                                        <MapPin size={11} className="text-rose-400 flex-shrink-0" />
+                                        <span className="truncate">{act.locationName}</span>
+                                      </p>
+                                    )}
+
+                                    {act.description && (
+                                      <p className="text-[11px] text-slate-400 mt-1 line-clamp-2">
+                                        {act.description}
+                                      </p>
+                                    )}
+                                  </div>
+
+                                  {/* Activity Card Actions */}
+                                  <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px]">
+                                    {act.cost && act.cost > 0 ? (
+                                      <button
+                                        onClick={() => handleConvertActivityToExpense(act)}
+                                        className="flex items-center gap-1 text-indigo-300 hover:text-indigo-200 transition-colors font-medium"
+                                        title="Split this activity cost with group members"
+                                      >
+                                        <DollarSign size={11} />
+                                        <span>Split as Bill</span>
+                                      </button>
+                                    ) : (
+                                      <span className="text-slate-500 text-[10px]">Free activity</span>
+                                    )}
+
+                                    <button
+                                      onClick={() => handleDeleteActivity(act.id, act.title)}
+                                      className="text-slate-500 hover:text-rose-400 p-1 transition-colors ml-auto"
+                                      title="Delete activity"
+                                    >
+                                      <Trash2 size={13} />
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
               </div>
             </div>
           )}
@@ -690,7 +935,10 @@ export default function TripWorkspaceModal({
       {showAddActivity && (
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-2xl animate-fade-in">
           <div className="relative w-full max-w-md bg-slate-900 border border-white/15 rounded-3xl p-6 shadow-2xl">
-            <h3 className="text-base font-bold text-white mb-4">Add Scheduled Activity</h3>
+            <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
+              <Calendar size={18} className="text-indigo-400" />
+              <span>Add Scheduled Activity</span>
+            </h3>
             <form onSubmit={handleAddActivity} className="space-y-3">
               <div>
                 <label className="block text-xs text-slate-400 mb-1">Activity Title *</label>
@@ -699,13 +947,14 @@ export default function TripWorkspaceModal({
                   required
                   value={actTitle}
                   onChange={(e) => setActTitle(e.target.value)}
-                  placeholder="e.g. Louvre Guided Tour"
+                  placeholder="e.g. Louvre Guided Tour & Mona Lisa"
                   className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-400"
                 />
               </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Day Number</label>
+                  <label className="block text-xs text-slate-400 mb-1">Day Schedule</label>
                   <select
                     value={actDay}
                     onChange={(e) => setActDay(Number(e.target.value))}
@@ -727,19 +976,75 @@ export default function TripWorkspaceModal({
                   />
                 </div>
               </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Category</label>
+                  <select
+                    value={actCategory}
+                    onChange={(e) => setActCategory(e.target.value)}
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                  >
+                    <option value="Sightseeing">Sightseeing</option>
+                    <option value="Dining">Dining / Food</option>
+                    <option value="Transport">Transport</option>
+                    <option value="Adventure">Adventure / Outdoor</option>
+                    <option value="Culture">Culture / Museum</option>
+                    <option value="Relax">Relaxation / Beach</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Estimated Cost ($)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={actCost}
+                    onChange={(e) => setActCost(Number(e.target.value))}
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                  />
+                </div>
+              </div>
+
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Location Name</label>
+                <label className="block text-xs text-slate-400 mb-1">Location Name & Address</label>
                 <input
                   type="text"
                   value={actLocation}
                   onChange={(e) => setActLocation(e.target.value)}
-                  placeholder="e.g. Musée du Louvre, Paris"
+                  placeholder="e.g. Musée du Louvre, Rue de Rivoli, Paris"
                   className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
                 />
               </div>
+
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">Notes / Instructions</label>
+                <textarea
+                  rows={2}
+                  value={actDescription}
+                  onChange={(e) => setActDescription(e.target.value)}
+                  placeholder="e.g. Meet at the glass pyramid entrance. Bring student ID."
+                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none resize-none"
+                />
+              </div>
+
+              {actCost > 0 && (
+                <label className="flex items-center gap-2 text-xs text-indigo-300 bg-indigo-950/40 p-2.5 rounded-xl border border-indigo-500/20 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={actAlsoAddExpense}
+                    onChange={(e) => setActAlsoAddExpense(e.target.checked)}
+                    className="rounded text-indigo-600 focus:ring-indigo-500 bg-slate-950"
+                  />
+                  <span>Automatically log as shared bill in Expense Splitter</span>
+                </label>
+              )}
+
               <div className="pt-3 flex items-center justify-end gap-3 border-t border-white/10">
                 <button type="button" onClick={() => setShowAddActivity(false)} className="px-4 py-2 text-xs text-slate-400 hover:text-white">Cancel</button>
-                <button type="submit" className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold">Save Activity</button>
+                <button type="submit" className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-md">
+                  Save Activity
+                </button>
               </div>
             </form>
           </div>
