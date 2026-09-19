@@ -32,6 +32,7 @@ import ChatAssistantModal from '@/components/Chat/ChatAssistantModal';
 import BudgetPlannerModal from '@/components/Budget/BudgetPlannerModal';
 import PackingChecklistModal from '@/components/Packing/PackingChecklistModal';
 import TransportBookingModal from '@/components/Booking/TransportBookingModal';
+import MyBookingsModal from '@/components/Booking/MyBookingsModal';
 
 type Route = 'home' | 'login' | 'signup' | 'forgot-password';
 
@@ -140,6 +141,7 @@ function App() {
   const [packingModalOpen, setPackingModalOpen] = useState(false);
   const [transportModalOpen, setTransportModalOpen] = useState(false);
   const [transportModalDestination, setTransportModalDestination] = useState<string | undefined>(undefined);
+  const [myBookingsOpen, setMyBookingsOpen] = useState(false);
   const globeRef = useRef<VoyanaGlobeHandle>(null);
 
   useEffect(() => {
@@ -262,6 +264,13 @@ function App() {
             aria-label="Search and book ground transport"
           >
             <Car size={14} /> Transport
+          </button>
+          <button
+            onClick={() => setMyBookingsOpen(true)}
+            style={{ background: 'rgba(168,85,247,0.15)', border: '1px solid rgba(168,85,247,0.35)', borderRadius: '9px', padding: '6px 14px', fontSize: '14px', fontWeight: 600, color: '#d8b4fe', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
+            aria-label="View and manage my travel bookings"
+          >
+            <Briefcase size={14} /> My Bookings
           </button>
         </nav>
         <div className="account-actions">
@@ -473,6 +482,15 @@ function App() {
         onOpenChatWithPrompt={(prompt) => {
           setChatModalOpen(true);
         }}
+      />
+
+      {/* Unified Bookings & Modification Management (VPM-215 / Manage Bookings) */}
+      <MyBookingsModal
+        isOpen={myBookingsOpen}
+        onClose={() => setMyBookingsOpen(false)}
+        onOpenFlightModal={() => setFlightModalOpen(true)}
+        onOpenHotelModal={() => setHotelModalOpen(true)}
+        onOpenTransportModal={() => setTransportModalOpen(true)}
       />
     </main>
   );
