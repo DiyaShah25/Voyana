@@ -1,3 +1,8 @@
+/**
+ * VPM-200: Flight Booking Service
+ * Assignee: Bhavika Sainani (202512053) <bhavikasainani2608@gmail.com>
+ * Provides global flight search, seat tier selection, pricing breakdown, and instant booking reservation.
+ */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { createAlert } from './alertService';
 
