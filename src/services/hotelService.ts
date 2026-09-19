@@ -1,3 +1,8 @@
+/**
+ * VPM-201: Hotel Booking Service
+ * Assignee: Bhavika Sainani (202512053) <bhavikasainani2608@gmail.com>
+ * Provides worldwide hotel stay search, room type selection, amenity filtering, and reservation pipelines.
+ */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { createAlert } from './alertService';
 
