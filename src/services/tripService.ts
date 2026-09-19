@@ -206,7 +206,7 @@ const INITIAL_USER_TRIPS: Trip[] = [
   },
 ];
 
-function getStoredTrips(): Trip[] {
+export function getStoredTrips(): Trip[] {
   try {
     const raw = localStorage.getItem(TRIPS_STORAGE_KEY);
     if (!raw) {
@@ -219,7 +219,7 @@ function getStoredTrips(): Trip[] {
   }
 }
 
-function saveStoredTrips(trips: Trip[]) {
+export function saveStoredTrips(trips: Trip[]) {
   try {
     localStorage.setItem(TRIPS_STORAGE_KEY, JSON.stringify(trips));
   } catch (err) {
