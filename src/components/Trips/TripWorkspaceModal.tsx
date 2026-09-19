@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import type { Trip, TripActivity, TripMember } from '@/services/tripService';
 import { addTripMember } from '@/services/tripService';
+import TripShareModal from './TripShareModal';
 import {
   getTripChatMessages,
   sendTripChatMessage,
@@ -86,8 +87,9 @@ export default function TripWorkspaceModal({
   const [expPaidBy, setExpPaidBy] = useState(currentUser.name);
   const [expCategory, setExpCategory] = useState('Dining');
 
-  // Invite Member Modal
+  // Invite Member / Share Modal
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<'editor' | 'viewer'>('editor');
 
@@ -269,23 +271,19 @@ export default function TripWorkspaceModal({
             </div>
 
             <button
-              onClick={() => setShowInviteModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 border border-indigo-500/30 text-xs font-semibold"
+              onClick={() => setShowShareModal(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 border border-indigo-500/30 text-xs font-semibold transition-all hover:scale-105 active:scale-95"
             >
               <Plus size={13} />
-              <span>Invite</span>
+              <span>Invite / Share</span>
             </button>
 
             <button
-              onClick={() => {
-                navigator.clipboard.writeText(window.location.href);
-                setCopiedLink(true);
-                setTimeout(() => setCopiedLink(false), 2000);
-              }}
-              className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-white/10"
-              title="Copy shareable link"
+              onClick={() => setShowShareModal(true)}
+              className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition-colors"
+              title="Share trip & manage permissions"
             >
-              {copiedLink ? <Check size={16} className="text-emerald-400" /> : <Share2 size={16} />}
+              <Share2 size={16} />
             </button>
 
             <button
@@ -923,6 +921,21 @@ export default function TripWorkspaceModal({
             </form>
           </div>
         </div>
+      {/* ─── SHARE & PERMISSIONS MODAL ──────────────────────────────────── */}
+      {showShareModal && (
+        <TripShareModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          trip={trip}
+          onTripUpdated={(updatedTrip) => {
+            if (trip.members && updatedTrip.members) {
+              trip.members = updatedTrip.members;
+            }
+            if (updatedTrip.visibility) {
+              trip.visibility = updatedTrip.visibility;
+            }
+          }}
+        />
       )}
     </div>
   );
