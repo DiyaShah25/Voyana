@@ -1,3 +1,9 @@
+/**
+ * VPM-202: Transport Booking Service
+ * Assignee: Megha Lalwani (202512054) <lalwani2406@gmail.com>
+ * Provides transport search (trains, rental cars, buses, private transfers, ferries),
+ * seat/class booking reservations, and real-time status management.
+ */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { createAlert } from './alertService';
 
