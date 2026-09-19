@@ -4,7 +4,8 @@ import {
   DollarSign, FileText, Users, Plus, X, ArrowRight,
   MapPin, Clock, Send, Check, Sparkles, Share2,
   Trash2, Copy, AlertCircle, ShieldCheck, ChevronRight,
-  CheckCircle2, Circle, ArrowUpRight, Tag, SlidersHorizontal
+  CheckCircle2, Circle, ArrowUpRight, Tag, SlidersHorizontal,
+  Heart, Camera, Image as ImageIcon, ZoomIn, Download
 } from 'lucide-react';
 import type { Trip, TripActivity, TripMember } from '@/services/tripService';
 import {
@@ -29,11 +30,16 @@ import {
   calculateDebtSettlement,
   getTripDocuments,
   uploadTripDocument,
+  getTripMemories,
+  uploadTripMemory,
+  likeTripMemory,
+  deleteTripMemory,
   type TripChatMessage,
   type TripTask,
   type TripPoll,
   type TripExpense,
   type TripDocument,
+  type TripMemory,
   type TaskStatus,
 } from '@/services/collaborationService';
 
@@ -44,7 +50,7 @@ export interface TripWorkspaceModalProps {
   currentUser?: { name: string; email: string };
 }
 
-type WorkspaceTab = 'itinerary' | 'chat' | 'tasks' | 'polls' | 'expenses' | 'documents';
+type WorkspaceTab = 'itinerary' | 'chat' | 'tasks' | 'polls' | 'expenses' | 'documents' | 'memories';
 
 export default function TripWorkspaceModal({
   isOpen,
@@ -61,6 +67,7 @@ export default function TripWorkspaceModal({
   const [polls, setPolls] = useState<TripPoll[]>([]);
   const [expenses, setExpenses] = useState<TripExpense[]>([]);
   const [documents, setDocuments] = useState<TripDocument[]>([]);
+  const [memories, setMemories] = useState<TripMemory[]>([]);
 
   // Input states
   const [newChatMessage, setNewChatMessage] = useState('');
@@ -103,22 +110,34 @@ export default function TripWorkspaceModal({
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<'editor' | 'viewer'>('editor');
 
+  // New Memory / Photo Form
+  const [showAddMemory, setShowAddMemory] = useState(false);
+  const [memTitle, setMemTitle] = useState('');
+  const [memCaption, setMemCaption] = useState('');
+  const [memLocation, setMemLocation] = useState('');
+  const [memImageUrl, setMemImageUrl] = useState('');
+  const [memTagInput, setMemTagInput] = useState('Sightseeing, Sunset');
+  const [selectedTagFilter, setSelectedTagFilter] = useState('all');
+  const [activePhotoViewer, setActivePhotoViewer] = useState<TripMemory | null>(null);
+
   const tripId = trip?.id || 'trip-user-01';
 
   const loadWorkspaceData = useCallback(async () => {
     if (!trip) return;
-    const [c, t, p, e, d] = await Promise.all([
+    const [c, t, p, e, d, m] = await Promise.all([
       getTripChatMessages(trip.id),
       getTripTasks(trip.id),
       getTripPolls(trip.id),
       getTripExpenses(trip.id),
       getTripDocuments(trip.id),
+      getTripMemories(trip.id),
     ]);
     setChatMessages(c);
     setTasks(t);
     setPolls(p);
     setExpenses(e);
     setDocuments(d);
+    setMemories(m);
   }, [trip]);
 
   useEffect(() => {
@@ -284,6 +303,52 @@ export default function TripWorkspaceModal({
     loadWorkspaceData();
   };
 
+  // 9. Memory Actions (VPM-9)
+  const handleUploadMemory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!memTitle.trim() || !memImageUrl.trim()) return;
+
+    const parsedTags = memTagInput
+      .split(',')
+      .map((t) => t.trim().replace(/^#/, ''))
+      .filter((t) => t.length > 0);
+
+    await uploadTripMemory(trip.id, {
+      uploadedBy: currentUser.name,
+      title: memTitle,
+      caption: memCaption || undefined,
+      locationName: memLocation || trip.destination,
+      imageUrl: memImageUrl,
+      date: new Date().toISOString().split('T')[0],
+      tags: parsedTags.length > 0 ? parsedTags : ['Moments', 'Travel'],
+    });
+
+    setShowAddMemory(false);
+    setMemTitle('');
+    setMemCaption('');
+    setMemLocation('');
+    setMemImageUrl('');
+    setMemTagInput('Sightseeing, Sunset');
+
+    sendTripChatMessage(
+      trip.id,
+      `posted a new trip photo memory: "${memTitle}"`,
+      currentUser.name,
+      'activity_log'
+    );
+    loadWorkspaceData();
+  };
+
+  const handleLikeMemory = async (memoryId: string) => {
+    await likeTripMemory(trip.id, memoryId, currentUser.name);
+    loadWorkspaceData();
+  };
+
+  const handleDeleteMemory = async (memoryId: string) => {
+    await deleteTripMemory(trip.id, memoryId);
+    loadWorkspaceData();
+  };
+
   // Calculate Debt Settlement & Budget Tracking
   const membersList = trip.members?.map((m) => m.name) || [currentUser.name, 'Bhavika Sainani', 'Diya Shah', 'Jagrat Kumar'];
   const debtSummary = calculateDebtSettlement(expenses, membersList);
@@ -363,6 +428,7 @@ export default function TripWorkspaceModal({
             { id: 'polls', label: `Voting & Polls (${polls.length})`, icon: BarChart3 },
             { id: 'expenses', label: `Expense Splitter ($${debtSummary.totalSpent})`, icon: DollarSign },
             { id: 'documents', label: `Documents Vault (${documents.length})`, icon: FileText },
+            { id: 'memories', label: `Memories & Journal (${memories.length})`, icon: Camera },
           ].map((tab) => {
             const Icon = tab.icon;
             return (
@@ -928,6 +994,181 @@ export default function TripWorkspaceModal({
               </div>
             </div>
           )}
+
+          {/* 7. MEMORIES & JOURNAL TAB (VPM-9) */}
+          {activeTab === 'memories' && (
+            <div className="space-y-6">
+              {/* Header & Upload Button */}
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <Camera size={20} className="text-indigo-400" />
+                    <span>Trip Memories & Shared Photo Journal</span>
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Crowdsourced travel photo albums, polaroids & shared journal entries
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setShowAddMemory(true)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-pink-600 to-indigo-600 hover:from-pink-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/20 transition-all hover:scale-105 active:scale-95"
+                >
+                  <Camera size={14} />
+                  <span>Post Photo Memory</span>
+                </button>
+              </div>
+
+              {/* Tag Filters */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                <button
+                  onClick={() => setSelectedTagFilter('all')}
+                  className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all ${
+                    selectedTagFilter === 'all'
+                      ? 'bg-indigo-600 text-white shadow-md'
+                      : 'bg-white/5 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  All Memories ({memories.length})
+                </button>
+                {Array.from(new Set(memories.flatMap((m) => m.tags || []))).map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => setSelectedTagFilter(tag)}
+                    className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
+                      selectedTagFilter === tag
+                        ? 'bg-indigo-600 text-white shadow-md'
+                        : 'bg-white/5 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    #{tag}
+                  </button>
+                ))}
+              </div>
+
+              {/* Photos Grid */}
+              {memories.length === 0 ? (
+                <div className="text-center py-16 bg-white/[0.02] border border-dashed border-white/10 rounded-3xl">
+                  <div className="w-14 h-14 rounded-2xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center mx-auto mb-3">
+                    <Camera size={28} />
+                  </div>
+                  <h4 className="text-sm font-bold text-white mb-1">No Travel Memories Yet</h4>
+                  <p className="text-xs text-slate-400 max-w-sm mx-auto mb-4">
+                    Capture and share unforgettable trip highlights, selfies, food shots and sunset polaroids with your group!
+                  </p>
+                  <button
+                    onClick={() => setShowAddMemory(true)}
+                    className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold"
+                  >
+                    Upload First Photo
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {memories
+                    .filter((m) => selectedTagFilter === 'all' || m.tags.includes(selectedTagFilter))
+                    .map((mem) => {
+                      const isLikedByMe = mem.likes.includes(currentUser.name);
+                      return (
+                        <div
+                          key={mem.id}
+                          className="group bg-white/[0.03] border border-white/10 rounded-2xl overflow-hidden hover:border-indigo-500/40 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all flex flex-col justify-between"
+                        >
+                          {/* Image Container with Hover zoom */}
+                          <div
+                            onClick={() => setActivePhotoViewer(mem)}
+                            className="relative aspect-4/3 w-full bg-slate-950 overflow-hidden cursor-pointer"
+                          >
+                            <img
+                              src={mem.imageUrl}
+                              alt={mem.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              loading="lazy"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-black/30 opacity-70 group-hover:opacity-90 transition-opacity" />
+
+                            {/* Location Pill */}
+                            {mem.locationName && (
+                              <div className="absolute top-3 left-3 bg-slate-950/80 backdrop-blur-md border border-white/10 text-slate-200 px-2.5 py-1 rounded-lg text-[11px] font-medium flex items-center gap-1">
+                                <MapPin size={11} className="text-rose-400" />
+                                <span className="truncate max-w-[160px]">{mem.locationName}</span>
+                              </div>
+                            )}
+
+                            {/* Zoom Icon Hint */}
+                            <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg bg-black/60 text-white">
+                              <ZoomIn size={14} />
+                            </div>
+
+                            {/* Title overlay at bottom of image */}
+                            <div className="absolute bottom-3 left-3 right-3">
+                              <h4 className="text-sm font-bold text-white drop-shadow-md truncate">
+                                {mem.title}
+                              </h4>
+                              <p className="text-[10px] text-slate-300 flex items-center gap-2 mt-0.5">
+                                <span>by {mem.uploadedBy}</span>
+                                <span>·</span>
+                                <span>{mem.date}</span>
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Body & Caption */}
+                          <div className="p-3.5 space-y-3 flex-1 flex flex-col justify-between">
+                            {mem.caption && (
+                              <p className="text-xs text-slate-300 italic leading-relaxed">
+                                "{mem.caption}"
+                              </p>
+                            )}
+
+                            {/* Tags list */}
+                            {mem.tags && mem.tags.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5 pt-1">
+                                {mem.tags.map((t) => (
+                                  <span
+                                    key={t}
+                                    onClick={() => setSelectedTagFilter(t)}
+                                    className="cursor-pointer text-[10px] font-semibold text-indigo-300 bg-indigo-950/60 border border-indigo-500/20 px-2 py-0.5 rounded-md hover:border-indigo-400 transition-colors"
+                                  >
+                                    #{t}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Action Row: Likes & Delete */}
+                            <div className="pt-2 border-t border-white/5 flex items-center justify-between">
+                              <button
+                                onClick={() => handleLikeMemory(mem.id)}
+                                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                                  isLikedByMe
+                                    ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30 scale-105'
+                                    : 'bg-white/5 text-slate-400 hover:text-pink-300 hover:bg-white/10'
+                                }`}
+                              >
+                                <Heart
+                                  size={13}
+                                  className={isLikedByMe ? 'fill-pink-500 text-pink-500' : ''}
+                                />
+                                <span>{mem.likes.length}</span>
+                              </button>
+
+                              <button
+                                onClick={() => handleDeleteMemory(mem.id)}
+                                className="text-slate-500 hover:text-rose-400 p-1 rounded-md transition-colors"
+                                title="Delete memory"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -1226,6 +1467,195 @@ export default function TripWorkspaceModal({
             </form>
           </div>
         </div>
+      )}
+
+      {/* ─── ADD TRIP MEMORY / PHOTO MODAL (VPM-9) ────────────────────────── */}
+      {showAddMemory && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-2xl animate-fade-in">
+          <div className="relative w-full max-w-md bg-slate-900 border border-white/15 rounded-3xl p-6 shadow-2xl">
+            <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
+              <Camera size={18} className="text-indigo-400" />
+              <span>Post Trip Photo Memory</span>
+            </h3>
+
+            <form onSubmit={handleUploadMemory} className="space-y-3.5">
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">Memory Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={memTitle}
+                  onChange={(e) => setMemTitle(e.target.value)}
+                  placeholder="e.g. Sunset over the Seine river"
+                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">Photo Image URL *</label>
+                <input
+                  type="url"
+                  required
+                  value={memImageUrl}
+                  onChange={(e) => setMemImageUrl(e.target.value)}
+                  placeholder="https://images.unsplash.com/..."
+                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-400 font-mono text-[11px]"
+                />
+
+                {/* Quick Presets */}
+                <div className="flex items-center gap-1.5 mt-2 overflow-x-auto pb-1">
+                  <span className="text-[10px] text-slate-500 font-medium mr-1">Presets:</span>
+                  {[
+                    { label: 'Sunset', url: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1000&auto=format&fit=crop&q=80' },
+                    { label: 'Food', url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1000&auto=format&fit=crop&q=80' },
+                    { label: 'Architecture', url: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=1000&auto=format&fit=crop&q=80' },
+                    { label: 'Tokyo Street', url: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=1000&auto=format&fit=crop&q=80' },
+                  ].map((p) => (
+                    <button
+                      key={p.label}
+                      type="button"
+                      onClick={() => {
+                        setMemImageUrl(p.url);
+                        if (!memTitle) setMemTitle(`${p.label} Highlight`);
+                      }}
+                      className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-white/5 hover:bg-white/10 text-indigo-300 border border-white/5 whitespace-nowrap"
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Location Name</label>
+                  <input
+                    type="text"
+                    value={memLocation}
+                    onChange={(e) => setMemLocation(e.target.value)}
+                    placeholder="e.g. Pont Neuf, Paris"
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Tags (comma-separated)</label>
+                  <input
+                    type="text"
+                    value={memTagInput}
+                    onChange={(e) => setMemTagInput(e.target.value)}
+                    placeholder="Sunset, Sightseeing"
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">Caption / Story Note</label>
+                <textarea
+                  rows={2}
+                  value={memCaption}
+                  onChange={(e) => setMemCaption(e.target.value)}
+                  placeholder="Share a story or memory about this moment..."
+                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none resize-none"
+                />
+              </div>
+
+              <div className="pt-3 flex items-center justify-end gap-3 border-t border-white/10">
+                <button type="button" onClick={() => setShowAddMemory(false)} className="px-4 py-2 text-xs text-slate-400 hover:text-white">Cancel</button>
+                <button type="submit" className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-md">
+                  Publish Memory
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ─── PHOTO LIGHTBOX MODAL ────────────────────────────────────────── */}
+      {activePhotoViewer && (
+        <div
+          onClick={() => setActivePhotoViewer(null)}
+          className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-black/95 backdrop-blur-3xl animate-fade-in"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative max-w-4xl w-full bg-slate-900 border border-white/15 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+          >
+            <div className="relative aspect-16/10 w-full bg-black flex items-center justify-center overflow-hidden">
+              <img
+                src={activePhotoViewer.imageUrl}
+                alt={activePhotoViewer.title}
+                className="w-full h-full object-contain"
+              />
+              <button
+                onClick={() => setActivePhotoViewer(null)}
+                className="absolute top-4 right-4 p-2.5 rounded-full bg-black/70 hover:bg-black text-white transition-all shadow-lg"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6 bg-slate-900 space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-bold text-white">{activePhotoViewer.title}</h3>
+                  <p className="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
+                    <MapPin size={12} className="text-rose-400" />
+                    <span>{activePhotoViewer.locationName || trip.destination}</span>
+                    <span>·</span>
+                    <span>Captured by {activePhotoViewer.uploadedBy} on {activePhotoViewer.date}</span>
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleLikeMemory(activePhotoViewer.id)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+                      activePhotoViewer.likes.includes(currentUser.name)
+                        ? 'bg-pink-600 text-white shadow-lg shadow-pink-600/30'
+                        : 'bg-white/10 text-slate-200 hover:bg-white/20'
+                    }`}
+                  >
+                    <Heart size={15} className={activePhotoViewer.likes.includes(currentUser.name) ? 'fill-white' : ''} />
+                    <span>{activePhotoViewer.likes.length} Likes</span>
+                  </button>
+
+                  <a
+                    href={activePhotoViewer.imageUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    download
+                    className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-1.5"
+                    title="Open full resolution"
+                  >
+                    <Download size={15} />
+                  </a>
+                </div>
+              </div>
+
+              {activePhotoViewer.caption && (
+                <p className="text-sm text-slate-300 italic bg-white/[0.03] border border-white/5 p-3.5 rounded-2xl">
+                  "{activePhotoViewer.caption}"
+                </p>
+              )}
+
+              {activePhotoViewer.tags && (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {activePhotoViewer.tags.map((t) => (
+                    <span
+                      key={t}
+                      className="text-xs font-semibold text-indigo-300 bg-indigo-950 border border-indigo-500/30 px-3 py-1 rounded-lg"
+                    >
+                      #{t}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ─── SHARE & PERMISSIONS MODAL ──────────────────────────────────── */}
       {showShareModal && (
         <TripShareModal
