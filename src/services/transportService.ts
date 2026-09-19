@@ -6,6 +6,7 @@ import { createAlert } from './alertService';
 // ---------------------------------------------------------------------------
 export type TransportType = 'train' | 'car_rental' | 'bus' | 'private_transfer' | 'ferry';
 export type TransportModeFilter = 'all' | 'train' | 'car' | 'car_rental' | 'bus' | 'private_transfer' | 'ferry';
+export type TransportBookingStatus = 'pending' | 'confirmed' | 'delayed' | 'cancelled' | 'completed';
 
 export interface TransportItem {
   id: string;
@@ -47,6 +48,17 @@ export interface TransportBookingDetails {
   driverNotes?: string;
 }
 
+export interface TransportBookingRecord {
+  id: string;
+  bookingReference: string;
+  transport: TransportItem;
+  details: TransportBookingDetails;
+  status: TransportBookingStatus;
+  totalAmount: number;
+  currency: string;
+  createdAt: string;
+}
+
 export interface TransportBookingResult {
   success: boolean;
   bookingReference?: string;
@@ -55,7 +67,7 @@ export interface TransportBookingResult {
 }
 
 // ---------------------------------------------------------------------------
-// Supabase Client Setup
+// Supabase Client Setup (Matching flightService & hotelService)
 // ---------------------------------------------------------------------------
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
@@ -70,7 +82,7 @@ if (supabaseUrl && supabaseKey) {
 }
 
 // ---------------------------------------------------------------------------
-// Seeded Mock Transport Routes
+// Seeded Mock Transport Catalog
 // ---------------------------------------------------------------------------
 export const SEED_TRANSPORTS: TransportItem[] = [
   // Paris
@@ -411,8 +423,12 @@ export function formatTransportDuration(minutes: number): string {
   return `${hrs}h ${mins}m`;
 }
 
+export function getTransportById(id: string): TransportItem | undefined {
+  return SEED_TRANSPORTS.find((item) => item.id === id);
+}
+
 // ---------------------------------------------------------------------------
-// Core Search Function
+// Core Search Function (VPM-213)
 // ---------------------------------------------------------------------------
 export async function searchTransport(
   origin?: string,
@@ -420,7 +436,6 @@ export async function searchTransport(
   date?: string,
   mode?: TransportModeFilter
 ): Promise<TransportItem[]> {
-  // Normalize mode filter ('car' aliases to 'car_rental')
   const normalizedMode: TransportModeFilter =
     mode === 'car' ? 'car_rental' : (mode || 'all');
 
@@ -502,7 +517,7 @@ export async function searchTransport(
     results = results.filter((item) => item.transportType === normalizedMode);
   }
 
-  // If filtered search returned empty, dynamically generate realistic routes for requested query
+  // Dynamic fallback for queries without predefined fixtures
   if (results.length === 0 && (origin || destination)) {
     const city = origin || destination || 'Destination';
     results = [
@@ -580,24 +595,52 @@ export async function searchTransport(
 }
 
 // ---------------------------------------------------------------------------
-// Booking Creation Function
+// Booking Function (VPM-215 / Manage Transport Booking)
+// Pattern matching createFlightBooking and bookHotel exactly
 // ---------------------------------------------------------------------------
 export async function bookTransport(
-  transport: TransportItem,
+  transportOrId: TransportItem | string,
   details: TransportBookingDetails,
   userId?: string
 ): Promise<TransportBookingResult> {
-  const reference = `VYN-TRP-${Math.floor(100000 + Math.random() * 900000)}`;
-  const totalAmount = transport.basePrice * Math.max(1, details.passengerCount);
+  const transport: TransportItem =
+    typeof transportOrId === 'string'
+      ? getTransportById(transportOrId) || {
+          id: transportOrId,
+          providerName: 'Voyana Ground Express',
+          transportType: 'private_transfer',
+          originLocation: 'Pickup Terminal',
+          destinationLocation: 'Dropoff Destination',
+          originCity: 'Global Hub',
+          destinationCity: 'Global Hub',
+          scheduledDeparture: new Date().toISOString(),
+          durationMinutes: 60,
+          vehicleClass: 'Standard',
+          maxPassengers: 4,
+          baggageCapacity: 2,
+          basePrice: 50,
+          currency: 'USD',
+          operatorRating: 4.8,
+          amenities: ['Air Conditioning'],
+        }
+      : transportOrId;
 
-  // 1. Database persistence via Supabase if active
-  if (supabase && userId) {
+  const bookingReference = `VYN-TRP-${Math.floor(100000 + Math.random() * 900000)}`;
+  const passengerCount = Math.max(1, details.passengerCount || 1);
+  const totalAmount =
+    transport.transportType === 'train' || transport.transportType === 'bus'
+      ? transport.basePrice * passengerCount
+      : transport.basePrice;
+
+  // 1. Supabase real execution path
+  if (supabase) {
     try {
-      const { data: bookingData, error: bookingError } = await supabase
+      // Step 1: Insert into bookings with status 'pending'
+      const { data: booking, error: bErr } = await supabase
         .from('bookings')
-        .insert({
-          user_id: userId,
-          booking_reference: reference,
+        .insert([{
+          user_id: userId || 'usr-demo-01',
+          booking_reference: bookingReference,
           booking_type: 'transport',
           status: 'pending',
           total_amount: totalAmount,
@@ -605,65 +648,177 @@ export async function bookTransport(
           payment_status: 'unpaid',
           contact_email: details.contactEmail,
           contact_phone: details.contactPhone,
-          special_requests: details.pickupNotes || details.dropoffNotes,
+          special_requests: details.pickupNotes || details.driverNotes || null,
           metadata: {
-            transportType: transport.transportType,
-            providerName: transport.providerName,
-            vehicleModel: transport.vehicleModel,
-            originLocation: transport.originLocation,
-            destinationLocation: transport.destinationLocation,
-            passengerCount: details.passengerCount,
+            transport_type: transport.transportType,
+            provider_name: transport.providerName,
+            origin_location: transport.originLocation,
+            destination_location: transport.destinationLocation,
+            passenger_count: passengerCount,
+            vehicle_model: transport.vehicleModel || null,
           },
-        })
-        .select('id')
+        }])
+        .select()
         .single();
 
-      if (!bookingError && bookingData?.id) {
-        await supabase.from('transport_bookings').insert({
-          booking_id: bookingData.id,
-          transport_id: transport.id.includes('-') && transport.id.length === 36 ? transport.id : null,
-          passenger_count: details.passengerCount,
-          pickup_notes: details.pickupNotes,
-          dropoff_notes: details.dropoffNotes,
-        });
-
-        // Trigger real-time alert
-        await createAlert({
-          userId,
-          bookingId: bookingData.id,
-          title: `Transport Reserved: ${transport.providerName}`,
-          message: `Your ${getTransportTypeLabel(transport.transportType)} reservation (${reference}) from ${transport.originLocation} to ${transport.destinationLocation} is reserved.`,
-          severity: 'info',
-          newStatus: 'pending',
-        });
-
-        return {
-          success: true,
-          bookingReference: reference,
-          bookingId: bookingData.id,
-        };
+      if (bErr || !booking) {
+        console.error('Supabase transport booking error:', bErr);
+        return { success: false, error: 'Failed to create transport booking.' };
       }
-    } catch {
-      // Fall through to offline mock result
+
+      // Step 2: Ensure transport catalog record exists
+      let targetTransportId = transport.id;
+      if (!transport.id.includes('-') || transport.id.length !== 36) {
+        const { data: trpRow } = await supabase
+          .from('transport')
+          .upsert([{
+            provider_name: transport.providerName,
+            transport_type: transport.transportType,
+            origin_location: transport.originLocation,
+            destination_location: transport.destinationLocation,
+            origin_city: transport.originCity,
+            destination_city: transport.destinationCity,
+            scheduled_departure: transport.scheduledDeparture,
+            scheduled_arrival: transport.scheduledArrival || null,
+            duration_minutes: transport.durationMinutes,
+            vehicle_model: transport.vehicleModel || null,
+            vehicle_class: transport.vehicleClass,
+            max_passengers: transport.maxPassengers,
+            baggage_capacity: transport.baggageCapacity,
+            base_price: transport.basePrice,
+            currency: transport.currency || 'USD',
+            operator_rating: transport.operatorRating,
+          }])
+          .select()
+          .single();
+
+        if (trpRow) {
+          targetTransportId = trpRow.id;
+        }
+      }
+
+      // Step 3: Insert transport_bookings item
+      const { error: tbErr } = await supabase
+        .from('transport_bookings')
+        .insert([{
+          booking_id: booking.id,
+          transport_id: targetTransportId.length === 36 ? targetTransportId : null,
+          passenger_count: passengerCount,
+          pickup_notes: details.pickupNotes || null,
+          dropoff_notes: details.dropoffNotes || null,
+        }]);
+
+      if (tbErr) {
+        console.error('Transport booking item error:', tbErr);
+      }
+
+      // Step 4: Confirm booking & payment
+      await supabase
+        .from('bookings')
+        .update({ status: 'confirmed', payment_status: 'paid' })
+        .eq('id', booking.id);
+
+      // Trigger alert pipeline (same as flightService & hotelService)
+      await createAlert({
+        user_id: userId || 'usr-demo-01',
+        booking_id: booking.id,
+        booking_reference: bookingReference,
+        booking_type: 'transport',
+        title: 'Transport Booking Confirmed',
+        message: `Your ${getTransportTypeLabel(transport.transportType)} reservation (${transport.providerName}) from ${transport.originLocation} to ${transport.destinationLocation} has been confirmed for ${details.passengerName}. Total: $${totalAmount}.`,
+        severity: 'success',
+        old_status: 'pending',
+        new_status: 'confirmed',
+      });
+
+      return {
+        success: true,
+        bookingReference,
+        bookingId: booking.id,
+      };
+    } catch (err) {
+      console.error('Supabase transport booking catch error:', err);
+      return { success: false, error: 'An unexpected error occurred during transport booking.' };
     }
   }
 
-  // 2. Offline / Simulated result
-  const mockBookingId = `bkg-trp-${Date.now()}`;
-  if (userId) {
-    await createAlert({
-      userId,
-      bookingId: mockBookingId,
-      title: `Transport Reserved: ${transport.providerName}`,
-      message: `Your ${getTransportTypeLabel(transport.transportType)} booking (${reference}) is held and awaiting payment.`,
-      severity: 'info',
-      newStatus: 'pending',
-    });
-  }
+  // 2. Preview / Offline Mode
+  await new Promise((r) => setTimeout(r, 1200)); // Simulate network latency
+
+  const fakeId = `bk-trp-${Date.now()}`;
+
+  // Trigger alert pipeline in preview mode
+  await createAlert({
+    user_id: userId || 'usr-demo-01',
+    booking_id: fakeId,
+    booking_reference: bookingReference,
+    booking_type: 'transport',
+    title: 'Transport Booking Confirmed',
+    message: `Your ${getTransportTypeLabel(transport.transportType)} reservation (${transport.providerName}) from ${transport.originLocation} to ${transport.destinationLocation} has been confirmed for ${details.passengerName}. Total: $${totalAmount}.`,
+    severity: 'success',
+    old_status: 'pending',
+    new_status: 'confirmed',
+  });
 
   return {
     success: true,
-    bookingReference: reference,
-    bookingId: mockBookingId,
+    bookingReference,
+    bookingId: fakeId,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Cancel Transport Booking Function (VPM-215 / Manage Transport Booking)
+// ---------------------------------------------------------------------------
+export async function cancelTransportBooking(
+  bookingId: string,
+  reason: string = 'User requested cancellation',
+  userId?: string
+): Promise<{ success: boolean; error?: string }> {
+  if (supabase) {
+    try {
+      const { data: booking, error: bErr } = await supabase
+        .from('bookings')
+        .update({ status: 'cancelled', payment_status: 'refunded' })
+        .eq('id', bookingId)
+        .select()
+        .single();
+
+      if (bErr || !booking) {
+        return { success: false, error: 'Failed to cancel transport booking.' };
+      }
+
+      await createAlert({
+        user_id: userId || 'usr-demo-01',
+        booking_id: bookingId,
+        booking_reference: booking.booking_reference,
+        booking_type: 'transport',
+        title: 'Transport Booking Cancelled',
+        message: `Your transport reservation (${booking.booking_reference}) has been cancelled. Refund of $${booking.total_amount} is being processed. Reason: ${reason}.`,
+        severity: 'warning',
+        old_status: 'confirmed',
+        new_status: 'cancelled',
+      });
+
+      return { success: true };
+    } catch (err) {
+      console.error('Cancel booking error:', err);
+      return { success: false, error: 'Unexpected error during cancellation.' };
+    }
+  }
+
+  // Preview mode cancellation
+  await createAlert({
+    user_id: userId || 'usr-demo-01',
+    booking_id: bookingId,
+    booking_reference: `VYN-TRP-${Math.floor(100000 + Math.random() * 900000)}`,
+    booking_type: 'transport',
+    title: 'Transport Booking Cancelled',
+    message: `Your transport booking (${bookingId}) was successfully cancelled and refunded. Reason: ${reason}.`,
+    severity: 'warning',
+    old_status: 'confirmed',
+    new_status: 'cancelled',
+  });
+
+  return { success: true };
 }
