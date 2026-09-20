@@ -19,6 +19,7 @@ import {
   X,
   Star,
   Package,
+  Camera,
 } from 'lucide-react';
 import VoyanaGlobe from '@/components/Globe/VoyanaGlobe';
 import type { GlobeLocation, VoyanaGlobeHandle } from '@/components/Globe/globe.types';
@@ -39,6 +40,7 @@ import TripDashboardModal from '@/components/Trips/TripDashboardModal';
 import TripWorkspaceModal from '@/components/Trips/TripWorkspaceModal';
 import TravelReviewsModal from '@/components/Reviews/TravelReviewsModal';
 import UnifiedBundleBookingModal from '@/components/Booking/UnifiedBundleBookingModal';
+import TravelMemoriesModal from '@/components/Memories/TravelMemoriesModal';
 import type { Trip } from '@/services/tripService';
 
 type Route = 'home' | 'login' | 'signup' | 'forgot-password';
@@ -154,6 +156,7 @@ function App() {
   const [reviewsModalOpen, setReviewsModalOpen] = useState(false);
   const [reviewsDestination, setReviewsDestination] = useState<string | undefined>(undefined);
   const [bundleBookingModalOpen, setBundleBookingModalOpen] = useState(false);
+  const [memoriesModalOpen, setMemoriesModalOpen] = useState(false);
   const globeRef = useRef<VoyanaGlobeHandle>(null);
 
   useEffect(() => {
@@ -296,6 +299,13 @@ function App() {
             aria-label="View travel reviews and ratings"
           >
             <Star size={14} className="fill-amber-400 text-amber-400" /> Reviews
+          </button>
+          <button
+            onClick={() => setMemoriesModalOpen(true)}
+            style={{ background: 'rgba(236,72,153,0.15)', border: '1px solid rgba(236,72,153,0.35)', borderRadius: '9px', padding: '6px 14px', fontSize: '14px', fontWeight: 600, color: '#f9a8d4', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
+            aria-label="View travel memories and photo journal"
+          >
+            <Camera size={14} className="text-pink-400" /> Memories
           </button>
         </nav>
         <div className="account-actions">
@@ -547,6 +557,12 @@ function App() {
       <UnifiedBundleBookingModal
         isOpen={bundleBookingModalOpen}
         onClose={() => setBundleBookingModalOpen(false)}
+      />
+
+      {/* Travel Memories & Photo Journal (VPM-106, VPM-121 / Manav Vyas) */}
+      <TravelMemoriesModal
+        isOpen={memoriesModalOpen}
+        onClose={() => setMemoriesModalOpen(false)}
       />
     </main>
   );
