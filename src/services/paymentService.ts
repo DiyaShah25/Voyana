@@ -258,3 +258,85 @@ export function formatExpiryDate(value: string): string {
   }
   return digits;
 }
+
+// ---------------------------------------------------------------------------
+// 3. Transaction History Queries (VPM-67: Transaction History)
+// ---------------------------------------------------------------------------
+export async function getTransactionHistory(userId: string = 'usr-demo-01'): Promise<PaymentRecord[]> {
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('payments')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        return data as PaymentRecord[];
+      }
+    } catch (err) {
+      console.error('[PaymentService] Error retrieving transaction history from Supabase:', err);
+    }
+  }
+
+  // Fallback demo transaction history
+  return [
+    {
+      id: 'pay-tx-001',
+      booking_id: 'bkg-fl-001',
+      user_id: userId,
+      amount: 850,
+      currency: 'USD',
+      status: 'completed',
+      payment_method: 'credit_card',
+      transaction_reference: 'TXN-20260910-K82M19',
+      created_at: new Date(Date.now() - 86400000 * 10).toISOString(),
+      updated_at: new Date(Date.now() - 86400000 * 10).toISOString(),
+      metadata: { description: 'Roundtrip Flight Booking: CDG -> HND' },
+    },
+    {
+      id: 'pay-tx-002',
+      booking_id: 'bkg-ht-002',
+      user_id: userId,
+      amount: 920,
+      currency: 'USD',
+      status: 'completed',
+      payment_method: 'apple_pay',
+      transaction_reference: 'TXN-20260912-P39Q71',
+      created_at: new Date(Date.now() - 86400000 * 8).toISOString(),
+      updated_at: new Date(Date.now() - 86400000 * 8).toISOString(),
+      metadata: { description: 'Hotel Reservation: Park Hyatt Tokyo (3 Nights)' },
+    },
+    {
+      id: 'pay-tx-003',
+      booking_id: 'bkg-tr-003',
+      user_id: userId,
+      amount: 90,
+      currency: 'USD',
+      status: 'completed',
+      payment_method: 'credit_card',
+      transaction_reference: 'TXN-20260915-Z14L88',
+      created_at: new Date(Date.now() - 86400000 * 5).toISOString(),
+      updated_at: new Date(Date.now() - 86400000 * 5).toISOString(),
+      metadata: { description: 'Airport Executive Transfer (Haneda Airport to Shinjuku)' },
+    },
+  ];
+}
+
+export async function getPaymentById(paymentId: string): Promise<PaymentRecord | null> {
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('payments')
+        .select('*')
+        .eq('id', paymentId)
+        .single();
+
+      if (!error && data) return data as PaymentRecord;
+    } catch (err) {
+      console.error('[PaymentService] Error retrieving payment by ID:', err);
+    }
+  }
+  return null;
+}
+
