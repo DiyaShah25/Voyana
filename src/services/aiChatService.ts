@@ -95,6 +95,47 @@ function generateContextualResponse(
 } {
   const q = query.toLowerCase();
 
+  // VPM-40: Destination Recommendation Intelligence
+  if (
+    q.includes('recommend') ||
+    q.includes('where to go') ||
+    q.includes('suggest destination') ||
+    q.includes('places to visit') ||
+    q.includes('best destination') ||
+    q.includes('trip ideas')
+  ) {
+    return {
+      content: `### 🌟 Top AI Destination Recommendations for You\n\n` +
+        `1. **🗼 Tokyo, Japan (96% Match)**\n` +
+        `   • *Vibe*: Culture, Culinary, Anime & Tech, Luxury\n` +
+        `   • *Daily Budget*: ~$160/day | *Best Season*: March - May & Oct - Nov\n` +
+        `   • *Highlights*: Shibuya Sky, Senso-ji Temple, Tsukiji Market, Shinjuku nightlife\n\n` +
+        `2. **🏝️ Bali, Indonesia (94% Match)**\n` +
+        `   • *Vibe*: Nature, Romantic, Surf, Budget Friendly\n` +
+        `   • *Daily Budget*: ~$75/day | *Best Season*: May - September\n` +
+        `   • *Highlights*: Tegallalang Rice Terraces, Uluwatu Clifftop Temple, Mount Batur sunrise\n\n` +
+        `3. **🏛️ Rome, Italy (92% Match)**\n` +
+        `   • *Vibe*: Living History, Gastronomy, Architecture\n` +
+        `   • *Daily Budget*: ~$140/day | *Best Season*: April - June & Sept - Oct\n` +
+        `   • *Highlights*: Colosseum VIP tour, Vatican Museums, Trevi Fountain, Trastevere pasta\n\n` +
+        `4. **✨ Santorini, Greece (95% Match)**\n` +
+        `   • *Vibe*: Romance, Caldera Views, Mediterranean Sunsets\n` +
+        `   • *Daily Budget*: ~$210/day | *Best Season*: May - October\n\n` +
+        `*Would you like me to generate a 3-day itinerary or budget plan for any of these?*`,
+      citedContext: {
+        categories: ['Global Destination Index', 'Traveler Match Engine', 'Seasonal Weather Forecasts'],
+        topics: ['Destination Discovery', 'Budget Benchmarks', 'Activity Highlights'],
+      },
+      proposedChanges: [
+        {
+          type: 'recommendation',
+          title: 'Curated Global Destinations',
+          details: { destinations: ['Tokyo', 'Bali', 'Rome', 'Santorini'] },
+        },
+      ],
+    };
+  }
+
   if (q.includes('pack') || q.includes('clothes') || q.includes('luggage') || q.includes('bring')) {
     return {
       content: `Here are my top packing recommendations for **${destination}**:\n\n` +
