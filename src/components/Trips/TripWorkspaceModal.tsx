@@ -18,6 +18,10 @@ import {
 import TripShareModal from './TripShareModal';
 import TripExportModal from './TripExportModal';
 import {
+  generateAiTripSchedule,
+  type GeneratedItineraryResult,
+} from '@/services/itineraryService';
+import {
   getTripChatMessages,
   sendTripChatMessage,
   getTripTasks,
@@ -121,6 +125,14 @@ export default function TripWorkspaceModal({
   const [memTagInput, setMemTagInput] = useState('Sightseeing, Sunset');
   const [selectedTagFilter, setSelectedTagFilter] = useState('all');
   const [activePhotoViewer, setActivePhotoViewer] = useState<TripMemory | null>(null);
+
+  // VPM-39: AI Itinerary Generator State
+  const [showAiItineraryModal, setShowAiItineraryModal] = useState(false);
+  const [aiDays, setAiDays] = useState(3);
+  const [aiPace, setAiPace] = useState<'relaxed' | 'balanced' | 'packed'>('balanced');
+  const [aiInterests, setAiInterests] = useState<string[]>(['Culture', 'Sightseeing', 'Gastronomy']);
+  const [aiItineraryResult, setAiItineraryResult] = useState<GeneratedItineraryResult | null>(null);
+  const [isApplyingItinerary, setIsApplyingItinerary] = useState(false);
 
   const tripId = trip?.id || 'trip-user-01';
 
@@ -550,16 +562,36 @@ export default function TripWorkspaceModal({
                   })}
                 </div>
 
-                <button
-                  onClick={() => {
-                    if (selectedDayFilter > 0) setActDay(selectedDayFilter);
-                    setShowAddActivity(true);
-                  }}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-md transition-all hover:scale-105 active:scale-95 ml-auto"
-                >
-                  <Plus size={14} />
-                  <span>Add Activity</span>
-                </button>
+                <div className="flex items-center gap-2 ml-auto">
+                  <button
+                    onClick={() => {
+                      const res = generateAiTripSchedule({
+                        destination: trip.destination,
+                        days: aiDays,
+                        pace: aiPace,
+                        interests: aiInterests,
+                      });
+                      setAiItineraryResult(res);
+                      setShowAiItineraryModal(true);
+                    }}
+                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-pink-500/20 to-indigo-500/20 hover:from-pink-500/30 hover:to-indigo-500/30 text-pink-300 border border-pink-500/30 text-xs font-bold shadow-md transition-all hover:scale-105 active:scale-95"
+                    title="Generate custom day schedules using Voyana AI"
+                  >
+                    <Sparkles size={14} className="text-pink-400" />
+                    <span>AI Generate Itinerary</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      if (selectedDayFilter > 0) setActDay(selectedDayFilter);
+                      setShowAddActivity(true);
+                    }}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-md transition-all hover:scale-105 active:scale-95"
+                  >
+                    <Plus size={14} />
+                    <span>Add Activity</span>
+                  </button>
+                </div>
               </div>
 
               {/* Day-by-Day Timeline List */}
@@ -1693,6 +1725,207 @@ export default function TripWorkspaceModal({
           expenses={expenses}
           debtSummary={debtSummary}
         />
+      )}
+
+      {/* ─── AI ITINERARY GENERATOR MODAL (VPM-39 / Jagrat Kumar) ───────── */}
+      {showAiItineraryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+          <div className="relative w-full max-w-2xl bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between p-5 border-b border-white/10 bg-slate-950/80">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-pink-500/20 text-pink-400 border border-pink-500/30 flex items-center justify-center">
+                  <Sparkles size={18} />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    AI Itinerary Generator
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30">
+                      VPM-39
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-400">Curating schedules for {trip.destination}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAiItineraryModal(false)}
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/10"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              {/* Controls */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">Trip Days</label>
+                  <select
+                    value={aiDays}
+                    onChange={(e) => {
+                      const d = parseInt(e.target.value);
+                      setAiDays(d);
+                      const res = generateAiTripSchedule({
+                        destination: trip.destination,
+                        days: d,
+                        pace: aiPace,
+                        interests: aiInterests,
+                      });
+                      setAiItineraryResult(res);
+                    }}
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7].map((num) => (
+                      <option key={num} value={num}>{num} {num === 1 ? 'Day' : 'Days'}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">Travel Pace</label>
+                  <select
+                    value={aiPace}
+                    onChange={(e) => {
+                      const p = e.target.value as any;
+                      setAiPace(p);
+                      const res = generateAiTripSchedule({
+                        destination: trip.destination,
+                        days: aiDays,
+                        pace: p,
+                        interests: aiInterests,
+                      });
+                      setAiItineraryResult(res);
+                    }}
+                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                  >
+                    <option value="relaxed">Relaxed (2 activities/day)</option>
+                    <option value="balanced">Balanced (3 activities/day)</option>
+                    <option value="packed">Packed & Energetic (4 activities/day)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Travel Interests</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {['Culture', 'Sightseeing', 'Gastronomy', 'Shopping', 'Adventure', 'Nightlife'].map((interest) => {
+                    const isSelected = aiInterests.includes(interest);
+                    return (
+                      <button
+                        key={interest}
+                        type="button"
+                        onClick={() => {
+                          const next = isSelected
+                            ? aiInterests.filter((x) => x !== interest)
+                            : [...aiInterests, interest];
+                          setAiInterests(next.length > 0 ? next : ['Culture']);
+                          const res = generateAiTripSchedule({
+                            destination: trip.destination,
+                            days: aiDays,
+                            pace: aiPace,
+                            interests: next.length > 0 ? next : ['Culture'],
+                          });
+                          setAiItineraryResult(res);
+                        }}
+                        className={`text-xs px-3 py-1 rounded-lg font-medium transition-all ${
+                          isSelected
+                            ? 'bg-indigo-600 text-white shadow-sm'
+                            : 'bg-white/5 text-slate-400 hover:text-slate-200 border border-white/5'
+                        }`}
+                      >
+                        {interest}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Itinerary Preview */}
+              {aiItineraryResult && (
+                <div className="space-y-3 pt-2 border-t border-white/10">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-indigo-300 uppercase tracking-wider">
+                      Generated Schedule Preview ({aiItineraryResult.allActivities.length} Activities)
+                    </h4>
+                    <span className="text-xs text-slate-400">
+                      Est. Activities Cost: <strong className="text-emerald-400">${aiItineraryResult.estimatedTotalCost}</strong>
+                    </span>
+                  </div>
+
+                  <div className="space-y-3">
+                    {aiItineraryResult.days.map((d) => (
+                      <div key={d.dayNumber} className="bg-slate-950/60 border border-white/5 rounded-xl p-3.5 space-y-2">
+                        <div className="flex items-center justify-between text-xs font-bold text-slate-200">
+                          <span className="flex items-center gap-1.5 text-pink-300">
+                            <span className="w-5 h-5 rounded-md bg-pink-500/20 text-[10px] grid place-items-center font-bold">
+                              D{d.dayNumber}
+                            </span>
+                            Day {d.dayNumber}: {d.theme}
+                          </span>
+                        </div>
+
+                        <div className="space-y-1.5 pl-6">
+                          {d.activities.map((a, i) => (
+                            <div key={i} className="flex items-start justify-between text-xs py-1 border-b border-white/5 last:border-0">
+                              <div>
+                                <div className="font-semibold text-slate-200 flex items-center gap-1.5">
+                                  <span className="text-[10px] text-indigo-400 font-mono">{a.timeSlot}</span>
+                                  <span>{a.title}</span>
+                                </div>
+                                <div className="text-[11px] text-slate-400">{a.locationName} · <span className="text-slate-500">{a.description}</span></div>
+                              </div>
+                              <span className="font-bold text-slate-300 shrink-0 ml-2">
+                                {a.cost && a.cost > 0 ? `$${a.cost}` : 'Free'}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-white/10 bg-slate-950/80 flex items-center justify-between">
+              <button
+                onClick={() => setShowAiItineraryModal(false)}
+                className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={async () => {
+                  if (!aiItineraryResult || !trip) return;
+                  setIsApplyingItinerary(true);
+                  try {
+                    for (const act of aiItineraryResult.allActivities) {
+                      await addTripActivity(trip.id, act);
+                    }
+                    sendTripChatMessage(
+                      trip.id,
+                      `applied an AI-generated ${aiItineraryResult.totalDays}-day itinerary schedule (${aiItineraryResult.allActivities.length} activities)!`,
+                      currentUser.name,
+                      'activity_log'
+                    );
+                    await loadWorkspaceData();
+                    setShowAiItineraryModal(false);
+                  } catch (err) {
+                    console.error('Error applying itinerary', err);
+                  } finally {
+                    setIsApplyingItinerary(false);
+                  }
+                }}
+                disabled={isApplyingItinerary || !aiItineraryResult}
+                className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-indigo-600 hover:from-pink-600 hover:to-indigo-700 text-white text-xs font-bold shadow-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+              >
+                <Sparkles size={14} />
+                <span>{isApplyingItinerary ? 'Applying to Workspace…' : 'Apply Itinerary to Trip'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
