@@ -312,7 +312,7 @@
   width: 100%;
   padding: 16px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #635bff, #8b7cf6);
+  background: #15803d;
   color: white;
   font-size: 16px;
   font-weight: 600;
@@ -324,13 +324,13 @@
   overflow: hidden;
   transition: all 0.25s ease;
   animation: fadeSlideUp 0.6s ease-out 0.55s both;
-  box-shadow: 0 8px 20px rgba(99, 91, 255, 0.3);
+  box-shadow: 0 8px 20px rgba(21, 128, 61, 0.3);
 }
 
 .login-submit-btn:hover {
   transform: translateY(-2px) scale(1.015);
-  box-shadow: 0 12px 25px rgba(99, 91, 255, 0.4);
-  background: linear-gradient(135deg, #716aff, #9b8ef6);
+  box-shadow: 0 12px 25px rgba(21, 128, 61, 0.4);
+  background: #166534;
 }
 
 .login-submit-arrow {

@@ -32,6 +32,15 @@ const locationSeeds: LocationSeed[] = [
   { name: 'Italy', country: 'Italy', latitude: 41.8719, longitude: 12.5674, type: 'country' },
   { name: 'Switzerland', country: 'Switzerland', latitude: 46.8182, longitude: 8.2275, type: 'country' },
   { name: 'Gujarat', state: 'Gujarat', country: 'India', latitude: 22.2587, longitude: 71.1924, type: 'state' },
+  { name: 'Bali', city: 'Denpasar', country: 'Indonesia', latitude: -8.4095, longitude: 115.1889, type: 'region', aliases: ['bali, indonesia', 'ubud', 'seminyak'] },
+  { name: 'Cairo', city: 'Cairo', country: 'Egypt', latitude: 30.0444, longitude: 31.2357, type: 'city', aliases: ['cairo, egypt', 'giza'] },
+  { name: 'Santorini', city: 'Fira', country: 'Greece', latitude: 36.3932, longitude: 25.4615, type: 'region', aliases: ['santorini, greece', 'thira'] },
+  { name: 'Kyoto', city: 'Kyoto', country: 'Japan', latitude: 35.0116, longitude: 135.7681, type: 'city', aliases: ['kyoto, japan'] },
+  { name: 'Reykjavik', city: 'Reykjavik', country: 'Iceland', latitude: 64.1466, longitude: -21.9426, type: 'city', aliases: ['reykjavik, iceland'] },
+  { name: 'Cape Town', city: 'Cape Town', country: 'South Africa', latitude: -33.9249, longitude: 18.4241, type: 'city', aliases: ['cape town, south africa'] },
+  { name: 'Zurich', city: 'Zurich', country: 'Switzerland', latitude: 47.3769, longitude: 8.5417, type: 'city', aliases: ['zurich, switzerland'] },
+  { name: 'Barcelona', city: 'Barcelona', country: 'Spain', latitude: 41.3879, longitude: 2.1699, type: 'city', aliases: ['barcelona, spain'] },
+  { name: 'Vancouver', city: 'Vancouver', country: 'Canada', latitude: 49.2827, longitude: -123.1207, type: 'city', aliases: ['vancouver, canada'] },
 ];
 
 export async function searchLocations(query: string, signal?: AbortSignal): Promise<GlobeLocation[]> {

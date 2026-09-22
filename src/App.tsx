@@ -1,45 +1,41 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  ArrowRight,
-  Briefcase,
-  Building2,
-  Car,
   Compass,
+  Plus,
+  Minus,
+  RotateCw,
+  Pause,
+  ArrowRight,
   Globe2,
   MapPin,
-  Menu,
-  Moon,
-  Pause,
-  Plane,
-  Search,
-  Settings2,
-  Sparkles,
-  Sun,
-  Wallet,
-  X,
-  Star,
-  Package,
-  Camera,
+  Users,
 } from 'lucide-react';
 import VoyanaGlobe from '@/components/Globe/VoyanaGlobe';
-import type { GlobeLocation, VoyanaGlobeHandle } from '@/components/Globe/globe.types';
-import { resolveLocation, suggestDestinations } from '@/services/locationService';
+import type { GlobeLocation, GlobeRoute, VoyanaGlobeHandle } from '@/components/Globe/globe.types';
+import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
+import TravelSearch from '@/components/Search/TravelSearch';
+import QuickExploreStrip from '@/components/Destinations/QuickExploreStrip';
+import DestinationGrid from '@/components/Destinations/DestinationGrid';
+import TravelSuiteHub from '@/components/Services/TravelSuiteHub';
+import FeaturedJourneys from '@/components/Journeys/FeaturedJourneys';
+
+// Modals & Sub-experiences
 import AuthLayout from '@/pages/AuthLayout';
 import LoginPage from '@/pages/LoginPage';
 import SignupPage from '@/pages/SignupPage';
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
-import AlertsPanel from '@/components/Alerts/AlertsPanel';
 import FlightBookingModal from '@/components/Booking/FlightBookingModal';
 import HotelBookingModal from '@/components/Booking/HotelBookingModal';
+import TransportBookingModal from '@/components/Booking/TransportBookingModal';
+import MyBookingsModal from '@/components/Booking/MyBookingsModal';
+import UnifiedBundleBookingModal from '@/components/Booking/UnifiedBundleBookingModal';
 import ChatAssistantModal from '@/components/Chat/ChatAssistantModal';
 import BudgetPlannerModal from '@/components/Budget/BudgetPlannerModal';
 import PackingChecklistModal from '@/components/Packing/PackingChecklistModal';
-import TransportBookingModal from '@/components/Booking/TransportBookingModal';
-import MyBookingsModal from '@/components/Booking/MyBookingsModal';
 import TripDashboardModal from '@/components/Trips/TripDashboardModal';
 import TripWorkspaceModal from '@/components/Trips/TripWorkspaceModal';
 import TravelReviewsModal from '@/components/Reviews/TravelReviewsModal';
-import UnifiedBundleBookingModal from '@/components/Booking/UnifiedBundleBookingModal';
 import TravelMemoriesModal from '@/components/Memories/TravelMemoriesModal';
 import type { Trip } from '@/services/tripService';
 
@@ -64,158 +60,71 @@ function useHashRoute(): Route {
   return route;
 }
 
-interface DestinationContent {
-  city: string;
-  country: string;
-  place: string;
-  description: string;
-  heroImage: string;
-  secondary: { name: string; image: string }[];
-}
+export function App() {
+  const route = useHashRoute();
 
-const destinationContent: Record<string, DestinationContent> = {
-  Paris: {
+  // Active globe location
+  const [selectedLocation, setSelectedLocation] = useState<GlobeLocation>({
+    name: 'Paris',
     city: 'Paris',
     country: 'France',
-    place: 'Eiffel Tower',
-    description: 'An iconic symbol of France, offering breathtaking views over the city of lights.',
-    heroImage: 'https://images.pexels.com/photos/14681748/pexels-photo-14681748.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-    secondary: [
-      { name: 'Louvre Museum', image: 'https://images.pexels.com/photos/16785486/pexels-photo-16785486.png?auto=compress&cs=tinysrgb&h=650&w=940' },
-      { name: 'Notre-Dame', image: 'https://images.pexels.com/photos/31052960/pexels-photo-31052960.jpeg?auto=compress&cs=tinysrgb&h=650&w=940' },
-      { name: 'Arc de Triomphe', image: 'https://images.pexels.com/photos/15995558/pexels-photo-15995558.jpeg?auto=compress&cs=tinysrgb&h=650&w=940' },
-    ],
-  },
-  Tokyo: {
-    city: 'Tokyo',
-    country: 'Japan',
-    place: 'Shibuya Crossing',
-    description: 'A city of neon nights, quiet temples, and a rhythm all its own.',
-    heroImage: 'https://images.pexels.com/photos/2506923/pexels-photo-2506923.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-    secondary: [{ name: 'Senso-ji Temple', image: 'https://images.pexels.com/photos/402028/pexels-photo-402028.jpeg?auto=compress&cs=tinysrgb&h=650&w=940' }],
-  },
-  Dubai: {
-    city: 'Dubai',
-    country: 'United Arab Emirates',
-    place: 'Burj Khalifa',
-    description: 'A skyline shaped by ambition, framed by desert horizons and warm sea air.',
-    heroImage: 'https://images.pexels.com/photos/1470502/pexels-photo-1470502.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-    secondary: [{ name: 'Desert Dunes', image: 'https://images.pexels.com/photos/1001435/pexels-photo-1001435.jpeg?auto=compress&cs=tinysrgb&h=650&w=940' }],
-  },
-  'New York': {
-    city: 'New York',
-    country: 'United States',
-    place: 'Brooklyn Bridge',
-    description: 'Big city energy, skyline walks, and stories waiting on every avenue.',
-    heroImage: 'https://images.pexels.com/photos/466685/pexels-photo-466685.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-    secondary: [{ name: 'Central Park', image: 'https://images.pexels.com/photos/290386/pexels-photo-290386.jpeg?auto=compress&cs=tinysrgb&h=650&w=940' }],
-  },
-  Ahmedabad: {
-    city: 'Ahmedabad',
-    country: 'India',
-    place: 'Sabarmati Ashram',
-    description: 'A city of living history, vibrant craft, and thoughtful quiet moments.',
-    heroImage: 'https://images.pexels.com/photos/3881104/pexels-photo-3881104.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-    secondary: [{ name: 'Adalaj Stepwell', image: 'https://images.pexels.com/photos/789750/pexels-photo-789750.jpeg?auto=compress&cs=tinysrgb&h=650&w=940' }],
-  },
-};
+    latitude: 48.8566,
+    longitude: 2.3522,
+    type: 'city',
+  });
 
-const fallbackContent: DestinationContent = {
-  city: 'World',
-  country: 'Earth',
-  place: 'Your next destination',
-  description: 'Search any city or country to begin exploring amazing places around the world.',
-  heroImage: 'https://images.pexels.com/photos/14681748/pexels-photo-14681748.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-  secondary: [],
-};
-
-const quickChips = ['Paris', 'Tokyo', 'Dubai', 'New York', 'Ahmedabad'];
-
-function App() {
-  const route = useHashRoute();
-  const [isLight, setIsLight] = useState(false);
-  const [query, setQuery] = useState('Paris');
-  const [selected, setSelected] = useState<GlobeLocation | null>(null);
+  const [activeRoutes, setActiveRoutes] = useState<GlobeRoute[]>([]);
   const [autoRotate, setAutoRotate] = useState(true);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [suggestions, setSuggestions] = useState<GlobeLocation[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  // Modals state
   const [flightModalOpen, setFlightModalOpen] = useState(false);
   const [flightModalDestination, setFlightModalDestination] = useState<string | undefined>(undefined);
+
   const [hotelModalOpen, setHotelModalOpen] = useState(false);
   const [hotelModalDestination, setHotelModalDestination] = useState<string | undefined>(undefined);
+
+  const [transportModalOpen, setTransportModalOpen] = useState(false);
+  const [transportModalDestination, setTransportModalDestination] = useState<string | undefined>(undefined);
+
+  const [bundleBookingModalOpen, setBundleBookingModalOpen] = useState(false);
+  const [myBookingsOpen, setMyBookingsOpen] = useState(false);
+
   const [chatModalOpen, setChatModalOpen] = useState(false);
   const [budgetModalOpen, setBudgetModalOpen] = useState(false);
   const [packingModalOpen, setPackingModalOpen] = useState(false);
-  const [transportModalOpen, setTransportModalOpen] = useState(false);
-  const [transportModalDestination, setTransportModalDestination] = useState<string | undefined>(undefined);
-  const [myBookingsOpen, setMyBookingsOpen] = useState(false);
+
   const [tripDashboardOpen, setTripDashboardOpen] = useState(false);
   const [activeWorkspaceTrip, setActiveWorkspaceTrip] = useState<Trip | null>(null);
+
   const [reviewsModalOpen, setReviewsModalOpen] = useState(false);
   const [reviewsDestination, setReviewsDestination] = useState<string | undefined>(undefined);
-  const [bundleBookingModalOpen, setBundleBookingModalOpen] = useState(false);
+
   const [memoriesModalOpen, setMemoriesModalOpen] = useState(false);
+
   const globeRef = useRef<VoyanaGlobeHandle>(null);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const fetchSuggestions = async () => {
-      if (query.trim().length > 0) {
-        try {
-          const results = await suggestDestinations(query, controller.signal);
-          setSuggestions(results);
-        } catch (e) {
-          if ((e as Error).name !== 'AbortError') console.error(e);
-        }
-      } else {
-        setSuggestions([]);
-      }
-    };
-    const timer = setTimeout(fetchSuggestions, 400);
-    return () => {
-      clearTimeout(timer);
-      controller.abort();
-    };
-  }, [query]);
-
-  const content = selected && destinationContent[selected.name] ? destinationContent[selected.name] : fallbackContent;
-
-  const selectLocation = (location: GlobeLocation) => {
-    setSelected(location);
-    setQuery(location.name);
-    setError(null);
-    setSuggestions([]);
-    globeRef.current?.pauseRotation();
+  // Geographic selection handler (slerp fly-to globe)
+  const handleLocationSelect = (location: GlobeLocation) => {
+    setSelectedLocation(location);
+    globeRef.current?.focusOnLocation(location.latitude, location.longitude, location.type);
+    globeRef.current?.setMarker(location);
   };
 
-  const handleSearch = async () => {
-    if (!query.trim()) return;
-    setIsLoading(true);
-    setError(null);
-    setSuggestions([]);
-    try {
-      const location = await resolveLocation(query);
-      if (location) {
-        selectLocation(location);
-      } else {
-        setError('Destination not found. Try another city or country.');
-      }
-    } catch (e) {
-      console.error(e);
-      setError('Unable to locate destination. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+  // Route preview handler (draws great circle lines on globe)
+  const handleSelectRoute = (routes: GlobeRoute[], startLocation: GlobeLocation) => {
+    setActiveRoutes(routes);
+    handleLocationSelect(startLocation);
   };
 
+  // Open workspace with customized route
+  const handleOpenWorkspaceWithRoute = (title: string, destination: string) => {
+    setTripDashboardOpen(true);
+  };
+
+  // Auth pages view
   if (route !== 'home') {
     return (
-      <main className="app">
-        <div className="star-field" aria-hidden="true" />
-        <div className="ambient ambient-one" aria-hidden="true" />
-        <div className="ambient ambient-two" aria-hidden="true" />
+      <main className="voyana-app">
         <AuthLayout route={route}>
           {route === 'login' && <LoginPage />}
           {route === 'signup' && <SignupPage />}
@@ -226,300 +135,213 @@ function App() {
   }
 
   return (
-    <main className={isLight ? 'app light' : 'app'}>
-      <div className="star-field" aria-hidden="true" />
-      <div className="ambient ambient-one" aria-hidden="true" />
-      <div className="ambient ambient-two" aria-hidden="true" />
+    <div className="voyana-app">
+      {/* 1. STICKY NAVIGATION HEADER */}
+      <Header
+        onOpenTrips={() => setTripDashboardOpen(true)}
+        onOpenFlight={() => { setFlightModalDestination(selectedLocation.city || selectedLocation.name); setFlightModalOpen(true); }}
+        onOpenHotel={() => { setHotelModalDestination(selectedLocation.city || selectedLocation.name); setHotelModalOpen(true); }}
+        onOpenTransport={() => { setTransportModalDestination(selectedLocation.city || selectedLocation.name); setTransportModalOpen(true); }}
+        onOpenBundle={() => setBundleBookingModalOpen(true)}
+        onOpenMyBookings={() => setMyBookingsOpen(true)}
+        onOpenChat={() => setChatModalOpen(true)}
+        onOpenBudget={() => setBudgetModalOpen(true)}
+        onOpenPacking={() => setPackingModalOpen(true)}
+        onOpenReviews={() => { setReviewsDestination(selectedLocation.name); setReviewsModalOpen(true); }}
+        onOpenMemories={() => setMemoriesModalOpen(true)}
+      />
 
-      <header className="topbar">
-        <a className="brand" href="#top" aria-label="Voyana home">
-          <span className="brand-mark"><Plane size={17} strokeWidth={2.2} /></span>
-          <span>VOYANA</span>
-        </a>
-        <nav className={mobileOpen ? 'main-nav open' : 'main-nav'} aria-label="Main navigation">
-          <button
-            onClick={() => setTripDashboardOpen(true)}
-            style={{ background: 'rgba(168,85,247,0.18)', border: '1px solid rgba(168,85,247,0.45)', borderRadius: '9px', padding: '6px 14px', fontSize: '14px', fontWeight: 600, color: '#e9d5ff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
-            aria-label="Open Trip Planning & Workspaces"
-          >
-            <Compass size={14} className="text-purple-400" /> Trips & Workspace
-          </button>
-          <button
-            onClick={() => setChatModalOpen(true)}
-            style={{ background: 'rgba(99,91,255,0.2)', border: '1px solid rgba(99,91,255,0.45)', borderRadius: '9px', padding: '6px 14px', fontSize: '14px', fontWeight: 600, color: '#c4c0ff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
-            aria-label="Open AI Travel Assistant"
-          >
-            <Sparkles size={14} className="text-indigo-400" /> AI Assistant
-          </button>
-          <button
-            onClick={() => setBudgetModalOpen(true)}
-            style={{ background: 'rgba(99,91,255,0.12)', border: '1px solid rgba(99,91,255,0.3)', borderRadius: '9px', padding: '6px 14px', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
-            aria-label="Open Budget Planner"
-          >
-            <Wallet size={14} className="text-amber-400" /> Budget Planner
-          </button>
-          <button
-            onClick={() => setPackingModalOpen(true)}
-            style={{ background: 'rgba(0,212,178,0.12)', border: '1px solid rgba(0,212,178,0.3)', borderRadius: '9px', padding: '6px 14px', fontSize: '14px', fontWeight: 600, color: '#cbd5e1', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
-            aria-label="Open Packing Checklist"
-          >
-            <Briefcase size={14} className="text-teal-400" /> Packing List
-          </button>
-          <button
-            onClick={() => { setFlightModalDestination(undefined); setFlightModalOpen(true); }}
-            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '9px', padding: '6px 14px', fontSize: '14px', fontWeight: 600, color: '#e2e8f0', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
-            aria-label="Book a flight"
-          >
-            <Plane size={14} /> Flights
-          </button>
-          <button
-            onClick={() => { setHotelModalDestination(undefined); setHotelModalOpen(true); }}
-            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '9px', padding: '6px 14px', fontSize: '14px', fontWeight: 600, color: '#e2e8f0', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
-            aria-label="Search and book hotels"
-          >
-            <Building2 size={14} /> Hotels
-          </button>
-          <button
-            onClick={() => { setTransportModalDestination(undefined); setTransportModalOpen(true); }}
-            style={{ background: 'rgba(99,91,255,0.15)', border: '1px solid rgba(99,91,255,0.35)', borderRadius: '9px', padding: '6px 14px', fontSize: '14px', fontWeight: 600, color: '#a5a0ff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
-            aria-label="Search and book ground transport"
-          >
-            <Car size={14} /> Transport
-          </button>
-          <button
-            onClick={() => setMyBookingsOpen(true)}
-            style={{ background: 'rgba(168,85,247,0.15)', border: '1px solid rgba(168,85,247,0.35)', borderRadius: '9px', padding: '6px 14px', fontSize: '14px', fontWeight: 600, color: '#d8b4fe', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
-            aria-label="View and manage my travel bookings"
-          >
-            <Briefcase size={14} /> My Bookings
-          </button>
-          <button
-            onClick={() => { setReviewsDestination(selected?.name || 'paris'); setReviewsModalOpen(true); }}
-            style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.35)', borderRadius: '9px', padding: '6px 14px', fontSize: '14px', fontWeight: 600, color: '#fcd34d', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
-            aria-label="View travel reviews and ratings"
-          >
-            <Star size={14} className="fill-amber-400 text-amber-400" /> Reviews
-          </button>
-          <button
-            onClick={() => setMemoriesModalOpen(true)}
-            style={{ background: 'rgba(236,72,153,0.15)', border: '1px solid rgba(236,72,153,0.35)', borderRadius: '9px', padding: '6px 14px', fontSize: '14px', fontWeight: 600, color: '#f9a8d4', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
-            aria-label="View travel memories and photo journal"
-          >
-            <Camera size={14} className="text-pink-400" /> Memories
-          </button>
-        </nav>
-        <div className="account-actions">
-          <AlertsPanel />
-          <button className="login-button" onClick={() => { window.location.hash = '/login'; }}>Sign In</button>
-          <button className="signup-button" onClick={() => { window.location.hash = '/signup'; }}>Sign Up</button>
-          <button className="menu-button" onClick={() => setMobileOpen((value) => !value)} aria-label="Toggle navigation">
-            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-        </div>
-      </header>
+      {/* 2. HERO SECTION & 3D EARTH GLOBE */}
+      <section className="hero-section" id="top">
+        <div className="hero-grid">
+          {/* Left Hero Column */}
+          <div className="hero-content-col">
+            <div className="hero-eyebrow">
+              <Compass size={14} className="text-emerald-700" />
+              <span>EXPLORE WITHOUT LIMITS</span>
+            </div>
 
-      <section className="hero" id="top">
-        <div className="globe-column">
-          <div className="globe-stage">
-            <div className="orbit orbit-one" aria-hidden="true" />
-            <div className="orbit orbit-two" aria-hidden="true" />
-            <div className="globe-halo" aria-hidden="true" />
-            <VoyanaGlobe
-              ref={globeRef}
-              selectedLocation={selected ?? undefined}
-              autoRotate={autoRotate}
-              onLocationSelect={selectLocation}
+            <h1 className="hero-heading">
+              Your world, waiting to be <em>discovered</em>.
+            </h1>
+
+            <p className="hero-lede">
+              The intelligent travel discovery platform. Explore real-time geography on an interactive 3D Earth, collaborate on shared itineraries, and orchestrate verified global journeys.
+            </p>
+
+            {/* Structured Multi-field Travel Search */}
+            <TravelSearch
+              onLocationSelect={handleLocationSelect}
             />
-            <div className="route-line route-one" aria-hidden="true"><Plane size={18} /></div>
-            <div className="route-line route-two" aria-hidden="true"><Plane size={16} /></div>
-            <div className="globe-controls">
-              <button onClick={() => globeRef.current?.zoomIn()} aria-label="Zoom in">+</button>
-              <button onClick={() => globeRef.current?.zoomOut()} aria-label="Zoom out">−</button>
-              <button onClick={() => globeRef.current?.reset()} aria-label="Reset globe"><Compass size={15} /></button>
+
+            {/* Global Stats */}
+            <div className="hero-stats-row">
+              <div className="stat-item">
+                <span className="stat-val">250+</span>
+                <span className="stat-label">Countries & Territories</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-val">10K+</span>
+                <span className="stat-label">Curated Destinations</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-val">100%</span>
+                <span className="stat-label">Real-time Coordinates</span>
+              </div>
             </div>
           </div>
-          <div className="globe-caption">
-            <span>DRAG TO EXPLORE</span>
-            <span className="caption-line" />
-            <span>SCROLL TO ZOOM</span>
-          </div>
-          <div className="stats-bar">
-            <div><Globe2 size={19} /><span><b>250+</b><small>Countries</small></span></div>
-            <div><MapPin size={19} /><span><b>10K+</b><small>Cities</small></span></div>
-            <div><span><b>1M+</b><small>Travelers</small></span></div>
-            <div><span><b>5K+</b><small>Destinations</small></span></div>
-          </div>
-        </div>
 
-        <div className="content-column">
-          <div className="eyebrow">
-            <span className="eyebrow-dot" /> Your journey begins here <ArrowRight size={14} />
-          </div>
-          <h1>Where will your<br />next <em>adventure</em> be?</h1>
-          <p className="lede">Search any city or country to explore amazing places</p>
+          {/* Right Hero Column: Large 3D Earth Globe */}
+          <div className="hero-globe-col">
+            <div className="globe-stage-container">
+              <VoyanaGlobe
+                ref={globeRef}
+                selectedLocation={selectedLocation}
+                routes={activeRoutes}
+                autoRotate={autoRotate}
+                onLocationSelect={handleLocationSelect}
+              />
 
-          <div className={`search-wrap ${suggestions.length ? 'has-suggestions' : ''}`}>
-            <Search size={21} />
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              onKeyDown={(event) => { if (event.key === 'Enter') handleSearch(); }}
-              aria-label="Search destinations"
-              placeholder="Search a city or country…"
-            />
-            <button onClick={handleSearch} aria-label="Search"><ArrowRight size={20} /></button>
-            {suggestions.length > 0 && (
-              <div className="suggestions">
-                {suggestions.map((location) => (
-                  <button key={`${location.name}-${location.latitude}`} onClick={() => selectLocation(location)}>
-                    <MapPin size={15} />
-                    <span>{location.name}<small>{[location.state, location.country].filter(Boolean).join(', ')}</small></span>
-                    <ArrowRight size={14} />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          {isLoading && <p style={{ fontSize: '0.85rem', color: '#9bc7df', marginTop: '0.5rem', marginBottom: '-1rem' }}>Finding your destination...</p>}
-          {error && <p style={{ fontSize: '0.85rem', color: '#ff7b72', marginTop: '0.5rem', marginBottom: '-1rem' }}>{error}</p>}
-
-          <div className="try-searching" style={ (isLoading || error) ? { marginTop: '1.5rem' } : {} }>
-            <span>Try searching:</span>
-            {quickChips.map((chip) => (
-              <button key={chip} onClick={async () => {
-                setIsLoading(true);
-                setError(null);
-                setSuggestions([]);
-                try {
-                  const location = await resolveLocation(chip);
-                  if (location) selectLocation(location);
-                } catch(e) {
-                  console.error(e);
-                } finally {
-                  setIsLoading(false);
-                }
-              }}>{chip}</button>
-            ))}
-          </div>
-
-          <div className="destination-grid">
-            <article className="featured-card">
-              <img src={content.heroImage} alt={`${content.place} in ${content.city}`} />
-              <div className="image-scrim" />
-              <div className="featured-copy">
-                <span className="popular-tag"><Sparkles size={12} /> Popular destination</span>
-                <h2>{content.place}</h2>
-                <p>{content.city}, {content.country}</p>
-                <span className="description">{content.description}</span>
-                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                  <button className="explore-button">Explore <ArrowRight size={17} /></button>
-                  <button
-                    onClick={() => { setFlightModalDestination(content.city); setFlightModalOpen(true); }}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '10px 18px', borderRadius: '12px', background: 'rgba(99,91,255,0.2)', border: '1px solid rgba(99,91,255,0.4)', color: '#c4c0ff', fontWeight: 600, fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s' }}
-                    aria-label={`Book flight to ${content.city}`}
-                  >
-                    <Plane size={15} /> Book Flight
-                  </button>
-                  <button
-                    onClick={() => { setHotelModalDestination(content.city); setHotelModalOpen(true); }}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '10px 18px', borderRadius: '12px', background: 'rgba(99,91,255,0.2)', border: '1px solid rgba(99,91,255,0.4)', color: '#c4c0ff', fontWeight: 600, fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s' }}
-                    aria-label={`Book hotel in ${content.city}`}
-                  >
-                    <Building2 size={15} /> Book Hotel
-                  </button>
-                  <button
-                    onClick={() => { setTransportModalDestination(content.city); setTransportModalOpen(true); }}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', padding: '10px 18px', borderRadius: '12px', background: 'rgba(99,91,255,0.2)', border: '1px solid rgba(99,91,255,0.4)', color: '#c4c0ff', fontWeight: 600, fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s' }}
-                    aria-label={`Book local transport in ${content.city}`}
-                  >
-                    <Car size={15} /> Book Transport
-                  </button>
-                </div>
-              </div>
-            </article>
-            <div className="secondary-list">
-              {content.secondary.map((place) => (
-                <button className="secondary-card" key={place.name}>
-                  <img src={place.image} alt={place.name} />
-                  <span>{place.name}</span>
-                  <ArrowRight size={15} />
+              {/* Minimal Floating Globe Controls */}
+              <div className="globe-floating-controls">
+                <button
+                  type="button"
+                  className="btn-globe-ctrl"
+                  onClick={() => globeRef.current?.zoomIn()}
+                  aria-label="Zoom in on Earth"
+                  title="Zoom in"
+                >
+                  <Plus size={16} />
                 </button>
-              ))}
+                <button
+                  type="button"
+                  className="btn-globe-ctrl"
+                  onClick={() => globeRef.current?.zoomOut()}
+                  aria-label="Zoom out on Earth"
+                  title="Zoom out"
+                >
+                  <Minus size={16} />
+                </button>
+                <button
+                  type="button"
+                  className="btn-globe-ctrl"
+                  onClick={() => setAutoRotate(!autoRotate)}
+                  aria-label={autoRotate ? 'Pause Earth rotation' : 'Resume Earth rotation'}
+                  title={autoRotate ? 'Pause rotation' : 'Resume rotation'}
+                >
+                  {autoRotate ? <Pause size={15} /> : <RotateCw size={15} />}
+                </button>
+                <button
+                  type="button"
+                  className="btn-globe-ctrl"
+                  onClick={() => globeRef.current?.reset()}
+                  aria-label="Reset Earth view"
+                  title="Reset view"
+                >
+                  <Compass size={15} />
+                </button>
+              </div>
+
+              {/* Geographic Focus Tag */}
+              <div className="globe-focus-chip animate-fade-in">
+                <span className="focus-dot" />
+                <span>
+                  Focused on <b>{selectedLocation.name}</b>
+                  {selectedLocation.country ? `, ${selectedLocation.country}` : ''}
+                </span>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <footer className="bottom-bar">
-        <span className="scroll-copy">Scroll to explore <span className="mouse-icon"><i /></span></span>
-        <div className="bottom-actions">
-          <button aria-label="Settings"><Settings2 size={17} /></button>
-          <button onClick={() => setAutoRotate((value) => !value)} aria-label={autoRotate ? 'Pause rotation' : 'Resume rotation'}>
-            {autoRotate ? <Pause size={17} /> : <ArrowRight size={17} />}
-          </button>
-          <button onClick={() => setIsLight((value) => !value)} aria-label="Toggle light and dark mode">
-            {isLight ? <Moon size={17} /> : <Sun size={17} />}
-          </button>
-        </div>
-      </footer>
-      <FlightBookingModal
-        isOpen={flightModalOpen}
-        onClose={() => setFlightModalOpen(false)}
-        initialDestination={flightModalDestination}
-      />
-      <HotelBookingModal
-        isOpen={hotelModalOpen}
-        onClose={() => setHotelModalOpen(false)}
-        initialDestination={hotelModalDestination}
-      />
-      <TransportBookingModal
-        isOpen={transportModalOpen}
-        onClose={() => setTransportModalOpen(false)}
-        defaultDestination={transportModalDestination}
+      {/* 3. QUICK EXPLORE STRIP (Instant geographic chips) */}
+      <QuickExploreStrip
+        selectedLocationName={selectedLocation.name}
+        onSelect={handleLocationSelect}
       />
 
-      {/* Floating AI Assistant Trigger */}
+      {/* 4. CURATED DESTINATIONS GRID */}
+      <DestinationGrid
+        selectedLocationName={selectedLocation.name}
+        onSelectOnGlobe={handleLocationSelect}
+        onBookFlight={(city) => { setFlightModalDestination(city); setFlightModalOpen(true); }}
+        onBookHotel={(city) => { setHotelModalDestination(city); setHotelModalOpen(true); }}
+        onViewReviews={(city) => { setReviewsDestination(city); setReviewsModalOpen(true); }}
+      />
+
+      {/* 5. MULTI-STOP EXPEDITIONS & ROUTE PREVIEW */}
+      <FeaturedJourneys
+        onSelectRoute={handleSelectRoute}
+        onOpenWorkspaceWithRoute={handleOpenWorkspaceWithRoute}
+      />
+
+      {/* 6. INTELLIGENT TRAVEL SUITE (Workspace, AI, Packing, Budget, Reviews, Memories) */}
+      <TravelSuiteHub
+        onOpenTrips={() => setTripDashboardOpen(true)}
+        onOpenChat={() => setChatModalOpen(true)}
+        onOpenPacking={() => setPackingModalOpen(true)}
+        onOpenBudget={() => setBudgetModalOpen(true)}
+        onOpenReviews={() => { setReviewsDestination(selectedLocation.name); setReviewsModalOpen(true); }}
+        onOpenMemories={() => setMemoriesModalOpen(true)}
+      />
+
+      {/* 7. FOOTER */}
+      <Footer />
+
+      {/* ==========================================================================
+         TRAVEL EXPERIENCE MODALS (Preserved 100% functionality)
+         ========================================================================== */}
+      {/* Floating Travel Assistant Trigger (bottom right) */}
       {!chatModalOpen && (
         <button
+          type="button"
           className="floating-ai-trigger"
           onClick={() => setChatModalOpen(true)}
-          aria-label="Open Voyana AI Assistant"
+          aria-label="Open Voyana AI Travel Assistant"
         >
-          <Sparkles size={17} />
-          <span>Voyana AI</span>
+          <Compass size={17} />
+          <span>Travel Assistant</span>
         </button>
       )}
 
-      {/* Voyana AI Chatbot (Mockup 5.4 / VPM-44 & VPM-38) */}
+      {/* Voyana AI Travel Assistant Modal */}
       <ChatAssistantModal
         isOpen={chatModalOpen}
         onClose={() => setChatModalOpen(false)}
-        destination={selected?.name || query || 'Paris'}
+        destination={selectedLocation.city || selectedLocation.name}
         onOpenBudget={() => setBudgetModalOpen(true)}
         onOpenPacking={() => setPackingModalOpen(true)}
       />
 
-      {/* Budget Planner & Transaction History (VPM-41, VPM-56, VPM-67, VPM-70) */}
-      <BudgetPlannerModal
-        isOpen={budgetModalOpen}
-        onClose={() => setBudgetModalOpen(false)}
-        destination={selected?.name || query || 'Paris'}
-        onOpenChatWithPrompt={(prompt) => {
-          setChatModalOpen(true);
-        }}
+      {/* Flight Booking Modal */}
+      <FlightBookingModal
+        isOpen={flightModalOpen}
+        onClose={() => setFlightModalOpen(false)}
+        initialDestination={flightModalDestination || selectedLocation.city || selectedLocation.name}
       />
 
-      {/* Smart Packing Checklist & Task Assignment (VPM-42, VPM-60, VPM-191) */}
-      <PackingChecklistModal
-        isOpen={packingModalOpen}
-        onClose={() => setPackingModalOpen(false)}
-        destination={selected?.name || query || 'Paris'}
-        onOpenChatWithPrompt={(prompt) => {
-          setChatModalOpen(true);
-        }}
+      {/* Hotel Booking Modal */}
+      <HotelBookingModal
+        isOpen={hotelModalOpen}
+        onClose={() => setHotelModalOpen(false)}
+        initialDestination={hotelModalDestination || selectedLocation.city || selectedLocation.name}
       />
 
-      {/* Unified Bookings & Modification Management (VPM-215 / Manage Bookings) */}
+      {/* Ground Transport Booking Modal */}
+      <TransportBookingModal
+        isOpen={transportModalOpen}
+        onClose={() => setTransportModalOpen(false)}
+        defaultDestination={transportModalDestination || selectedLocation.city || selectedLocation.name}
+      />
+
+      {/* Unified Bundle Booking Modal */}
+      <UnifiedBundleBookingModal
+        isOpen={bundleBookingModalOpen}
+        onClose={() => setBundleBookingModalOpen(false)}
+      />
+
+      {/* My Bookings Modal */}
       <MyBookingsModal
         isOpen={myBookingsOpen}
         onClose={() => setMyBookingsOpen(false)}
@@ -528,7 +350,23 @@ function App() {
         onOpenTransportModal={() => setTransportModalOpen(true)}
       />
 
-      {/* Trip Planning Dashboard & Templates (VPM-4 / Megha Lalwani) */}
+      {/* Smart Packing Checklist Modal */}
+      <PackingChecklistModal
+        isOpen={packingModalOpen}
+        onClose={() => setPackingModalOpen(false)}
+        destination={selectedLocation.city || selectedLocation.name}
+        onOpenChatWithPrompt={() => setChatModalOpen(true)}
+      />
+
+      {/* Budget Planner Modal */}
+      <BudgetPlannerModal
+        isOpen={budgetModalOpen}
+        onClose={() => setBudgetModalOpen(false)}
+        destination={selectedLocation.city || selectedLocation.name}
+        onOpenChatWithPrompt={() => setChatModalOpen(true)}
+      />
+
+      {/* Trip Planning Dashboard */}
       <TripDashboardModal
         isOpen={tripDashboardOpen}
         onClose={() => setTripDashboardOpen(false)}
@@ -538,33 +376,27 @@ function App() {
         }}
       />
 
-      {/* Interactive Trip Workspace & Collaboration Hub (VPM-8 / Megha Lalwani) */}
+      {/* Trip Collaborative Workspace */}
       <TripWorkspaceModal
         isOpen={!!activeWorkspaceTrip}
         onClose={() => setActiveWorkspaceTrip(null)}
         trip={activeWorkspaceTrip}
       />
 
-      {/* Travel Reviews & Ratings Engine (VPM-122 / Manav Vyas) */}
+      {/* Travel Reviews & Ratings Modal */}
       <TravelReviewsModal
         isOpen={reviewsModalOpen}
         onClose={() => setReviewsModalOpen(false)}
-        initialTargetId={reviewsDestination || 'paris'}
-        initialTargetTitle={reviewsDestination ? `${reviewsDestination}` : 'Paris, France'}
+        initialTargetId={(reviewsDestination || selectedLocation.name).toLowerCase()}
+        initialTargetTitle={reviewsDestination || selectedLocation.name}
       />
 
-      {/* Unified Cross-Service Booking Integration (VPM-204 / Manav Vyas) */}
-      <UnifiedBundleBookingModal
-        isOpen={bundleBookingModalOpen}
-        onClose={() => setBundleBookingModalOpen(false)}
-      />
-
-      {/* Travel Memories & Photo Journal (VPM-106, VPM-121 / Manav Vyas) */}
+      {/* Travel Memories & Photo Journal */}
       <TravelMemoriesModal
         isOpen={memoriesModalOpen}
         onClose={() => setMemoriesModalOpen(false)}
       />
-    </main>
+    </div>
   );
 }
 
