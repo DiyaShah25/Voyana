@@ -68,7 +68,7 @@ const INITIAL_PACKING_LIST: PackingListState = {
       category: 'Electronics',
       isPacked: true,
       priority: 'essential',
-      assignedTo: 'Jagrat Kumar',
+      assignedTo: 'Nigam Sanghvi',
       quantity: 2,
       notes: 'EU 2-pin compatible',
     },

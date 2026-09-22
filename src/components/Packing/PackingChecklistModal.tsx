@@ -45,7 +45,7 @@ const CATEGORIES: PackingCategory[] = [
   'Accessories',
 ];
 
-const TRAVELERS = ['Everyone', 'Diya Shah', 'Tirth Gandhi', 'Jagrat Kumar', 'Shared'];
+const TRAVELERS = ['Everyone', 'Diya Shah', 'Nigam Sanghvi', 'Tirth Gandhi', 'Jagrat Kumar', 'Shared'];
 
 export const PackingChecklistModal: React.FC<PackingChecklistModalProps> = ({
   isOpen,
