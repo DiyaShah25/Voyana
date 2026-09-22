@@ -134,6 +134,8 @@ function generateContextualResponse(
         },
       ],
     };
+  }
+
   // VPM-138: Weather Forecast & Climate Intelligence
   if (q.includes('weather') || q.includes('forecast') || q.includes('rain') || q.includes('temperature') || q.includes('climate')) {
     return {
