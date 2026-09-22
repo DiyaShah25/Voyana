@@ -134,6 +134,27 @@ function generateContextualResponse(
         },
       ],
     };
+  // VPM-138: Weather Forecast & Climate Intelligence
+  if (q.includes('weather') || q.includes('forecast') || q.includes('rain') || q.includes('temperature') || q.includes('climate')) {
+    return {
+      content: `### 🌦️ Current & Forecasted Weather for ${destination}\n\n` +
+        `• **Daytime Average**: 18°C (64°F) — comfortable with light cloud cover.\n` +
+        `• **Evening Lows**: 12°C (54°F) — crisp and breezy; jacket or trench recommended.\n` +
+        `• **Precipitation**: 30% chance of brief afternoon showers; pack a pocket umbrella.\n` +
+        `• **Air Quality**: Excellent (AQI 28).\n\n` +
+        `*Tip: Packing recommendations have been synced to these weather conditions.*`,
+      citedContext: {
+        categories: [`${destination} Live Meteorology`, 'Seasonal Climate Forecast'],
+        topics: ['Weather Planning', 'Apparel Recommendations'],
+      },
+      proposedChanges: [
+        {
+          type: 'add_packing_item',
+          title: `Sync Weather Gear for ${destination}`,
+          details: { category: 'Clothing', items: ['Windbreaker', 'Pocket Umbrella'] },
+        },
+      ],
+    };
   }
 
   if (q.includes('pack') || q.includes('clothes') || q.includes('luggage') || q.includes('bring')) {
