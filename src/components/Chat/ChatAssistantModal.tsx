@@ -65,6 +65,7 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
     `Suggest a 3-day sightseeing plan for ${destination}`,
     `Analyze our current trip budget`,
     `What should we pack for ${destination}?`,
+    `Check current weather forecast for ${destination}`,
   ];
 
   const recommendedList = getRecommendedDestinations({
