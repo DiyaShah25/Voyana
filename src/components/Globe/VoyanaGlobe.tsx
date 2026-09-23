@@ -3,17 +3,43 @@ import * as THREE from 'three';
 import type { GlobeLocation, GlobeLocationType, GlobeRoute, VoyanaGlobeHandle, VoyanaGlobeProps } from './globe.types';
 import { greatCirclePoints, latLngToVector3, makeFocusQuaternion, vector3ToLatLng } from './globe.utils';
 
-const earthTextureUrl = 'https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg';
-const earthNormalUrl = 'https://threejs.org/examples/textures/planets/earth_normal_2048.jpg';
-const earthSpecularUrl = 'https://threejs.org/examples/textures/planets/earth_specular_2048.jpg';
-const cloudTextureUrl = 'https://threejs.org/examples/textures/planets/earth_clouds_1024.png';
+// Local high-resolution photorealistic NASA texture maps
+const earthTextureUrl = '/textures/earth_atmos_2048.jpg';
+const earthNormalUrl = '/textures/earth_normal_2048.jpg';
+const earthSpecularUrl = '/textures/earth_specular_2048.jpg';
+const cloudTextureUrl = '/textures/earth_clouds_1024.png';
 
-export interface EnhancedVoyanaGlobeProps extends VoyanaGlobeProps {
-  onHoverLocation?: (info: { name: string; x: number; y: number } | null) => void;
+export interface KeyCity {
+  name: string;
+  country: string;
+  latitude: number;
+  longitude: number;
 }
 
-const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, EnhancedVoyanaGlobeProps>(function VoyanaGlobe(
-  { selectedLocation, routes = [], autoRotate = true, onLocationSelect, onGlobeReady },
+export const keyWorldCities: KeyCity[] = [
+  { name: 'Tokyo', country: 'Japan', latitude: 35.6762, longitude: 139.6503 },
+  { name: 'Paris', country: 'France', latitude: 48.8566, longitude: 2.3522 },
+  { name: 'New York', country: 'United States', latitude: 40.7128, longitude: -74.006 },
+  { name: 'Cairo', country: 'Egypt', latitude: 30.0444, longitude: 31.2357 },
+  { name: 'Bali', country: 'Indonesia', latitude: -8.4095, longitude: 115.1889 },
+  { name: 'Rome', country: 'Italy', latitude: 41.9028, longitude: 12.4964 },
+  { name: 'Reykjavik', country: 'Iceland', latitude: 64.1466, longitude: -21.9426 },
+  { name: 'Cape Town', country: 'South Africa', latitude: -33.9249, longitude: 18.4241 },
+  { name: 'Sydney', country: 'Australia', latitude: -33.8688, longitude: 151.2093 },
+  { name: 'Rio de Janeiro', country: 'Brazil', latitude: -22.9068, longitude: -43.1729 },
+  { name: 'Santorini', country: 'Greece', latitude: 36.3932, longitude: 25.4615 },
+  { name: 'Kyoto', country: 'Japan', latitude: 35.0116, longitude: 135.7681 },
+];
+
+export interface VoyanaGlobeExtendedProps extends VoyanaGlobeProps {
+  metadata?: {
+    temperature?: string;
+    style?: string;
+  };
+}
+
+const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(function VoyanaGlobe(
+  { selectedLocation, routes = [], autoRotate = true, onLocationSelect, onGlobeReady, metadata },
   ref,
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -22,7 +48,8 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, EnhancedVoyanaGlobeProps>(func
   const autoRotateRef = useRef(autoRotate);
   const apiRef = useRef<VoyanaGlobeHandle | null>(null);
 
-  const [tooltip, setTooltip] = useState<{ text: string; x: number; y: number } | null>(null);
+  // Floating label projected coordinates on 2D screen
+  const [labelPos, setLabelPos] = useState<{ x: number; y: number; visible: boolean } | null>(null);
 
   selectedRef.current = selectedLocation;
   onLocationSelectRef.current = onLocationSelect;
@@ -44,169 +71,180 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, EnhancedVoyanaGlobeProps>(func
     if (!container) return;
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
-    camera.position.set(0, 0, 3.25);
+
+    // Perspective camera positioned for a commanding planetary presence with generous breathing room
+    const camera = new THREE.PerspectiveCamera(44, 1, 0.1, 100);
+    camera.position.set(0, 0, 3.20);
 
     let renderer: THREE.WebGLRenderer;
     try {
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+      renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        powerPreference: 'high-performance',
+      });
     } catch {
       container.dataset.webgl = 'unavailable';
       return;
     }
+
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.setClearColor(0x000000, 0); // Transparent background for pure white page
+    renderer.setClearColor(0x000000, 0); // Pure transparent so it blends seamlessly
     container.appendChild(renderer.domElement);
 
     const earthGroup = new THREE.Group();
     scene.add(earthGroup);
 
-    // Natural Earth Material: True natural textures with subtle specular ocean shine
+    // Natural axial tilt (23.5 degrees)
+    earthGroup.rotation.z = THREE.MathUtils.degToRad(16);
+
+    // 1. HIGH-TESSELLATION 3D SPHERICAL EARTH (128x128 vertices)
+    const sphereGeometry = new THREE.SphereGeometry(1, 128, 128);
     const textureLoader = new THREE.TextureLoader();
+
+    // Realistic Planetary Material: Specular oceans, relief terrain, natural light response
     const earthMaterial = new THREE.MeshPhongMaterial({
       color: 0xffffff,
-      shininess: 18,
-      specular: new THREE.Color(0x1a3344),
+      shininess: 32,
+      specular: new THREE.Color(0x2d6898), // Realistic ocean blue glint
     });
-    const earth = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 96), earthMaterial);
-    earth.name = 'earth';
-    earthGroup.add(earth);
 
-    // Realistic Cloud Layer: Delicate natural opacity
+    const earthMesh = new THREE.Mesh(sphereGeometry, earthMaterial);
+    earthMesh.name = 'earth';
+    earthGroup.add(earthMesh);
+
+    // 2. DETAILED CLOUD SPHERE (Separate altitude layer for genuine 3D parallax)
+    const cloudGeometry = new THREE.SphereGeometry(1.015, 96, 96);
     const cloudMaterial = new THREE.MeshPhongMaterial({
       transparent: true,
-      opacity: 0.28,
+      opacity: 0.40,
       depthWrite: false,
       side: THREE.DoubleSide,
     });
-    const clouds = new THREE.Mesh(new THREE.SphereGeometry(1.012, 64, 64), cloudMaterial);
-    earthGroup.add(clouds);
+    const cloudMesh = new THREE.Mesh(cloudGeometry, cloudMaterial);
+    earthGroup.add(cloudMesh);
 
-    // Subtle Natural Atmospheric Glow Shader (Clean, muted oceanic daylight rim)
+    // 3. FRESNEL ATMOSPHERE RIM HALO (Delicate planetary daylight limb glow)
     const atmosphereMaterial = new THREE.ShaderMaterial({
       transparent: true,
       side: THREE.BackSide,
       blending: THREE.AdditiveBlending,
       uniforms: {
-        glowColor: { value: new THREE.Color(0x4aa3df) },
-        coefficient: { value: 0.32 },
-        power: { value: 3.6 },
+        glowColor: { value: new THREE.Color(0x38bdf8) }, // Natural planetary sky blue
       },
       vertexShader: `
         varying vec3 vNormal;
-        varying vec3 vWorldPosition;
         void main() {
           vNormal = normalize(normalMatrix * normal);
-          vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-          vWorldPosition = worldPosition.xyz;
-          gl_Position = projectionMatrix * viewMatrix * worldPosition;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }
       `,
       fragmentShader: `
         uniform vec3 glowColor;
-        uniform float coefficient;
-        uniform float power;
         varying vec3 vNormal;
-        varying vec3 vWorldPosition;
         void main() {
-          vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
-          float intensity = pow(coefficient - dot(vNormal, viewDirection), power);
-          gl_FragColor = vec4(glowColor, intensity * 0.7);
+          float intensity = pow(0.70 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.2);
+          gl_FragColor = vec4(glowColor, max(0.0, intensity) * 0.95);
         }
       `,
     });
-    const atmosphere = new THREE.Mesh(new THREE.SphereGeometry(1.065, 64, 64), atmosphereMaterial);
-    scene.add(atmosphere);
+    const atmosphereMesh = new THREE.Mesh(new THREE.SphereGeometry(1.055, 64, 64), atmosphereMaterial);
+    scene.add(atmosphereMesh);
 
-    // Studio Lighting: Soft daylight balanced with warm sunlight
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.25);
+    // 4. PLANETARY DIRECTIONAL SUNLIGHT (Creates distinct 3D daylight and terminator curvature)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.42);
     scene.add(ambientLight);
 
-    const sun = new THREE.DirectionalLight(0xfff8ee, 2.2);
-    sun.position.set(-4, 3, 5);
-    scene.add(sun);
+    const sunLight = new THREE.DirectionalLight(0xfffdf4, 2.7);
+    sunLight.position.set(-6, 3.8, 5.0);
+    scene.add(sunLight);
 
-    const softFill = new THREE.DirectionalLight(0x8bc3eb, 0.45);
-    softFill.position.set(4, -2, -3);
-    scene.add(softFill);
+    const softFillLight = new THREE.DirectionalLight(0x38bdf8, 0.28);
+    softFillLight.position.set(5, -2, -2.5);
+    scene.add(softFillLight);
 
-    let marker: THREE.Group | null = null;
-    let routeGroup = new THREE.Group();
-    earthGroup.add(routeGroup);
+    // 5. GLOBAL CITY REFERENCE PINS (Subtle markers across continents)
+    const referenceGroup = new THREE.Group();
+    earthGroup.add(referenceGroup);
 
-    const raycaster = new THREE.Raycaster();
-    const pointer = new THREE.Vector2();
-    const targetQuaternion = new THREE.Quaternion();
-    const focusStartQuaternion = new THREE.Quaternion();
-    let focusStartedAt = 0;
-    let focusing = false;
-    let lastInteraction = performance.now();
-    let rotationPaused = false;
-    let cameraDistance = 3.25;
-    let pointerDown = false;
-    let movedSinceDown = false;
-    let lastPointer = { x: 0, y: 0 };
+    keyWorldCities.forEach((city) => {
+      const pos = latLngToVector3(city.latitude, city.longitude, 1.008);
+      const dot = new THREE.Mesh(
+        new THREE.SphereGeometry(0.011, 12, 12),
+        new THREE.MeshBasicMaterial({ color: 0x0b7a3b, transparent: true, opacity: 0.7 })
+      );
+      dot.position.copy(pos);
+      referenceGroup.add(dot);
+    });
 
-    // Minimal Forest Green & Gold Location Pin
+    // 6. ACTIVE SELECTED LOCATION MARKER (Botanical Green + Pulsing Wave Ring)
+    let activeMarker: THREE.Group | null = null;
+
     const setMarker = (location: GlobeLocation | undefined) => {
-      if (marker) {
-        earthGroup.remove(marker);
-        marker.traverse((object) => {
-          if (object instanceof THREE.Mesh) {
-            object.geometry.dispose();
-            if (Array.isArray(object.material)) object.material.forEach((mat) => mat.dispose());
-            else object.material.dispose();
+      if (activeMarker) {
+        earthGroup.remove(activeMarker);
+        activeMarker.traverse((obj) => {
+          if (obj instanceof THREE.Mesh) {
+            obj.geometry.dispose();
+            if (Array.isArray(obj.material)) obj.material.forEach((m) => m.dispose());
+            else obj.material.dispose();
           }
         });
-        marker = null;
+        activeMarker = null;
       }
-      if (!location) return;
+
+      if (!location) {
+        setLabelPos(null);
+        return;
+      }
 
       const normal = latLngToVector3(location.latitude, location.longitude, 1).normalize();
-      marker = new THREE.Group();
-      marker.position.copy(normal.clone().multiplyScalar(1.032));
 
-      // Forest green central dot
-      const dot = new THREE.Mesh(
-        new THREE.SphereGeometry(0.024, 16, 16),
-        new THREE.MeshBasicMaterial({ color: 0x15803d }) // deep forest green
+      activeMarker = new THREE.Group();
+      activeMarker.position.copy(normal.clone().multiplyScalar(1.032));
+
+      // Central emerald beacon dot
+      const centerDot = new THREE.Mesh(
+        new THREE.SphereGeometry(0.028, 20, 20),
+        new THREE.MeshBasicMaterial({ color: 0x10b981 })
       );
 
-      // Gold pulsing outer ring
+      // Inner white luminous core for pinpoint clarity
+      const coreDot = new THREE.Mesh(
+        new THREE.SphereGeometry(0.014, 16, 16),
+        new THREE.MeshBasicMaterial({ color: 0xffffff })
+      );
+
+      // Pulsing outer ring
       const ring = new THREE.Mesh(
-        new THREE.RingGeometry(0.042, 0.054, 32),
-        new THREE.MeshBasicMaterial({ color: 0xd97706, transparent: true, opacity: 0.85, side: THREE.DoubleSide })
+        new THREE.RingGeometry(0.046, 0.066, 36),
+        new THREE.MeshBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0.9, side: THREE.DoubleSide })
       );
       ring.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal);
 
-      // Delicate location pin needle
-      const pin = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.006, 0.006, 0.1, 8),
-        new THREE.MeshBasicMaterial({ color: 0x15803d })
-      );
-      pin.position.copy(normal.clone().multiplyScalar(0.05));
-      pin.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
-
-      marker.add(dot, ring, pin);
-      earthGroup.add(marker);
+      activeMarker.add(centerDot, coreDot, ring);
+      earthGroup.add(activeMarker);
     };
 
-    // Rebuild great circle routes
+    // 7. GREAT-CIRCLE FLIGHT ROUTE LINES
+    let routeGroup = new THREE.Group();
+    earthGroup.add(routeGroup);
+
     const rebuildRoutes = () => {
       earthGroup.remove(routeGroup);
-      routeGroup.traverse((object) => {
-        if (object instanceof THREE.Line) {
-          object.geometry.dispose();
-          (object.material as THREE.Material).dispose();
+      routeGroup.traverse((obj) => {
+        if (obj instanceof THREE.Line) {
+          obj.geometry.dispose();
+          (obj.material as THREE.Material).dispose();
         }
       });
       routeGroup = new THREE.Group();
       routes.forEach((route) => {
-        const points = greatCirclePoints(route.from, route.to, 1.035);
+        const points = greatCirclePoints(route.from, route.to, 1.032);
         const line = new THREE.Line(
           new THREE.BufferGeometry().setFromPoints(points),
-          new THREE.LineBasicMaterial({ color: 0x15803d, transparent: true, opacity: 0.6, linewidth: 2 })
+          new THREE.LineBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0.85, linewidth: 2 })
         );
         routeGroup.add(line);
       });
@@ -214,8 +252,16 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, EnhancedVoyanaGlobeProps>(func
     };
     rebuildRoutes();
 
-    let startCameraDistance = 3.25;
-    let targetCameraDistance = 3.25;
+    // 8. CAMERA & SLERP ANIMATION INTERPOLATION
+    const targetQuaternion = new THREE.Quaternion();
+    const focusStartQuaternion = new THREE.Quaternion();
+    let focusStartedAt = 0;
+    let focusing = false;
+    let rotationPaused = false;
+    let cameraDistance = 3.20;
+    let startCameraDistance = 3.20;
+    let targetCameraDistance = 3.20;
+    let lastInteraction = performance.now();
 
     const focusOnLocation = (latitude: number, longitude: number, type?: GlobeLocationType) => {
       targetQuaternion.copy(makeFocusQuaternion(latitude, longitude));
@@ -226,10 +272,9 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, EnhancedVoyanaGlobeProps>(func
       lastInteraction = performance.now();
 
       startCameraDistance = cameraDistance;
-      if (type === 'city' || type === 'landmark') targetCameraDistance = 2.0;
-      else if (type === 'state') targetCameraDistance = 2.35;
-      else if (type === 'country') targetCameraDistance = 2.75;
-      else targetCameraDistance = 3.25;
+      if (type === 'city' || type === 'landmark') targetCameraDistance = 3.05;
+      else if (type === 'region') targetCameraDistance = 3.14;
+      else targetCameraDistance = 3.20;
     };
 
     const reset = () => {
@@ -238,7 +283,7 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, EnhancedVoyanaGlobeProps>(func
       focusStartedAt = performance.now();
       focusing = true;
       rotationPaused = false;
-      targetCameraDistance = 3.25;
+      targetCameraDistance = 3.20;
     };
 
     const pauseRotation = () => {
@@ -252,41 +297,45 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, EnhancedVoyanaGlobeProps>(func
     };
 
     const zoomIn = () => {
-      cameraDistance = Math.max(1.85, cameraDistance - 0.22);
+      cameraDistance = Math.max(2.98, cameraDistance - 0.12);
       lastInteraction = performance.now();
     };
 
     const zoomOut = () => {
-      cameraDistance = Math.min(4.4, cameraDistance + 0.22);
+      cameraDistance = Math.min(3.90, cameraDistance + 0.12);
       lastInteraction = performance.now();
     };
 
     apiRef.current = { focusOnLocation, reset, pauseRotation, resumeRotation, zoomIn, zoomOut, setMarker };
 
-    // Load High-Res Earth Maps
+    // 9. LOAD PHOTOREALISTIC NASA TEXTURES LOCALLY
     const loadTextures = async () => {
       try {
-        const [earthTexture, normalTexture, specularTexture, cloudTexture] = await Promise.all([
+        const [earthTex, normalTex, specTex, cloudTex] = await Promise.all([
           textureLoader.loadAsync(earthTextureUrl),
           textureLoader.loadAsync(earthNormalUrl),
           textureLoader.loadAsync(earthSpecularUrl),
           textureLoader.loadAsync(cloudTextureUrl),
         ]);
-        earthTexture.colorSpace = THREE.SRGBColorSpace;
-        cloudTexture.colorSpace = THREE.SRGBColorSpace;
-        earthMaterial.map = earthTexture;
-        earthMaterial.normalMap = normalTexture;
-        earthMaterial.normalScale.set(0.35, 0.35);
-        earthMaterial.specularMap = specularTexture;
+
+        earthTex.colorSpace = THREE.SRGBColorSpace;
+        cloudTex.colorSpace = THREE.SRGBColorSpace;
+
+        earthMaterial.map = earthTex;
+        earthMaterial.normalMap = normalTex;
+        earthMaterial.normalScale.set(0.75, 0.75); // Enhanced relief elevation
+        earthMaterial.specularMap = specTex;
         earthMaterial.needsUpdate = true;
-        cloudMaterial.map = cloudTexture;
+
+        cloudMaterial.map = cloudTex;
         cloudMaterial.needsUpdate = true;
-      } catch {
-        // Fallback silently if textures fail
+      } catch (err) {
+        console.warn('Local texture load notice:', err);
       }
     };
     void loadTextures();
 
+    // 10. RESIZE OBSERVER
     const resize = () => {
       const width = container.clientWidth || 1;
       const height = container.clientHeight || width;
@@ -299,75 +348,62 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, EnhancedVoyanaGlobeProps>(func
     resizeObserver.observe(container);
     resize();
 
-    const handlePointerDown = (event: PointerEvent) => {
+    // 11. MOUSE / TOUCH GESTURES
+    let pointerDown = false;
+    let movedSinceDown = false;
+    let lastPointer = { x: 0, y: 0 };
+    const raycaster = new THREE.Raycaster();
+    const pointerVec = new THREE.Vector2();
+
+    const handlePointerDown = (e: PointerEvent) => {
       pointerDown = true;
       movedSinceDown = false;
-      lastPointer = { x: event.clientX, y: event.clientY };
-      renderer.domElement.setPointerCapture(event.pointerId);
+      lastPointer = { x: e.clientX, y: e.clientY };
+      renderer.domElement.setPointerCapture(e.pointerId);
       pauseRotation();
     };
 
-    const handlePointerMove = (event: PointerEvent) => {
-      if (!pointerDown) {
-        // Hover tooltip tracking
-        const bounds = renderer.domElement.getBoundingClientRect();
-        pointer.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
-        pointer.y = -((event.clientY - bounds.top) / bounds.height) * 2 + 1;
-        raycaster.setFromCamera(pointer, camera);
-        const hit = raycaster.intersectObject(earth, false)[0];
-        if (hit) {
-          const localPoint = earthGroup.worldToLocal(hit.point.clone());
-          const coords = vector3ToLatLng(localPoint);
-          setTooltip({
-            text: `${Math.abs(coords.latitude).toFixed(1)}°${coords.latitude >= 0 ? 'N' : 'S'}, ${Math.abs(coords.longitude).toFixed(1)}°${coords.longitude >= 0 ? 'E' : 'W'}`,
-            x: event.clientX - bounds.left,
-            y: event.clientY - bounds.top - 28,
-          });
-        } else {
-          setTooltip(null);
-        }
-        return;
-      }
+    const handlePointerMove = (e: PointerEvent) => {
+      if (!pointerDown) return;
+      const dx = e.clientX - lastPointer.x;
+      const dy = e.clientY - lastPointer.y;
+      if (Math.abs(dx) + Math.abs(dy) > 2) movedSinceDown = true;
 
-      const deltaX = event.clientX - lastPointer.x;
-      const deltaY = event.clientY - lastPointer.y;
-      if (Math.abs(deltaX) + Math.abs(deltaY) > 2) movedSinceDown = true;
-      earthGroup.rotateY(deltaX * 0.0055);
-      earthGroup.rotateX(deltaY * 0.0035);
-      lastPointer = { x: event.clientX, y: event.clientY };
+      earthGroup.rotateY(dx * 0.005);
+      earthGroup.rotateX(dy * 0.0035);
+      lastPointer = { x: e.clientX, y: e.clientY };
       lastInteraction = performance.now();
-      setTooltip(null);
     };
 
-    const handlePointerUp = (event: PointerEvent) => {
+    const handlePointerUp = (e: PointerEvent) => {
       pointerDown = false;
-      renderer.domElement.releasePointerCapture(event.pointerId);
+      renderer.domElement.releasePointerCapture(e.pointerId);
+
+      // Click detection: raycast to find clicked coordinates on the 3D globe
       if (!movedSinceDown) {
         const bounds = renderer.domElement.getBoundingClientRect();
-        pointer.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
-        pointer.y = -((event.clientY - bounds.top) / bounds.height) * 2 + 1;
-        raycaster.setFromCamera(pointer, camera);
-        const hit = raycaster.intersectObject(earth, false)[0];
-        if (hit) {
-          const localPoint = earthGroup.worldToLocal(hit.point.clone());
-          const coordinates = vector3ToLatLng(localPoint);
+        pointerVec.x = ((e.clientX - bounds.left) / bounds.width) * 2 - 1;
+        pointerVec.y = -((e.clientY - bounds.top) / bounds.height) * 2 + 1;
+        raycaster.setFromCamera(pointerVec, camera);
+
+        const hits = raycaster.intersectObject(earthMesh, false);
+        if (hits.length > 0) {
+          const localHit = earthGroup.worldToLocal(hits[0].point.clone());
+          const coords = vector3ToLatLng(localHit);
           onLocationSelectRef.current?.({
             name: 'Explored Coordinates',
-            latitude: coordinates.latitude,
-            longitude: coordinates.longitude,
+            latitude: coords.latitude,
+            longitude: coords.longitude,
             type: 'region',
           });
         }
       }
     };
 
-    const handlePointerLeave = () => {
-      setTooltip(null);
-    };
-
-    const handleWheel = (event: WheelEvent) => {
-      event.preventDefault();
-      cameraDistance = THREE.MathUtils.clamp(cameraDistance + event.deltaY * 0.0016, 1.85, 4.4);
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      // Clamped so the spherical curvature is ALWAYS prominently visible, never flattening or clipping against borders
+      cameraDistance = THREE.MathUtils.clamp(cameraDistance + e.deltaY * 0.0016, 2.98, 3.90);
       lastInteraction = performance.now();
       pauseRotation();
     };
@@ -377,44 +413,65 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, EnhancedVoyanaGlobeProps>(func
     canvas.addEventListener('pointermove', handlePointerMove);
     canvas.addEventListener('pointerup', handlePointerUp);
     canvas.addEventListener('pointercancel', handlePointerUp);
-    canvas.addEventListener('pointerleave', handlePointerLeave);
     canvas.addEventListener('wheel', handleWheel, { passive: false });
 
+    // 12. ANIMATION LOOP & 2D PROJECTION
     const clock = new THREE.Clock();
-    let animationFrame = 0;
+    let animId = 0;
 
     const animate = () => {
-      animationFrame = window.requestAnimationFrame(animate);
+      animId = window.requestAnimationFrame(animate);
       const elapsed = clock.getElapsedTime();
       const now = performance.now();
 
-      // Smooth cinematic spherical slerp camera transitions
+      // Smooth cinematic camera transition
       if (focusing) {
-        const progress = THREE.MathUtils.clamp((now - focusStartedAt) / 2200, 0, 1);
+        const progress = THREE.MathUtils.clamp((now - focusStartedAt) / 1600, 0, 1);
         const eased = 1 - Math.pow(1 - progress, 3); // cubic ease-out
         earthGroup.quaternion.copy(focusStartQuaternion).slerp(targetQuaternion, eased);
 
-        const zoomProgress = THREE.MathUtils.clamp((progress - 0.25) / 0.75, 0, 1);
+        const zoomProgress = THREE.MathUtils.clamp((progress - 0.2) / 0.8, 0, 1);
         const zoomEased = 1 - Math.pow(1 - zoomProgress, 3);
         cameraDistance = startCameraDistance + (targetCameraDistance - startCameraDistance) * zoomEased;
 
         if (progress >= 1) focusing = false;
       } else if (autoRotateRef.current && !rotationPaused && !pointerDown && now - lastInteraction > 1400) {
-        earthGroup.rotateY(0.00075);
+        earthGroup.rotateY(0.00065);
       }
 
-      if (!pointerDown && rotationPaused && autoRotateRef.current && now - lastInteraction > 4500 && !selectedRef.current) {
+      if (!pointerDown && rotationPaused && autoRotateRef.current && now - lastInteraction > 5000 && !selectedRef.current) {
         rotationPaused = false;
       }
 
-      clouds.rotation.y = elapsed * 0.01;
+      // Gentle independent cloud drift
+      cloudMesh.rotation.y = elapsed * 0.014;
 
-      if (marker) {
-        const pulse = 1 + Math.sin(elapsed * 3.2) * 0.16;
-        marker.children[0].scale.setScalar(pulse);
-        marker.children[1].scale.setScalar(pulse);
+      // Pulse active marker ring
+      if (activeMarker) {
+        const ringPulse = 1 + Math.sin(elapsed * 3.6) * 0.22;
+        if (activeMarker.children[2]) {
+          activeMarker.children[2].scale.setScalar(ringPulse);
+        }
+
+        // Project 3D marker position to 2D screen coordinates
+        const markerWorldPos = activeMarker.getWorldPosition(new THREE.Vector3());
+        const camDir = camera.position.clone().sub(markerWorldPos).normalize();
+        const normalWorld = markerWorldPos.clone().normalize();
+        const isFacing = normalWorld.dot(camDir) > 0.05; // Visible on facing hemisphere
+
+        if (isFacing) {
+          const screenPos = markerWorldPos.clone().project(camera);
+          const x = (screenPos.x * 0.5 + 0.5) * container.clientWidth;
+          const y = (-screenPos.y * 0.5 + 0.5) * container.clientHeight;
+          setLabelPos({ x, y, visible: true });
+        } else {
+          setLabelPos(null);
+        }
+      } else {
+        setLabelPos(null);
       }
 
+      // Camera easing
       camera.position.z += (cameraDistance - camera.position.z) * 0.08;
       renderer.render(scene, camera);
     };
@@ -423,19 +480,17 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, EnhancedVoyanaGlobeProps>(func
     onGlobeReady?.();
 
     return () => {
-      window.cancelAnimationFrame(animationFrame);
+      window.cancelAnimationFrame(animId);
       resizeObserver.disconnect();
       canvas.removeEventListener('pointerdown', handlePointerDown);
       canvas.removeEventListener('pointermove', handlePointerMove);
       canvas.removeEventListener('pointerup', handlePointerUp);
       canvas.removeEventListener('pointercancel', handlePointerUp);
-      canvas.removeEventListener('pointerleave', handlePointerLeave);
       canvas.removeEventListener('wheel', handleWheel);
-      earth.geometry.dispose();
+      sphereGeometry.dispose();
       earthMaterial.dispose();
-      clouds.geometry.dispose();
+      cloudGeometry.dispose();
       cloudMaterial.dispose();
-      atmosphere.geometry.dispose();
       atmosphereMaterial.dispose();
       renderer.dispose();
       if (container.contains(canvas)) container.removeChild(canvas);
@@ -453,14 +508,33 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, EnhancedVoyanaGlobeProps>(func
   }, [selectedLocation]);
 
   return (
-    <div className="voyana-globe-wrapper">
-      <div ref={containerRef} className="voyana-globe" aria-label="Interactive 3D Earth Globe" />
-      {tooltip && (
+    <div className="voyana-globe-circular-container">
+      {/* Subtle Circular Atmospheric Halo Aura */}
+      <div className="globe-circular-aura" aria-hidden="true" />
+
+      {/* WebGL Canvas mount */}
+      <div ref={containerRef} className="globe-canvas-mount" aria-label="Interactive 3D Earth Globe" />
+
+      {/* Projected Editorial 2D Location Pin Label */}
+      {labelPos && labelPos.visible && selectedLocation && (
         <div
-          className="globe-tooltip animate-fade-in"
-          style={{ left: `${tooltip.x}px`, top: `${tooltip.y}px` }}
+          className="editorial-globe-label animate-fade-in"
+          style={{
+            left: `${labelPos.x}px`,
+            top: `${labelPos.y}px`,
+          }}
         >
-          {tooltip.text}
+          <div className="label-stem" />
+          <div className="label-content">
+            <div className="label-city">{selectedLocation.name}</div>
+            <div className="label-country">{selectedLocation.country || 'Global Destination'}</div>
+            {metadata?.temperature && (
+              <div className="label-meta">
+                <span>{metadata.temperature}</span>
+                {metadata.style && <span>&bull; {metadata.style}</span>}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
