@@ -21,7 +21,9 @@ export function vector3ToLatLng(position: THREE.Vector3): { latitude: number; lo
 
 export function makeFocusQuaternion(latitude: number, longitude: number): THREE.Quaternion {
   const location = latLngToVector3(latitude, longitude, 1).normalize();
-  return new THREE.Quaternion().setFromUnitVectors(location, new THREE.Vector3(0, 0, 1));
+  // Target vector positions the selected location prominently in the exposed left hemisphere of the right-wall globe
+  const targetVector = new THREE.Vector3(-0.35, 0.05, 0.93).normalize();
+  return new THREE.Quaternion().setFromUnitVectors(location, targetVector);
 }
 
 export function greatCirclePoints(from: GlobeLocationPoint, to: GlobeLocationPoint, radius: number, segments = 64): THREE.Vector3[] {
