@@ -1,14 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  Search,
-  MapPin,
-  Calendar,
-  Users,
-  Compass,
-  ArrowRight,
-  ChevronDown,
-  Sparkles,
-} from 'lucide-react';
+import { Search, MapPin, ArrowRight, SlidersHorizontal, Check } from 'lucide-react';
 import type { GlobeLocation } from '@/components/Globe/globe.types';
 import { suggestDestinations, resolveLocation } from '@/services/locationService';
 
@@ -23,17 +14,13 @@ export const TravelSearch: React.FC<TravelSearchProps> = ({
 }) => {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<GlobeLocation[]>([]);
-  const [whenOpen, setWhenOpen] = useState(false);
-  const [whoOpen, setWhoOpen] = useState(false);
-  const [styleOpen, setStyleOpen] = useState(false);
-
-  const [selectedSeason, setSelectedSeason] = useState('Anytime / Flexible');
-  const [selectedTravelers, setSelectedTravelers] = useState('2 Travelers (Couple)');
+  const [showPreferences, setShowPreferences] = useState(false);
+  const [selectedSeason, setSelectedSeason] = useState('Anytime');
   const [selectedStyle, setSelectedStyle] = useState('Cultural & Discovery');
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Autocomplete suggestions
+  // Autocomplete
   useEffect(() => {
     const controller = new AbortController();
     const fetchSuggestions = async () => {
@@ -48,20 +35,17 @@ export const TravelSearch: React.FC<TravelSearchProps> = ({
         setSuggestions([]);
       }
     };
-    const timer = setTimeout(fetchSuggestions, 300);
+    const timer = setTimeout(fetchSuggestions, 250);
     return () => {
       clearTimeout(timer);
       controller.abort();
     };
   }, [query]);
 
-  // Click outside to close dropdowns
+  // Click outside to dismiss suggestions
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setWhenOpen(false);
-        setWhoOpen(false);
-        setStyleOpen(false);
         setSuggestions([]);
       }
     };
@@ -75,206 +59,123 @@ export const TravelSearch: React.FC<TravelSearchProps> = ({
     onLocationSelect(loc);
   };
 
-  const handleSearchSubmit = async () => {
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     const term = query.trim() || 'Paris';
     try {
       const loc = await resolveLocation(term);
       if (loc) {
         handleSelect(loc);
       }
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error(err);
     }
   };
 
   return (
-    <div className="travel-search-bar" ref={containerRef}>
-      {/* 1. WHERE */}
-      <div className="search-field where-field">
-        <div className="search-field-icon">
-          <MapPin size={18} className="text-emerald-700" />
-        </div>
-        <div className="search-field-content">
-          <label className="search-field-label">Where to</label>
-          <input
-            type="text"
-            className="search-field-input"
-            placeholder="Search destination, city, region…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleSearchSubmit();
-            }}
-          />
+    <div className="editorial-search-wrap" ref={containerRef}>
+      <form onSubmit={handleSubmit} className="editorial-search-bar">
+        <div className="search-input-group">
+          <label className="search-eyebrow-label">Where do you want to go?</label>
+          <div className="search-input-field">
+            <Search size={18} className="search-leading-icon" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search a city, country, or region…"
+              className="editorial-search-input"
+            />
+          </div>
         </div>
 
-        {/* Suggestions Autocomplete */}
+        <div className="search-actions-group">
+          <button
+            type="button"
+            className={`btn-pref-toggle ${showPreferences ? 'active' : ''}`}
+            onClick={() => setShowPreferences(!showPreferences)}
+            title="Refine season and travel style"
+            aria-label="Toggle travel preferences"
+          >
+            <SlidersHorizontal size={15} />
+            <span>Preferences</span>
+          </button>
+
+          <button
+            type="submit"
+            className="btn-editorial-explore"
+            disabled={isLoading}
+            aria-label="Explore Destination"
+          >
+            <span>Explore</span>
+            <ArrowRight size={15} />
+          </button>
+        </div>
+
+        {/* Real-time suggestions dropdown */}
         {suggestions.length > 0 && (
-          <div className="search-suggestions-dropdown animate-fade-down">
+          <div className="editorial-suggestions-popover animate-fade-down">
             {suggestions.map((loc) => (
               <button
                 key={`${loc.name}-${loc.latitude}`}
                 type="button"
-                className="suggestion-row"
+                className="suggestion-item-row"
                 onClick={() => handleSelect(loc)}
               >
-                <div className="suggestion-icon">
-                  <MapPin size={15} />
+                <div className="suggestion-marker-dot">
+                  <MapPin size={14} />
                 </div>
-                <div className="suggestion-text">
-                  <span className="suggestion-name">{loc.name}</span>
-                  <span className="suggestion-meta">
+                <div className="suggestion-details">
+                  <span className="suggestion-title">{loc.name}</span>
+                  <span className="suggestion-subtitle">
                     {[loc.state, loc.country].filter(Boolean).join(', ')}
                   </span>
                 </div>
-                <ArrowRight size={14} className="suggestion-arrow" />
+                <ArrowRight size={13} className="suggestion-tail-arrow" />
               </button>
             ))}
           </div>
         )}
-      </div>
+      </form>
 
-      <div className="search-divider" />
+      {/* Progressive refinement panel */}
+      {showPreferences && (
+        <div className="progressive-preferences-tray animate-fade-down">
+          <div className="pref-column">
+            <span className="pref-label">Travel Season</span>
+            <div className="pref-options-row">
+              {['Anytime', 'Spring (Mar–May)', 'Summer (Jun–Aug)', 'Autumn (Sep–Nov)', 'Winter (Dec–Feb)'].map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  className={`pref-pill-btn ${selectedSeason === s ? 'selected' : ''}`}
+                  onClick={() => setSelectedSeason(s)}
+                >
+                  {selectedSeason === s && <Check size={12} className="inline mr-1" />}
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
 
-      {/* 2. WHEN */}
-      <div className="search-field interactive-field" onClick={() => { setWhenOpen(!whenOpen); setWhoOpen(false); setStyleOpen(false); }}>
-        <div className="search-field-icon">
-          <Calendar size={18} className="text-emerald-700" />
-        </div>
-        <div className="search-field-content">
-          <label className="search-field-label">When</label>
-          <div className="search-field-value">
-            <span>{selectedSeason}</span>
-            <ChevronDown size={13} className={`field-chevron ${whenOpen ? 'rotate-180' : ''}`} />
+          <div className="pref-column">
+            <span className="pref-label">Travel Style</span>
+            <div className="pref-options-row">
+              {['Cultural & Discovery', 'Island & Coastal', 'Alpine & Hiking', 'Epicurean & Wine'].map((st) => (
+                <button
+                  key={st}
+                  type="button"
+                  className={`pref-pill-btn ${selectedStyle === st ? 'selected' : ''}`}
+                  onClick={() => setSelectedStyle(st)}
+                >
+                  {selectedStyle === st && <Check size={12} className="inline mr-1" />}
+                  {st}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-
-        {whenOpen && (
-          <div className="search-popover-menu animate-fade-down">
-            {[
-              'Anytime / Flexible',
-              'Spring (Mar – May)',
-              'Summer (Jun – Aug)',
-              'Autumn (Sep – Nov)',
-              'Winter (Dec – Feb)',
-            ].map((season) => (
-              <button
-                key={season}
-                type="button"
-                className={`popover-option ${selectedSeason === season ? 'selected' : ''}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedSeason(season);
-                  setWhenOpen(false);
-                }}
-              >
-                {season}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="search-divider" />
-
-      {/* 3. WHO */}
-      <div className="search-field interactive-field" onClick={() => { setWhoOpen(!whoOpen); setWhenOpen(false); setStyleOpen(false); }}>
-        <div className="search-field-icon">
-          <Users size={18} className="text-emerald-700" />
-        </div>
-        <div className="search-field-content">
-          <label className="search-field-label">Who</label>
-          <div className="search-field-value">
-            <span>{selectedTravelers}</span>
-            <ChevronDown size={13} className={`field-chevron ${whoOpen ? 'rotate-180' : ''}`} />
-          </div>
-        </div>
-
-        {whoOpen && (
-          <div className="search-popover-menu animate-fade-down">
-            {[
-              '1 Traveler (Solo Explorer)',
-              '2 Travelers (Couple)',
-              '3–5 Travelers (Family / Friends)',
-              '6+ Travelers (Group Expedition)',
-            ].map((travelers) => (
-              <button
-                key={travelers}
-                type="button"
-                className={`popover-option ${selectedTravelers === travelers ? 'selected' : ''}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedTravelers(travelers);
-                  setWhoOpen(false);
-                }}
-              >
-                {travelers}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="search-divider" />
-
-      {/* 4. STYLE */}
-      <div className="search-field interactive-field" onClick={() => { setStyleOpen(!styleOpen); setWhenOpen(false); setWhoOpen(false); }}>
-        <div className="search-field-icon">
-          <Compass size={18} className="text-emerald-700" />
-        </div>
-        <div className="search-field-content">
-          <label className="search-field-label">Travel Style</label>
-          <div className="search-field-value">
-            <span>{selectedStyle}</span>
-            <ChevronDown size={13} className={`field-chevron ${styleOpen ? 'rotate-180' : ''}`} />
-          </div>
-        </div>
-
-        {styleOpen && (
-          <div className="search-popover-menu animate-fade-down">
-            {[
-              'Cultural & Discovery',
-              'Relaxation & Wellness',
-              'Mountain & Trekking',
-              'Coastal & Tropical',
-              'Culinary & Epicurean',
-            ].map((style) => (
-              <button
-                key={style}
-                type="button"
-                className={`popover-option ${selectedStyle === style ? 'selected' : ''}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedStyle(style);
-                  setStyleOpen(false);
-                }}
-              >
-                {style}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* 5. EXPLORE CTA BUTTON */}
-      <div className="search-action-wrap">
-        <button
-          type="button"
-          className="btn-search-explore"
-          onClick={handleSearchSubmit}
-          disabled={isLoading}
-          aria-label="Explore Destination"
-        >
-          {isLoading ? (
-            <div className="spinner-small" />
-          ) : (
-            <>
-              <span>Explore</span>
-              <ArrowRight size={16} />
-            </>
-          )}
-        </button>
-      </div>
+      )}
     </div>
   );
 };
