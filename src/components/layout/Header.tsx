@@ -1,377 +1,490 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  Compass,
+  Sparkles,
   Plane,
   Building2,
   Car,
+  Layers,
   Briefcase,
-  Sparkles,
   Wallet,
   Star,
   Camera,
   ChevronDown,
   Menu,
   X,
-  Layers,
-  Globe2,
+  BookmarkCheck,
+  User,
+  Shield,
+  LogOut,
+  Compass,
 } from 'lucide-react';
 import AlertsPanel from '@/components/Alerts/AlertsPanel';
+import { useAuth } from '@/context/AuthContext';
 
 interface HeaderProps {
   onOpenTrips: () => void;
+  onOpenMyBookings: () => void;
+  onOpenChat: () => void;
   onOpenFlight: () => void;
   onOpenHotel: () => void;
   onOpenTransport: () => void;
   onOpenBundle: () => void;
-  onOpenMyBookings: () => void;
-  onOpenChat: () => void;
-  onOpenBudget: () => void;
   onOpenPacking: () => void;
+  onOpenBudget: () => void;
   onOpenReviews: () => void;
   onOpenMemories: () => void;
+  onOpenProfile: () => void;
+  onOpenAdmin: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   onOpenTrips,
+  onOpenMyBookings,
+  onOpenChat,
   onOpenFlight,
   onOpenHotel,
   onOpenTransport,
   onOpenBundle,
-  onOpenMyBookings,
-  onOpenChat,
-  onOpenBudget,
   onOpenPacking,
+  onOpenBudget,
   onOpenReviews,
   onOpenMemories,
+  onOpenProfile,
+  onOpenAdmin,
 }) => {
+  const { user, isAuthenticated, isAdmin, signOut } = useAuth();
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [bookingsDropdownOpen, setBookingsDropdownOpen] = useState(false);
-  const [suiteDropdownOpen, setSuiteDropdownOpen] = useState(false);
+  const [bookingsOpen, setBookingsOpen] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const bookingsRef = useRef<HTMLDivElement>(null);
-  const suiteRef = useRef<HTMLDivElement>(null);
+  const toolsRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdowns on outside click
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (bookingsRef.current && !bookingsRef.current.contains(event.target as Node)) {
-        setBookingsDropdownOpen(false);
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (bookingsRef.current && !bookingsRef.current.contains(e.target as Node)) {
+        setBookingsOpen(false);
       }
-      if (suiteRef.current && !suiteRef.current.contains(event.target as Node)) {
-        setSuiteDropdownOpen(false);
+      if (toolsRef.current && !toolsRef.current.contains(e.target as Node)) {
+        setToolsOpen(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, []);
 
   return (
-    <header className="voyana-header">
-      <div className="header-inner">
-        {/* Brand Logo */}
-        <a href="#top" className="brand-link" aria-label="Voyana Home">
-          <div className="brand-logo-mark">
-            <Compass size={18} strokeWidth={2.4} />
-          </div>
-          <div className="brand-text-wrap">
-            <span className="brand-name">VOYANA</span>
-            <span className="brand-tagline">TRAVEL DISCOVERY</span>
-          </div>
-        </a>
+    <header className="architectural-header" id="architectural-header">
+      {/* Main Architectural Navigation Bar (Flush Edge-to-Edge) */}
+      <div className="architectural-navbar-main">
+        <div className="architectural-navbar-container">
+          {/* Left: Bespoke Celestial Astrolabe Brand Lockup */}
+          <a href="#top" className="arch-brand-lockup" aria-label="Voyana Home">
+            <div className="arch-brand-emblem">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="astrolabe-svg">
+                <circle cx="12" cy="12" r="9.5" stroke="currentColor" strokeWidth="1.6" opacity="0.9" />
+                <ellipse cx="12" cy="12" rx="4.8" ry="9.5" stroke="currentColor" strokeWidth="1.4" opacity="0.8" />
+                <line x1="2.5" y1="12" x2="21.5" y2="12" stroke="currentColor" strokeWidth="1.4" opacity="0.8" />
+                <circle cx="12" cy="12" r="2" fill="#0b7a3b" />
+              </svg>
+            </div>
+            <div className="arch-brand-titles">
+              <span className="arch-brand-wordmark">VOYANA</span>
+              <span className="arch-brand-tagline">Trip Pe Aana!</span>
+            </div>
+          </a>
 
-        {/* Desktop Navigation */}
-        <nav className="desktop-nav" aria-label="Main navigation">
-          <a href="#top" className="nav-link active">Explore</a>
-          <a href="#destinations" className="nav-link">Destinations</a>
-          
-          <button
-            type="button"
-            className="nav-link btn-nav"
-            onClick={onOpenTrips}
-            aria-label="Open Trips and Collaborative Workspace"
-          >
-            <Compass size={14} className="nav-icon" />
-            <span>Trips & Workspace</span>
-          </button>
-
-          {/* Bookings Dropdown */}
-          <div className="dropdown-container" ref={bookingsRef}>
+          {/* Center: Curated Navigation Links */}
+          <nav className="arch-navbar-center" aria-label="Main Navigation">
+            <a href="#top" className="arch-nav-item active">
+              <span className="arch-nav-label">Explore</span>
+            </a>
+            <a href="#destinations" className="arch-nav-item">
+              <span className="arch-nav-label">Destinations</span>
+            </a>
             <button
               type="button"
-              className={`nav-link btn-nav dropdown-trigger ${bookingsDropdownOpen ? 'active' : ''}`}
-              onClick={() => {
-                setBookingsDropdownOpen(!bookingsDropdownOpen);
-                setSuiteDropdownOpen(false);
-              }}
-              aria-expanded={bookingsDropdownOpen}
-              aria-haspopup="true"
+              className="arch-nav-item"
+              onClick={onOpenTrips}
             >
-              <span>Bookings</span>
-              <ChevronDown size={14} className={`dropdown-chevron ${bookingsDropdownOpen ? 'rotate-180' : ''}`} />
+              <span className="arch-nav-label">Workspaces</span>
             </button>
 
-            {bookingsDropdownOpen && (
-              <div className="dropdown-menu animate-fade-down" role="menu">
+            {/* Bookings Dropdown */}
+            <div className="nav-dropdown-wrap" ref={bookingsRef}>
+              <button
+                type="button"
+                className={`arch-nav-item dropdown-trigger ${bookingsOpen ? 'active' : ''}`}
+                onClick={() => {
+                  setBookingsOpen(!bookingsOpen);
+                  setToolsOpen(false);
+                  setUserMenuOpen(false);
+                }}
+                aria-expanded={bookingsOpen}
+              >
+                <span className="arch-nav-label">Bookings</span>
+                <ChevronDown size={11} className={`dropdown-chevron ${bookingsOpen ? 'open' : ''}`} />
+              </button>
+
+              {bookingsOpen && (
+                <div className="nav-dropdown-popover animate-fade-down" role="menu">
+                  <button
+                    type="button"
+                    className="dropdown-menu-row"
+                    onClick={() => { setBookingsOpen(false); onOpenFlight(); }}
+                  >
+                    <Plane size={15} className="dropdown-row-icon" />
+                    <div className="dropdown-row-meta">
+                      <span className="dropdown-row-title">Flights</span>
+                      <span className="dropdown-row-desc">Global airfare & routes</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    className="dropdown-menu-row"
+                    onClick={() => { setBookingsOpen(false); onOpenHotel(); }}
+                  >
+                    <Building2 size={15} className="dropdown-row-icon" />
+                    <div className="dropdown-row-meta">
+                      <span className="dropdown-row-title">Hotels & Stays</span>
+                      <span className="dropdown-row-desc">Curated boutique stays</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    className="dropdown-menu-row"
+                    onClick={() => { setBookingsOpen(false); onOpenTransport(); }}
+                  >
+                    <Car size={15} className="dropdown-row-icon" />
+                    <div className="dropdown-row-meta">
+                      <span className="dropdown-row-title">Ground Transport</span>
+                      <span className="dropdown-row-desc">Transfers & rentals</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    className="dropdown-menu-row"
+                    onClick={() => { setBookingsOpen(false); onOpenBundle(); }}
+                  >
+                    <Layers size={15} className="dropdown-row-icon" />
+                    <div className="dropdown-row-meta">
+                      <span className="dropdown-row-title">Unified Bundles</span>
+                      <span className="dropdown-row-desc">Flight + Stay + Car packages</span>
+                    </div>
+                  </button>
+                  <div className="dropdown-divider" />
+                  <button
+                    type="button"
+                    className="dropdown-menu-row"
+                    onClick={() => { setBookingsOpen(false); onOpenMyBookings(); }}
+                  >
+                    <BookmarkCheck size={15} className="dropdown-row-icon" />
+                    <div className="dropdown-row-meta">
+                      <span className="dropdown-row-title">My Bookings</span>
+                      <span className="dropdown-row-desc">Active itineraries & vouchers</span>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Travel Suite Dropdown */}
+            <div className="nav-dropdown-wrap" ref={toolsRef}>
+              <button
+                type="button"
+                className={`arch-nav-item dropdown-trigger ${toolsOpen ? 'active' : ''}`}
+                onClick={() => {
+                  setToolsOpen(!toolsOpen);
+                  setBookingsOpen(false);
+                  setUserMenuOpen(false);
+                }}
+                aria-expanded={toolsOpen}
+              >
+                <span className="arch-nav-label">Travel Suite</span>
+                <ChevronDown size={11} className={`dropdown-chevron ${toolsOpen ? 'open' : ''}`} />
+              </button>
+
+              {toolsOpen && (
+                <div className="nav-dropdown-popover animate-fade-down" role="menu">
+                  <button
+                    type="button"
+                    className="dropdown-menu-row"
+                    onClick={() => { setToolsOpen(false); onOpenPacking(); }}
+                  >
+                    <Briefcase size={15} className="dropdown-row-icon" />
+                    <div className="dropdown-row-meta">
+                      <span className="dropdown-row-title">Smart Packing List</span>
+                      <span className="dropdown-row-desc">Automated gear checklists</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    className="dropdown-menu-row"
+                    onClick={() => { setToolsOpen(false); onOpenBudget(); }}
+                  >
+                    <Wallet size={15} className="dropdown-row-icon" />
+                    <div className="dropdown-row-meta">
+                      <span className="dropdown-row-title">Budget Planner</span>
+                      <span className="dropdown-row-desc">Multi-currency split & expenses</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    className="dropdown-menu-row"
+                    onClick={() => { setToolsOpen(false); onOpenReviews(); }}
+                  >
+                    <Star size={15} className="dropdown-row-icon" />
+                    <div className="dropdown-row-meta">
+                      <span className="dropdown-row-title">Travel Reviews</span>
+                      <span className="dropdown-row-desc">Verified community feedback</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    className="dropdown-menu-row"
+                    onClick={() => { setToolsOpen(false); onOpenMemories(); }}
+                  >
+                    <Camera size={15} className="dropdown-row-icon" />
+                    <div className="dropdown-row-meta">
+                      <span className="dropdown-row-title">Memories Journal</span>
+                      <span className="dropdown-row-desc">Geo-tagged photo memories</span>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
+          </nav>
+
+          {/* Right: Travel Assistant, Alerts, Profile / Sign In */}
+          <div className="arch-navbar-right">
+            {/* Architectural AI Assistant Trigger */}
+            <button
+              type="button"
+              className="arch-assistant-pill"
+              onClick={onOpenChat}
+              aria-label="Open AI Travel Assistant"
+            >
+              <Sparkles size={13} className="text-emerald-700" />
+              <span>AI Concierge</span>
+            </button>
+
+            {/* Notifications Panel */}
+            <AlertsPanel />
+
+            {/* Hierarchical Profile Control */}
+            {isAuthenticated && user ? (
+              <div className="nav-dropdown-wrap" ref={userMenuRef}>
                 <button
                   type="button"
-                  className="dropdown-item"
-                  onClick={() => { setBookingsDropdownOpen(false); onOpenFlight(); }}
-                  role="menuitem"
+                  className={`arch-profile-control ${userMenuOpen ? 'active' : ''}`}
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  aria-expanded={userMenuOpen}
                 >
-                  <Plane size={16} className="text-emerald-700" />
-                  <div>
-                    <span className="dropdown-item-title">Flights</span>
-                    <span className="dropdown-item-desc">Global flight routes & fares</span>
+                  <img
+                    src={user.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'}
+                    alt={user.name}
+                    className="arch-avatar-img"
+                  />
+                  <div className="arch-profile-identity">
+                    <span className="arch-profile-name">{user.name.split(' ')[0]}</span>
+                    <span className="arch-profile-badge">{user.role}</span>
                   </div>
+                  <ChevronDown size={11} className={`profile-chevron ${userMenuOpen ? 'open' : ''}`} />
                 </button>
+
+                {userMenuOpen && (
+                  <div className="nav-dropdown-popover profile-popover animate-fade-down" role="menu">
+                    <div className="profile-popover-header">
+                      <span className="popover-user-name">{user.name}</span>
+                      <span className="popover-user-email">{user.email}</span>
+                    </div>
+                    <div className="dropdown-divider" />
+
+                    <button
+                      type="button"
+                      className="dropdown-menu-row"
+                      onClick={() => { setUserMenuOpen(false); onOpenProfile(); }}
+                    >
+                      <User size={15} className="dropdown-row-icon" />
+                      <div className="dropdown-row-meta">
+                        <span className="dropdown-row-title">Profile & Preferences</span>
+                        <span className="dropdown-row-desc">Style, currency & details</span>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="dropdown-menu-row"
+                      onClick={() => { setUserMenuOpen(false); onOpenTrips(); }}
+                    >
+                      <Briefcase size={15} className="dropdown-row-icon" />
+                      <div className="dropdown-row-meta">
+                        <span className="dropdown-row-title">My Workspaces</span>
+                        <span className="dropdown-row-desc">Shared trips & plans</span>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="dropdown-menu-row"
+                      onClick={() => { setUserMenuOpen(false); onOpenMyBookings(); }}
+                    >
+                      <BookmarkCheck size={15} className="dropdown-row-icon" />
+                      <div className="dropdown-row-meta">
+                        <span className="dropdown-row-title">My Bookings</span>
+                        <span className="dropdown-row-desc">Flights, stays & cars</span>
+                      </div>
+                    </button>
+
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        className="dropdown-menu-row admin-row"
+                        onClick={() => { setUserMenuOpen(false); onOpenAdmin(); }}
+                      >
+                        <Shield size={15} className="dropdown-row-icon text-amber-600" />
+                        <div className="dropdown-row-meta">
+                          <span className="dropdown-row-title">Admin Console</span>
+                          <span className="dropdown-row-desc">Platform telemetry & users</span>
+                        </div>
+                      </button>
+                    )}
+
+                    <div className="dropdown-divider" />
+                    <button
+                      type="button"
+                      className="dropdown-menu-row logout-row"
+                      onClick={() => { setUserMenuOpen(false); signOut(); }}
+                    >
+                      <LogOut size={15} className="dropdown-row-icon text-rose-500" />
+                      <div className="dropdown-row-meta">
+                        <span className="dropdown-row-title text-rose-600">Sign Out</span>
+                      </div>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="arch-auth-actions">
                 <button
                   type="button"
-                  className="dropdown-item"
-                  onClick={() => { setBookingsDropdownOpen(false); onOpenHotel(); }}
-                  role="menuitem"
+                  className="arch-btn-ghost"
+                  onClick={() => { window.location.hash = '/login'; }}
                 >
-                  <Building2 size={16} className="text-emerald-700" />
-                  <div>
-                    <span className="dropdown-item-title">Hotels & Stays</span>
-                    <span className="dropdown-item-desc">Curated accommodations</span>
-                  </div>
+                  Sign In
                 </button>
+
                 <button
                   type="button"
-                  className="dropdown-item"
-                  onClick={() => { setBookingsDropdownOpen(false); onOpenTransport(); }}
-                  role="menuitem"
+                  className="arch-btn-primary"
+                  onClick={() => { window.location.hash = '/signup'; }}
                 >
-                  <Car size={16} className="text-emerald-700" />
-                  <div>
-                    <span className="dropdown-item-title">Ground Transport</span>
-                    <span className="dropdown-item-desc">Transfers, trains & car rentals</span>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  className="dropdown-item"
-                  onClick={() => { setBookingsDropdownOpen(false); onOpenBundle(); }}
-                  role="menuitem"
-                >
-                  <Layers size={16} className="text-teal-700" />
-                  <div>
-                    <span className="dropdown-item-title">Unified Bundles</span>
-                    <span className="dropdown-item-desc">Multi-service package bookings</span>
-                  </div>
-                </button>
-                <div className="dropdown-divider" />
-                <button
-                  type="button"
-                  className="dropdown-item highlight"
-                  onClick={() => { setBookingsDropdownOpen(false); onOpenMyBookings(); }}
-                  role="menuitem"
-                >
-                  <Briefcase size={16} className="text-emerald-800" />
-                  <div>
-                    <span className="dropdown-item-title">My Bookings</span>
-                    <span className="dropdown-item-desc">Manage upcoming reservations</span>
-                  </div>
+                  <span>Start Exploring</span>
                 </button>
               </div>
             )}
-          </div>
 
-          {/* Travel Suite Dropdown */}
-          <div className="dropdown-container" ref={suiteRef}>
+            {/* Mobile hamburger */}
             <button
               type="button"
-              className={`nav-link btn-nav dropdown-trigger ${suiteDropdownOpen ? 'active' : ''}`}
-              onClick={() => {
-                setSuiteDropdownOpen(!suiteDropdownOpen);
-                setBookingsDropdownOpen(false);
-              }}
-              aria-expanded={suiteDropdownOpen}
-              aria-haspopup="true"
+              className="arch-mobile-toggle"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle navigation menu"
             >
-              <span>Travel Tools</span>
-              <ChevronDown size={14} className={`dropdown-chevron ${suiteDropdownOpen ? 'rotate-180' : ''}`} />
-            </button>
-
-            {suiteDropdownOpen && (
-              <div className="dropdown-menu animate-fade-down" role="menu">
-                <button
-                  type="button"
-                  className="dropdown-item"
-                  onClick={() => { setSuiteDropdownOpen(false); onOpenChat(); }}
-                  role="menuitem"
-                >
-                  <Sparkles size={16} className="text-emerald-700" />
-                  <div>
-                    <span className="dropdown-item-title">AI Travel Assistant</span>
-                    <span className="dropdown-item-desc">Weather & itinerary engine</span>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  className="dropdown-item"
-                  onClick={() => { setSuiteDropdownOpen(false); onOpenPacking(); }}
-                  role="menuitem"
-                >
-                  <Briefcase size={16} className="text-emerald-700" />
-                  <div>
-                    <span className="dropdown-item-title">Smart Packing List</span>
-                    <span className="dropdown-item-desc">Checklists & member gear sync</span>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  className="dropdown-item"
-                  onClick={() => { setSuiteDropdownOpen(false); onOpenBudget(); }}
-                  role="menuitem"
-                >
-                  <Wallet size={16} className="text-emerald-700" />
-                  <div>
-                    <span className="dropdown-item-title">Budget Planner</span>
-                    <span className="dropdown-item-desc">Multi-currency split & tracking</span>
-                  </div>
-                </button>
-                <div className="dropdown-divider" />
-                <button
-                  type="button"
-                  className="dropdown-item"
-                  onClick={() => { setSuiteDropdownOpen(false); onOpenReviews(); }}
-                  role="menuitem"
-                >
-                  <Star size={16} className="text-amber-600" />
-                  <div>
-                    <span className="dropdown-item-title">Travel Reviews</span>
-                    <span className="dropdown-item-desc">Verified traveler ratings</span>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  className="dropdown-item"
-                  onClick={() => { setSuiteDropdownOpen(false); onOpenMemories(); }}
-                  role="menuitem"
-                >
-                  <Camera size={16} className="text-teal-700" />
-                  <div>
-                    <span className="dropdown-item-title">Memories Journal</span>
-                    <span className="dropdown-item-desc">Geo-tagged photo memories</span>
-                  </div>
-                </button>
-              </div>
-            )}
-          </div>
-        </nav>
-
-        {/* Right Actions */}
-        <div className="header-actions">
-          {/* AI Assistant Quick Pill */}
-          <button
-            type="button"
-            className="ai-pill-button"
-            onClick={onOpenChat}
-            aria-label="Launch Voyana AI Travel Assistant"
-          >
-            <Sparkles size={14} />
-            <span>Travel Assistant</span>
-          </button>
-
-          {/* Alerts Bell */}
-          <AlertsPanel />
-
-          {/* Auth CTA */}
-          <div className="auth-buttons">
-            <button
-              type="button"
-              className="btn-ghost-header"
-              onClick={() => { window.location.hash = '/login'; }}
-            >
-              Sign In
-            </button>
-            <button
-              type="button"
-              className="btn-primary-header"
-              onClick={() => { window.location.hash = '/signup'; }}
-            >
-              Get Started
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
-
-          {/* Mobile Hamburger Button */}
-          <button
-            type="button"
-            className="mobile-toggle"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle navigation menu"
-          >
-            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
         </div>
       </div>
 
-      {/* Mobile Drawer Menu */}
+      {/* Mobile Architectural Drawer */}
       {mobileMenuOpen && (
-        <div className="mobile-drawer animate-fade-down">
-          <div className="mobile-section-label">Navigation</div>
-          <a href="#top" className="mobile-nav-item" onClick={() => setMobileMenuOpen(false)}>
-            <Globe2 size={16} /> Explore World
-          </a>
-          <a href="#destinations" className="mobile-nav-item" onClick={() => setMobileMenuOpen(false)}>
-            <Compass size={16} /> Destinations
-          </a>
-          <button
-            type="button"
-            className="mobile-nav-item"
-            onClick={() => { setMobileMenuOpen(false); onOpenTrips(); }}
-          >
-            <Compass size={16} /> Trips & Workspace
-          </button>
-
-          <div className="mobile-section-label">Bookings</div>
-          <button type="button" className="mobile-nav-item" onClick={() => { setMobileMenuOpen(false); onOpenFlight(); }}>
-            <Plane size={16} /> Book Flights
-          </button>
-          <button type="button" className="mobile-nav-item" onClick={() => { setMobileMenuOpen(false); onOpenHotel(); }}>
-            <Building2 size={16} /> Book Hotels
-          </button>
-          <button type="button" className="mobile-nav-item" onClick={() => { setMobileMenuOpen(false); onOpenTransport(); }}>
-            <Car size={16} /> Ground Transport
-          </button>
-          <button type="button" className="mobile-nav-item" onClick={() => { setMobileMenuOpen(false); onOpenMyBookings(); }}>
-            <Briefcase size={16} /> My Bookings
-          </button>
-
-          <div className="mobile-section-label">Travel Tools</div>
-          <button type="button" className="mobile-nav-item" onClick={() => { setMobileMenuOpen(false); onOpenChat(); }}>
-            <Sparkles size={16} /> AI Travel Assistant
-          </button>
-          <button type="button" className="mobile-nav-item" onClick={() => { setMobileMenuOpen(false); onOpenPacking(); }}>
-            <Briefcase size={16} /> Smart Packing List
-          </button>
-          <button type="button" className="mobile-nav-item" onClick={() => { setMobileMenuOpen(false); onOpenBudget(); }}>
-            <Wallet size={16} /> Budget Planner
-          </button>
-          <button type="button" className="mobile-nav-item" onClick={() => { setMobileMenuOpen(false); onOpenReviews(); }}>
-            <Star size={16} /> Reviews & Ratings
-          </button>
-          <button type="button" className="mobile-nav-item" onClick={() => { setMobileMenuOpen(false); onOpenMemories(); }}>
-            <Camera size={16} /> Memories Journal
-          </button>
-
-          <div className="mobile-auth-actions">
-            <button
-              type="button"
-              className="btn-secondary-full"
-              onClick={() => { setMobileMenuOpen(false); window.location.hash = '/login'; }}
-            >
-              Sign In
+        <div className="arch-mobile-drawer animate-fade-down">
+          <div className="arch-mobile-links">
+            <a href="#top" className="arch-mobile-item" onClick={() => setMobileMenuOpen(false)}>
+              <span>Explore</span>
+            </a>
+            <a href="#destinations" className="arch-mobile-item" onClick={() => setMobileMenuOpen(false)}>
+              <span>Destinations</span>
+            </a>
+            <button type="button" className="arch-mobile-item" onClick={() => { setMobileMenuOpen(false); onOpenTrips(); }}>
+              <span>Workspaces & Trips</span>
             </button>
-            <button
-              type="button"
-              className="btn-primary-full"
-              onClick={() => { setMobileMenuOpen(false); window.location.hash = '/signup'; }}
-            >
-              Create Account
+            <button type="button" className="arch-mobile-item" onClick={() => { setMobileMenuOpen(false); onOpenFlight(); }}>
+              <span>Book Flights</span>
+            </button>
+            <button type="button" className="arch-mobile-item" onClick={() => { setMobileMenuOpen(false); onOpenHotel(); }}>
+              <span>Book Hotels</span>
+            </button>
+            <button type="button" className="arch-mobile-item" onClick={() => { setMobileMenuOpen(false); onOpenTransport(); }}>
+              <span>Ground Transport</span>
+            </button>
+            <button type="button" className="arch-mobile-item" onClick={() => { setMobileMenuOpen(false); onOpenMyBookings(); }}>
+              <span>My Bookings</span>
+            </button>
+            <button type="button" className="arch-mobile-item" onClick={() => { setMobileMenuOpen(false); onOpenChat(); }}>
+              <span>AI Concierge</span>
+            </button>
+            <button type="button" className="arch-mobile-item" onClick={() => { setMobileMenuOpen(false); onOpenPacking(); }}>
+              <span>Smart Packing List</span>
+            </button>
+            <button type="button" className="arch-mobile-item" onClick={() => { setMobileMenuOpen(false); onOpenBudget(); }}>
+              <span>Budget Planner</span>
             </button>
           </div>
+
+          {isAuthenticated && user ? (
+            <div className="arch-mobile-auth">
+              <button
+                type="button"
+                className="arch-mobile-profile-row"
+                onClick={() => { setMobileMenuOpen(false); onOpenProfile(); }}
+              >
+                <User size={16} className="text-emerald-700" />
+                <span>{user.name} ({user.role})</span>
+              </button>
+              {isAdmin && (
+                <button
+                  type="button"
+                  className="arch-mobile-profile-row text-amber-700"
+                  onClick={() => { setMobileMenuOpen(false); onOpenAdmin(); }}
+                >
+                  <Shield size={16} className="text-amber-600" />
+                  <span>Admin Console</span>
+                </button>
+              )}
+              <button
+                type="button"
+                className="arch-mobile-signout-btn"
+                onClick={() => { setMobileMenuOpen(false); signOut(); }}
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <div className="arch-mobile-auth-guest">
+              <button
+                type="button"
+                className="arch-btn-ghost"
+                onClick={() => { setMobileMenuOpen(false); window.location.hash = '/login'; }}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                className="arch-btn-primary"
+                onClick={() => { setMobileMenuOpen(false); window.location.hash = '/signup'; }}
+              >
+                Start Exploring
+              </button>
+            </div>
+          )}
         </div>
       )}
     </header>
