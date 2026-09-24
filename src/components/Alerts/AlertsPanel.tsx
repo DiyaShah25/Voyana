@@ -160,17 +160,17 @@ export const AlertsPanel: React.FC = () => {
       <div className="relative" ref={panelRef}>
         <button
           onClick={() => setIsOpen((prev) => !prev)}
-          className={`relative p-2.5 rounded-full transition-all duration-200 border ${
+          className={`relative p-2 rounded-full transition-all duration-150 border ${
             isOpen
-              ? 'bg-indigo-600/30 border-indigo-400/60 text-white shadow-lg shadow-indigo-500/20'
-              : 'bg-white/10 hover:bg-white/15 border-white/10 text-slate-200 hover:text-white'
+              ? 'bg-emerald-50 border-emerald-300 text-emerald-800 shadow-sm'
+              : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900'
           }`}
           aria-label="View booking alerts"
           title="Booking Alerts"
         >
-          <Bell size={18} />
+          <Bell size={16} />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white ring-2 ring-[#0a0e17] animate-pulse">
+            <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-700 text-[9px] font-bold text-white ring-2 ring-white">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}

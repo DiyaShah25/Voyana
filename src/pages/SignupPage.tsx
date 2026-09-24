@@ -9,9 +9,12 @@ import {
   Lock,
   Mail,
   User,
-  UserPlus,
+  Compass,
+  Users,
 } from 'lucide-react';
-import { EMAIL_PATTERN, MIN_PASSWORD_LENGTH, signUp } from '@/services/authService';
+import { EMAIL_PATTERN, MIN_PASSWORD_LENGTH } from '@/services/authService';
+import { useAuth } from '@/context/AuthContext';
+import type { UserRole } from '@/types/auth.types';
 import SocialAuth from './SocialAuth';
 
 type Status = 'idle' | 'loading' | 'error' | 'success';
@@ -25,10 +28,12 @@ interface FieldErrors {
 }
 
 function SignupPage() {
+  const { signUp } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+  const [role, setRole] = useState<UserRole>('traveler');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [agreed, setAgreed] = useState(false);
@@ -42,11 +47,11 @@ function SignupPage() {
 
   const validate = () => {
     const errors: FieldErrors = {};
-    if (!name.trim()) errors.name = 'Full name is required.';
-    if (!email.trim()) errors.email = 'Email is required.';
+    if (!name.trim() || name.trim().length < 2) errors.name = 'Full name is required (minimum 2 characters).';
+    if (!email.trim()) errors.email = 'Email address is required.';
     else if (!EMAIL_PATTERN.test(email.trim())) errors.email = 'Please enter a valid email address.';
     if (!password) errors.password = 'Password is required.';
-    else if (password.length < MIN_PASSWORD_LENGTH) errors.password = `Use at least ${MIN_PASSWORD_LENGTH} characters.`;
+    else if (password.length < MIN_PASSWORD_LENGTH) errors.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`;
     if (confirm !== password) errors.confirm = 'Passwords do not match.';
     if (!agreed) errors.terms = 'Please accept the Terms of Service to continue.';
     setFieldErrors(errors);
@@ -60,175 +65,238 @@ function SignupPage() {
     if (!validate()) return;
 
     setStatus('loading');
-    const result = await signUp(name.trim(), email.trim(), password);
+    const result = await signUp(name.trim(), email.trim(), password, role);
     if (!result.ok) {
       setStatus('error');
       setFormError(result.message);
+      if (result.fieldErrors) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          name: result.fieldErrors?.name,
+          email: result.fieldErrors?.email,
+          password: result.fieldErrors?.password,
+        }));
+      }
       return;
     }
     setStatus('success');
     window.setTimeout(() => {
-      window.location.hash = '/login';
-    }, 1600);
+      window.location.hash = '/';
+    }, 700);
   };
 
   const busy = status === 'loading';
 
   return (
-    <div className="login-panel">
-      <div className="login-brand">
-        <div className="login-logo-container">
-          <UserPlus className="login-logo" size={24} fill="none" strokeWidth={2.5} />
-        </div>
-        <h2 className="login-brand-name">VOYANA</h2>
-        <span className="login-brand-tag">Join the adventure</span>
+    <div className="auth-card-body">
+      <div className="auth-header-block">
+        <h1 className="auth-main-title">Create your account</h1>
+        <p className="auth-main-subtitle">
+          Join Voyana to discover destinations, plan multi-stop journeys, and collaborate with travelers worldwide.
+        </p>
       </div>
 
-      <h1 className="login-heading">Create Account <span className="login-sparkle">✨</span></h1>
-      <p className="login-subheading">
-        Start your adventure today and<br />
-        explore amazing places.
-      </p>
-
       {formError && (
-        <div className="auth-alert auth-alert-error" role="alert">
+        <div className="auth-alert-box error animate-fade-in" role="alert">
           <AlertCircle size={16} />
           <span>{formError}</span>
         </div>
       )}
+
       {status === 'success' && (
-        <div className="auth-alert auth-alert-success" role="status" style={{ background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)', color: '#86efac', padding: '12px 16px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+        <div className="auth-alert-box success animate-fade-in" role="alert">
           <CheckCircle2 size={16} />
-          <span>Account created. Taking you to sign in…</span>
+          <span>Account created successfully! Welcome to Voyana…</span>
         </div>
       )}
 
-      <form className="login-form" onSubmit={handleSubmit} noValidate>
-        <div className="login-field-group">
-          <div className={`login-input-wrap ${fieldErrors.name ? 'has-error' : ''}`}>
-            <User size={18} className="login-input-icon" aria-hidden="true" />
+      <form className="auth-actual-form" onSubmit={handleSubmit} noValidate>
+        {/* Full Name */}
+        <div className="auth-input-group">
+          <label className="auth-input-label" htmlFor="signup-name">Full Name</label>
+          <div className={`auth-input-wrapper ${fieldErrors.name ? 'error' : ''}`}>
+            <User size={17} className="auth-input-icon" />
             <input
               id="signup-name"
               type="text"
-              autoComplete="name"
-              placeholder="Full Name"
               value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                clearFieldError('name');
+              }}
+              placeholder="Alex Morgan"
+              autoComplete="name"
               disabled={busy}
-              aria-invalid={Boolean(fieldErrors.name)}
-              aria-describedby={fieldErrors.name ? 'signup-name-error' : undefined}
-              onChange={(event) => { setName(event.target.value); clearFieldError('name'); }}
+              className="auth-text-field"
             />
           </div>
+          {fieldErrors.name && <span className="auth-field-error-msg">{fieldErrors.name}</span>}
         </div>
 
-        <div className="login-field-group">
-          <div className={`login-input-wrap ${fieldErrors.email ? 'has-error' : ''}`}>
-            <Mail size={18} className="login-input-icon" aria-hidden="true" />
+        {/* Email Address */}
+        <div className="auth-input-group">
+          <label className="auth-input-label" htmlFor="signup-email">Email Address</label>
+          <div className={`auth-input-wrapper ${fieldErrors.email ? 'error' : ''}`}>
+            <Mail size={17} className="auth-input-icon" />
             <input
               id="signup-email"
               type="email"
-              autoComplete="email"
-              placeholder="Email Address"
               value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                clearFieldError('email');
+              }}
+              placeholder="you@domain.com"
+              autoComplete="email"
               disabled={busy}
-              aria-invalid={Boolean(fieldErrors.email)}
-              aria-describedby={fieldErrors.email ? 'signup-email-error' : undefined}
-              onChange={(event) => { setEmail(event.target.value); clearFieldError('email'); }}
+              className="auth-text-field"
             />
           </div>
+          {fieldErrors.email && <span className="auth-field-error-msg">{fieldErrors.email}</span>}
         </div>
 
-        <div className="login-field-group">
-          <div className={`login-input-wrap ${fieldErrors.password ? 'has-error' : ''}`}>
-            <Lock size={18} className="login-input-icon" aria-hidden="true" />
-            <input
-              id="signup-password"
-              type={showPassword ? 'text' : 'password'}
-              autoComplete="new-password"
-              placeholder="Create Password"
-              value={password}
-              disabled={busy}
-              aria-invalid={Boolean(fieldErrors.password)}
-              aria-describedby={fieldErrors.password ? 'signup-password-error' : undefined}
-              onChange={(event) => { setPassword(event.target.value); clearFieldError('password'); }}
-            />
+        {/* Role Selection */}
+        <div className="auth-input-group">
+          <label className="auth-input-label">Traveler Role</label>
+          <div className="auth-role-selector">
             <button
               type="button"
-              className="login-eye-button"
-              onClick={() => setShowPassword((value) => !value)}
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
-              aria-pressed={showPassword}
+              className={`auth-role-option ${role === 'traveler' ? 'active' : ''}`}
+              onClick={() => setRole('traveler')}
             >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              <Compass size={15} />
+              <div className="role-opt-info">
+                <strong>Traveler</strong>
+                <span>Personal trips, bookings & budget</span>
+              </div>
+            </button>
+            <button
+              type="button"
+              className={`auth-role-option ${role === 'organizer' ? 'active' : ''}`}
+              onClick={() => setRole('organizer')}
+            >
+              <Users size={15} />
+              <div className="role-opt-info">
+                <strong>Trip Organizer</strong>
+                <span>Lead shared expeditions & group tools</span>
+              </div>
             </button>
           </div>
         </div>
 
-        <div className="login-field-group">
-          <div className={`login-input-wrap ${fieldErrors.confirm ? 'has-error' : ''}`}>
-            <Lock size={18} className="login-input-icon" aria-hidden="true" />
-            <input
-              id="signup-confirm"
-              type={showConfirm ? 'text' : 'password'}
-              autoComplete="new-password"
-              placeholder="Confirm Password"
-              value={confirm}
-              disabled={busy}
-              aria-invalid={Boolean(fieldErrors.confirm)}
-              aria-describedby={fieldErrors.confirm ? 'signup-confirm-error' : undefined}
-              onChange={(event) => { setConfirm(event.target.value); clearFieldError('confirm'); }}
-            />
-            <button
-              type="button"
-              className="login-eye-button"
-              onClick={() => setShowConfirm((value) => !value)}
-              aria-label={showConfirm ? 'Hide password' : 'Show password'}
-              aria-pressed={showConfirm}
-            >
-              {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
+        {/* Password & Confirm Password */}
+        <div className="auth-grid-two">
+          <div className="auth-input-group">
+            <label className="auth-input-label" htmlFor="signup-password">Password</label>
+            <div className={`auth-input-wrapper ${fieldErrors.password ? 'error' : ''}`}>
+              <Lock size={17} className="auth-input-icon" />
+              <input
+                id="signup-password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  clearFieldError('password');
+                }}
+                placeholder="At least 6 chars"
+                autoComplete="new-password"
+                disabled={busy}
+                className="auth-text-field"
+              />
+              <button
+                type="button"
+                className="auth-password-toggle-btn"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+              </button>
+            </div>
+          </div>
+
+          <div className="auth-input-group">
+            <label className="auth-input-label" htmlFor="signup-confirm">Confirm Password</label>
+            <div className={`auth-input-wrapper ${fieldErrors.confirm ? 'error' : ''}`}>
+              <Lock size={17} className="auth-input-icon" />
+              <input
+                id="signup-confirm"
+                type={showConfirm ? 'text' : 'password'}
+                value={confirm}
+                onChange={(e) => {
+                  setConfirm(e.target.value);
+                  clearFieldError('confirm');
+                }}
+                placeholder="Re-enter password"
+                autoComplete="new-password"
+                disabled={busy}
+                className="auth-text-field"
+              />
+              <button
+                type="button"
+                className="auth-password-toggle-btn"
+                onClick={() => setShowConfirm(!showConfirm)}
+                aria-label={showConfirm ? 'Hide password' : 'Show password'}
+              >
+                {showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="login-options-row" style={{ marginTop: '4px' }}>
-          <label className="login-check">
+        {fieldErrors.password && <span className="auth-field-error-msg">{fieldErrors.password}</span>}
+        {fieldErrors.confirm && <span className="auth-field-error-msg">{fieldErrors.confirm}</span>}
+
+        {/* Terms and Privacy Checkbox */}
+        <div className="auth-terms-group">
+          <label className="auth-checkbox-label">
             <input
               type="checkbox"
               checked={agreed}
+              onChange={(e) => {
+                setAgreed(e.target.checked);
+                clearFieldError('terms');
+              }}
               disabled={busy}
-              aria-invalid={Boolean(fieldErrors.terms)}
-              aria-describedby={fieldErrors.terms ? 'signup-terms-error' : undefined}
-              onChange={(event) => { setAgreed(event.target.checked); clearFieldError('terms'); }}
             />
-            <span className="login-check-box" aria-hidden="true">
-              <CheckCircle2 size={12} className="login-check-mark" />
-            </span>
-            <span style={{ fontSize: '13px' }}>
-              I agree to the <a className="login-forgot-link" href="#/terms">Terms</a> &{' '}
-              <a className="login-forgot-link" href="#/privacy">Privacy</a>
+            <span>
+              I agree to the <a href="#/terms" className="auth-inline-link">Terms of Service</a> and{' '}
+              <a href="#/privacy" className="auth-inline-link">Privacy Policy</a>.
             </span>
           </label>
         </div>
+        {fieldErrors.terms && <span className="auth-field-error-msg">{fieldErrors.terms}</span>}
 
-        <button type="submit" className={`login-submit-btn ${status === 'success' ? 'is-success' : ''} ${status === 'loading' ? 'is-loading' : ''}`} disabled={busy || status === 'success'} style={{ marginTop: '8px' }}>
-          {status === 'loading' && <Loader2 size={18} className="auth-spinner" aria-hidden="true" />}
-          {status === 'success' ? (
-            'Welcome aboard!'
+        {/* Submit Button */}
+        <button
+          type="submit"
+          disabled={busy || status === 'success'}
+          className="btn-auth-submit"
+        >
+          {busy ? (
+            <>
+              <Loader2 size={17} className="animate-spin" />
+              <span>Creating account…</span>
+            </>
           ) : (
             <>
-              <span>Sign Up</span>
-              <ArrowRight size={18} className="login-submit-arrow" aria-hidden="true" />
-              <div className="login-submit-sweep" aria-hidden="true"></div>
+              <span>Create Account</span>
+              <ArrowRight size={16} />
             </>
           )}
         </button>
       </form>
 
-      <SocialAuth />
+      {/* Social Auth Divider */}
+      <div className="auth-divider-line">
+        <span>or sign up with</span>
+      </div>
 
-      <p className="login-footer-text">
-        Already have an account? <a href="#/login">Sign In</a>
-      </p>
+      <SocialAuth disabled={busy} onAuthSuccess={() => { window.location.hash = '/'; }} />
+
+      <div className="auth-switch-footer">
+        <span>Already have a Voyana account?</span>{' '}
+        <a href="#/login" className="auth-switch-link">Sign In</a>
+      </div>
     </div>
   );
 }

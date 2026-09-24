@@ -1,71 +1,99 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
+import { Compass, ArrowLeft, Star, ShieldCheck } from 'lucide-react';
 import './auth.css';
-
-const VIDEO_SRC = '/media/IMG_0536.mp4';
 
 interface AuthLayoutProps {
   route: string;
   children: ReactNode;
 }
 
-function AuthLayout({ route, children }: AuthLayoutProps) {
-  const [videoState, setVideoState] = useState({ attempt: 0, failed: false });
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-
-  const handleVideoError = () => {
-    setVideoState((prev) =>
-      prev.attempt < 2 ? { attempt: prev.attempt + 1, failed: false } : { ...prev, failed: true },
-    );
-  };
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    const tryPlay = () => {
-      if (!document.hidden) video.play().catch(() => { /* first frame remains visible */ });
-    };
-    tryPlay();
-    document.addEventListener('visibilitychange', tryPlay);
-    return () => document.removeEventListener('visibilitychange', tryPlay);
-  }, [videoState]);
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    // Parallax max 3px movement
-    const x = (e.clientX / window.innerWidth) * 2 - 1;
-    const y = (e.clientY / window.innerHeight) * 2 - 1;
-    setOffset({ x: x * 3, y: y * 3 });
-  };
-
+export function AuthLayout({ route, children }: AuthLayoutProps) {
   return (
-    <div className="auth-page" onMouseMove={handleMouseMove}>
-      <div className="auth-visual-bg">
-        {!videoState.failed && (
-          <video
-            key={videoState.attempt}
-            ref={videoRef}
-            className="auth-video"
-            src={VIDEO_SRC}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="auto"
-            tabIndex={-1}
-            disablePictureInPicture
-            onError={handleVideoError}
-          />
-        )}
+    <div className="voyana-auth-screen">
+      {/* Left Visual Column: Editorial Travel Storytelling */}
+      <div className="auth-editorial-column">
+        <div className="auth-editorial-bg" />
+        <div className="auth-editorial-scrim" />
+
+        <div className="auth-editorial-content">
+          <a href="#/" className="auth-back-link">
+            <ArrowLeft size={16} />
+            <span>Back to Voyana</span>
+          </a>
+
+          <div className="auth-editorial-quote-box">
+            <div className="auth-editorial-logo">
+              <div className="auth-logo-badge">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="9.5" stroke="currentColor" strokeWidth="1.6" opacity="0.9" />
+                  <ellipse cx="12" cy="12" rx="4.8" ry="9.5" stroke="currentColor" strokeWidth="1.4" opacity="0.8" />
+                  <line x1="2.5" y1="12" x2="21.5" y2="12" stroke="currentColor" strokeWidth="1.4" opacity="0.8" />
+                  <circle cx="12" cy="12" r="1.8" fill="#10b981" />
+                </svg>
+              </div>
+              <div className="auth-brand-text-col">
+                <span className="auth-logo-text">VOYANA</span>
+                <span className="auth-submark-text">GLOBAL EXPEDITIONS</span>
+              </div>
+            </div>
+
+            <h2 className="auth-quote-heading">
+              "The world is a book and those who do not travel read only one page."
+            </h2>
+            <p className="auth-quote-author">— Saint Augustine</p>
+
+            <div className="auth-proof-badge">
+              <div className="proof-stars">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} size={13} className="text-amber-400 fill-amber-400" />
+                ))}
+              </div>
+              <span className="proof-text">Trusted by 100,000+ global travelers</span>
+            </div>
+          </div>
+
+          <div className="auth-editorial-footer">
+            <div className="trust-indicator">
+              <ShieldCheck size={15} className="text-emerald-400" />
+              <span>Verified Global Identity & Safe Bookings</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="auth-panel-container">
-        <div 
-          className="auth-panel-parallax"
-          style={{ transform: `translate(${offset.x}px, ${offset.y}px)` }}
-        >
-          <div className="auth-panel-idle">
-            {children}
+      {/* Right Form Column: Clean, Refined Authentication */}
+      <div className="auth-form-column">
+        <div className="auth-form-shell">
+          <div className="auth-mobile-header">
+            <a href="#/" className="auth-mobile-brand">
+              <div className="auth-mobile-logo-badge">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="9.5" stroke="currentColor" strokeWidth="1.6" opacity="0.9" />
+                  <ellipse cx="12" cy="12" rx="4.8" ry="9.5" stroke="currentColor" strokeWidth="1.4" opacity="0.8" />
+                  <line x1="2.5" y1="12" x2="21.5" y2="12" stroke="currentColor" strokeWidth="1.4" opacity="0.8" />
+                  <circle cx="12" cy="12" r="1.8" fill="#10b981" />
+                </svg>
+              </div>
+              <span>VOYANA</span>
+            </a>
           </div>
+
+          <div className="auth-route-switch">
+            <a
+              href="#/login"
+              className={`route-switch-tab ${route === 'login' ? 'active' : ''}`}
+            >
+              Sign In
+            </a>
+            <a
+              href="#/signup"
+              className={`route-switch-tab ${route === 'signup' ? 'active' : ''}`}
+            >
+              Create Account
+            </a>
+          </div>
+
+          {children}
         </div>
       </div>
     </div>

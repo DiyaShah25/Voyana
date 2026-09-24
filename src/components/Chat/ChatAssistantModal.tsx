@@ -10,12 +10,9 @@ import {
   Compass,
   DollarSign,
   Briefcase,
-  Layers,
   ChevronDown,
-  MapPin,
-  Star,
   ArrowRight,
-  Filter,
+  RotateCcw,
 } from 'lucide-react';
 import { sendChatMessage, type ChatMessage } from '@/services/aiChatService';
 import {
@@ -27,6 +24,7 @@ interface ChatAssistantModalProps {
   isOpen: boolean;
   onClose: () => void;
   destination?: string;
+  initialPrompt?: string;
   onOpenBudget?: () => void;
   onOpenPacking?: () => void;
 }
@@ -35,6 +33,7 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
   isOpen,
   onClose,
   destination = 'Paris',
+  initialPrompt,
   onOpenBudget,
   onOpenPacking,
 }) => {
@@ -42,11 +41,11 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
     {
       id: 'welcome-1',
       role: 'assistant',
-      content: `Hello! I'm **Voyana AI**, your collaborative travel assistant for **${destination}**.\n\nAsk me anything about creating custom itineraries, exploring destination recommendations, optimizing group budgets, or generating tailored packing lists!`,
+      content: `Hello! I'm **Voyana AI**, your collaborative travel concierge for **${destination}**.\n\nAsk me anything about creating custom itineraries, curated destination recommendations, group budget optimization, or smart packing gear checklists!`,
       timestamp: 'Just now',
       aiGenerated: true,
       citedContext: {
-        categories: [`${destination} Guide`, 'Collaborative Travel'],
+        categories: [`${destination} Guide`, 'Curated Expeditions'],
       },
     },
   ]);
@@ -59,16 +58,17 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const sentInitialPromptRef = useRef<string | null>(null);
 
   const quickPrompts = [
-    `Recommend top travel destinations for me`,
-    `Suggest a 3-day sightseeing plan for ${destination}`,
-    `Analyze our current trip budget`,
-    `What should we pack for ${destination}?`,
-    `Check current weather forecast for ${destination}`,
+    `Suggest a 3-day sightseeing itinerary for ${destination}`,
+    `Recommend top hidden gems & local dining in ${destination}`,
+    `Analyze our current travel budget`,
+    `What specialized gear should I pack for ${destination}?`,
+    `Current seasonal weather & best time to explore ${destination}`,
   ];
 
-  const recommendedList = getRecommendedDestinations({
+  const recommendedList: RecommendedDestination[] = getRecommendedDestinations({
     vibe: selectedVibe,
     budgetTier: selectedBudget,
   });
@@ -82,7 +82,15 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
       scrollToBottom();
       setTimeout(() => inputRef.current?.focus(), 150);
     }
-  }, [isOpen, messages]);
+  }, [isOpen, messages, showExploreDestinations]);
+
+  // Handle incoming initial prompt if passed
+  useEffect(() => {
+    if (isOpen && initialPrompt && initialPrompt !== sentInitialPromptRef.current) {
+      sentInitialPromptRef.current = initialPrompt;
+      void handleSend(initialPrompt);
+    }
+  }, [isOpen, initialPrompt]);
 
   if (!isOpen) return null;
 
@@ -108,7 +116,7 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
         history: messages.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
       });
       setMessages((prev) => [...prev, assistantResponse]);
-    } catch (err) {
+    } catch {
       setMessages((prev) => [
         ...prev,
         {
@@ -124,6 +132,18 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
     }
   };
 
+  const handleResetChat = () => {
+    setMessages([
+      {
+        id: `welcome-${Date.now()}`,
+        role: 'assistant',
+        content: `Chat session refreshed. How can I assist with your journey to **${destination}** today?`,
+        timestamp: 'Just now',
+        aiGenerated: true,
+      },
+    ]);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -131,8 +151,8 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
     }
   };
 
-  // Helper to render markdown-like bold and bullet lists
-  const renderFormattedContent = (content: string) => {
+  // Helper to render markdown-like bold and bullet lists with high-contrast editorial styling
+  const renderFormattedContent = (content: string, isUser: boolean) => {
     const lines = content.split('\n');
     return lines.map((line, idx) => {
       // Heading level 3
@@ -148,7 +168,7 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
         const itemText = line.substring(2);
         return (
           <li key={idx} className="chat-bullet-item">
-            {parseBoldText(itemText)}
+            {parseBoldText(itemText, isUser)}
           </li>
         );
       }
@@ -157,17 +177,24 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
       }
       return (
         <p key={idx} className="chat-paragraph">
-          {parseBoldText(line)}
+          {parseBoldText(line, isUser)}
         </p>
       );
     });
   };
 
-  const parseBoldText = (text: string) => {
+  const parseBoldText = (text: string, isUser: boolean) => {
     const parts = text.split(/(\*\*.*?\*\*)/g);
     return parts.map((part, i) => {
       if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={i} className="text-indigo-200 font-semibold">{part.slice(2, -2)}</strong>;
+        return (
+          <strong
+            key={i}
+            className={isUser ? 'chat-strong-user' : 'chat-strong-assistant'}
+          >
+            {part.slice(2, -2)}
+          </strong>
+        );
       }
       return part;
     });
@@ -177,79 +204,91 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
     <div
       className={`chat-assistant-container ${isMinimized ? 'minimized' : ''}`}
       role="dialog"
-      aria-label="Voyana AI Travel Assistant"
+      aria-label="Voyana AI Travel Concierge"
     >
-      {/* Assistant Header */}
+      {/* 1. Header Bar */}
       <div className="chat-header">
         <div className="chat-header-brand">
           <div className="chat-avatar-glow">
             <Sparkles size={18} className="chat-sparkle-icon" />
           </div>
-          <div>
+          <div className="chat-brand-meta">
             <div className="chat-title-row">
-              <span className="chat-title">Voyana AI</span>
+              <span className="chat-title">Voyana AI Concierge</span>
               <span className="chat-status-badge">
                 <span className="status-pulse-dot" /> Online
               </span>
             </div>
-            <span className="chat-subtitle">Trip Assistant • {destination}</span>
+            <span className="chat-subtitle">Plan · Discover · {destination}</span>
           </div>
         </div>
 
-        <div className="chat-header-actions flex items-center gap-1.5">
+        <div className="chat-header-actions">
           <button
-            className={`chat-ctrl-btn ${showExploreDestinations ? 'bg-indigo-600/40 text-indigo-300' : ''}`}
+            type="button"
+            className={`chat-ctrl-btn ${showExploreDestinations ? 'active' : ''}`}
             onClick={() => setShowExploreDestinations(!showExploreDestinations)}
-            title="Explore Destination Recommendations (VPM-40)"
+            title="Explore Destination Recommendations"
+            aria-label="Explore Destination Recommendations"
           >
-            <Compass size={16} />
+            <Compass size={15} />
           </button>
           <button
+            type="button"
+            className="chat-ctrl-btn"
+            onClick={handleResetChat}
+            title="Refresh Conversation"
+            aria-label="Refresh Conversation"
+          >
+            <RotateCcw size={14} />
+          </button>
+          <button
+            type="button"
             className="chat-ctrl-btn"
             onClick={() => setIsMinimized(!isMinimized)}
             title={isMinimized ? 'Expand' : 'Minimize'}
             aria-label={isMinimized ? 'Expand assistant' : 'Minimize assistant'}
           >
-            <ChevronDown size={17} style={{ transform: isMinimized ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+            <ChevronDown size={15} style={{ transform: isMinimized ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
           </button>
           <button
-            className="chat-ctrl-btn"
+            type="button"
+            className="chat-ctrl-btn chat-close-btn"
             onClick={onClose}
-            title="Close"
-            aria-label="Close assistant"
+            title="Close Assistant"
+            aria-label="Close Assistant"
           >
-            <X size={17} />
+            <X size={15} />
           </button>
         </div>
       </div>
 
-      {/* Main Chat Flow (hidden if minimized) */}
+      {/* 2. Main Chat Flow (Hidden when minimized) */}
       {!isMinimized && (
         <>
-          {/* Explore Destinations Drawer (VPM-40) */}
+          {/* Explore Destinations Drawer View */}
           {showExploreDestinations ? (
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-950/90">
-              <div className="flex items-center justify-between pb-2 border-b border-white/10">
+            <div className="chat-explore-panel">
+              <div className="chat-explore-header">
                 <div className="flex items-center gap-2">
-                  <Compass size={16} className="text-pink-400" />
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-                    AI Destination Recommender (VPM-40)
-                  </h4>
+                  <Compass size={16} className="text-emerald-700" />
+                  <h4 className="chat-explore-title">Curated Destination Recommendations</h4>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setShowExploreDestinations(false)}
-                  className="text-xs text-slate-400 hover:text-white"
+                  className="chat-explore-back-btn"
                 >
-                  Back to Chat
+                  ← Back to Chat
                 </button>
               </div>
 
-              {/* Filters */}
-              <div className="flex flex-wrap gap-2 text-xs">
+              {/* Filter Controls */}
+              <div className="chat-filters-row">
                 <select
                   value={selectedVibe}
                   onChange={(e) => setSelectedVibe(e.target.value)}
-                  className="bg-slate-900 border border-white/10 rounded-lg px-2.5 py-1 text-slate-300 text-xs outline-none"
+                  className="chat-filter-select"
                 >
                   <option value="all">All Vibes</option>
                   <option value="Romantic">Romantic</option>
@@ -264,7 +303,7 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
                 <select
                   value={selectedBudget}
                   onChange={(e) => setSelectedBudget(e.target.value)}
-                  className="bg-slate-900 border border-white/10 rounded-lg px-2.5 py-1 text-slate-300 text-xs outline-none"
+                  className="chat-filter-select"
                 >
                   <option value="all">All Budgets</option>
                   <option value="$">Budget ($)</option>
@@ -273,42 +312,40 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
                 </select>
               </div>
 
-              {/* Recommendations Cards */}
-              <div className="space-y-3">
+              {/* Recommended Cards List */}
+              <div className="chat-recommend-cards-list">
                 {recommendedList.map((dest) => (
-                  <div
-                    key={dest.id}
-                    className="bg-slate-900/90 border border-white/10 rounded-xl overflow-hidden hover:border-indigo-500/40 transition-all p-3 space-y-2"
-                  >
-                    <div className="flex items-start justify-between gap-2">
+                  <div key={dest.id} className="chat-recommend-card">
+                    <div className="chat-recommend-top">
                       <div>
-                        <div className="flex items-center gap-1.5">
-                          <h5 className="text-sm font-bold text-white">{dest.name}</h5>
-                          <span className="text-xs text-slate-400">· {dest.country}</span>
+                        <div className="chat-dest-title-row">
+                          <h5 className="chat-dest-name">{dest.name}</h5>
+                          <span className="chat-dest-country">· {dest.country}</span>
                         </div>
-                        <p className="text-[11px] text-pink-300 font-medium">{dest.tagline}</p>
+                        <p className="chat-dest-tagline">{dest.tagline}</p>
                       </div>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold shrink-0">
+                      <span className="chat-match-badge">
                         {dest.matchScore}% Match
                       </span>
                     </div>
 
-                    <p className="text-xs text-slate-300 leading-relaxed">{dest.description}</p>
+                    <p className="chat-dest-desc">{dest.description}</p>
 
-                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/5 text-[11px]">
-                      <div className="flex items-center gap-2 text-slate-400">
-                        <span>💰 ~${dest.estimatedDailyCostUsd}/day</span>
+                    <div className="chat-recommend-footer">
+                      <div className="chat-dest-meta-tags">
+                        <span>~${dest.estimatedDailyCostUsd}/day</span>
                         <span>·</span>
-                        <span>🗓️ {dest.recommendedDays} Days</span>
+                        <span>{dest.recommendedDays} Days</span>
                       </div>
                       <button
+                        type="button"
                         onClick={() => {
                           setShowExploreDestinations(false);
                           handleSend(`Can you create a custom ${dest.recommendedDays}-day travel itinerary for ${dest.name}, ${dest.country}?`);
                         }}
-                        className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold flex items-center gap-1 text-[10px] transition-all"
+                        className="chat-plan-btn"
                       >
-                        Plan Itinerary <ArrowRight size={10} />
+                        Plan Itinerary <ArrowRight size={11} />
                       </button>
                     </div>
                   </div>
@@ -323,8 +360,8 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
                   className={`chat-message-row ${msg.role === 'user' ? 'user-row' : 'assistant-row'}`}
                 >
                   {msg.role === 'assistant' && (
-                    <div className="chat-msg-avatar">
-                      <Bot size={16} />
+                    <div className="chat-msg-avatar assistant-avatar">
+                      <Bot size={15} />
                     </div>
                   )}
 
@@ -332,23 +369,18 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
                     {msg.aiGenerated && (
                       <div className="ai-attribution-tag">
                         <Sparkles size={11} />
-                        <span>Generated by Voyana AI</span>
+                        <span>Curated by Voyana AI</span>
                       </div>
                     )}
 
                     <div className="chat-bubble-content">
-                      {renderFormattedContent(msg.content)}
+                      {renderFormattedContent(msg.content, msg.role === 'user')}
                     </div>
 
-                    {/* Context Citation Chips (VPM-44 spec) */}
+                    {/* Context Citation Chips */}
                     {msg.citedContext && (
                       <div className="citation-chips-wrap">
-                        <span className="citation-label">Citations:</span>
-                        {msg.citedContext.days?.map((day) => (
-                          <span key={`day-${day}`} className="citation-chip">
-                            Day {day}
-                          </span>
-                        ))}
+                        <span className="citation-label">Verified Sources:</span>
                         {msg.citedContext.categories?.map((cat) => (
                           <span key={`cat-${cat}`} className="citation-chip">
                             {cat}
@@ -362,21 +394,25 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
                       <div className="proposed-actions-wrap">
                         {msg.proposedChanges.map((change, idx) => (
                           <div key={idx} className="proposed-action-card">
-                            <CheckCircle2 size={14} className="text-emerald-400" />
-                            <span>{change.title}</span>
+                            <div className="proposed-action-info">
+                              <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
+                              <span className="proposed-action-title">{change.title}</span>
+                            </div>
                             {change.type === 'add_packing_item' && onOpenPacking && (
                               <button
+                                type="button"
                                 className="action-link-btn"
                                 onClick={() => {
                                   onOpenPacking();
                                   onClose();
                                 }}
                               >
-                                <Briefcase size={12} /> View Packing List
+                                <Briefcase size={12} /> Packing List
                               </button>
                             )}
                             {change.type === 'update_budget' && onOpenBudget && (
                               <button
+                                type="button"
                                 className="action-link-btn"
                                 onClick={() => {
                                   onOpenBudget();
@@ -388,10 +424,11 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
                             )}
                             {change.type === 'recommendation' && (
                               <button
+                                type="button"
                                 className="action-link-btn"
                                 onClick={() => setShowExploreDestinations(true)}
                               >
-                                <Compass size={12} /> Explore All Recommendations
+                                <Compass size={12} /> Explore Recommendations
                               </button>
                             )}
                           </div>
@@ -404,7 +441,7 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
 
                   {msg.role === 'user' && (
                     <div className="chat-msg-avatar user-avatar">
-                      <User size={15} />
+                      <User size={14} />
                     </div>
                   )}
                 </div>
@@ -412,8 +449,8 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
 
               {isLoading && (
                 <div className="chat-message-row assistant-row">
-                  <div className="chat-msg-avatar">
-                    <Bot size={16} />
+                  <div className="chat-msg-avatar assistant-avatar">
+                    <Bot size={15} />
                   </div>
                   <div className="chat-bubble assistant-bubble loading-bubble">
                     <div className="typing-indicator">
@@ -421,7 +458,7 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
                       <span />
                       <span />
                     </div>
-                    <span className="typing-label">Voyana AI is thinking…</span>
+                    <span className="typing-label">Voyana AI is preparing your travel insights…</span>
                   </div>
                 </div>
               )}
@@ -429,26 +466,27 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
             </div>
           )}
 
-          {/* Quick Prompt Suggestion Pills */}
+          {/* 3. Quick Prompt Suggestion Pills */}
           <div className="quick-prompts-bar">
             {quickPrompts.map((prompt, i) => (
               <button
                 key={i}
+                type="button"
                 className="quick-prompt-pill"
                 onClick={() => handleSend(prompt)}
                 disabled={isLoading}
               >
-                {prompt}
+                <span>{prompt}</span>
               </button>
             ))}
           </div>
 
-          {/* Composer & Action Toolbar */}
+          {/* 4. Composer & Action Toolbar */}
           <div className="chat-composer-wrap">
             <textarea
               ref={inputRef}
               className="chat-textarea"
-              placeholder={`Ask Voyana AI about destinations, itineraries, budget, or packing for ${destination}...`}
+              placeholder={`Ask Voyana AI about flights, stays, itineraries, packing, or budget for ${destination}...`}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -499,7 +537,7 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
                 disabled={!inputText.trim() || isLoading}
                 aria-label="Send message"
               >
-                {isLoading ? <RefreshCw size={15} className="animate-spin" /> : <Send size={15} />}
+                {isLoading ? <RefreshCw size={14} className="animate-spin" /> : <Send size={14} />}
               </button>
             </div>
           </div>
