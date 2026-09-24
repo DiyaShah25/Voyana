@@ -6,109 +6,206 @@ import {
   CheckCircle2,
   KeyRound,
   Loader2,
+  Lock,
   Mail,
+  ShieldCheck,
 } from 'lucide-react';
-import { EMAIL_PATTERN, requestPasswordReset } from '@/services/authService';
+import {
+  EMAIL_PATTERN,
+  MIN_PASSWORD_LENGTH,
+  requestPasswordReset,
+  confirmPasswordReset,
+} from '@/services/authService';
 
-type Status = 'idle' | 'loading' | 'error' | 'success';
+type Step = 'request' | 'reset' | 'completed';
 
 function ForgotPasswordPage() {
+  const [step, setStep] = useState<Step>('request');
   const [email, setEmail] = useState('');
-  const [status, setStatus] = useState<Status>('idle');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [fieldError, setFieldError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault();
-    if (status === 'loading') return;
+  const handleRequest = async (e: FormEvent) => {
+    e.preventDefault();
     setFormError(null);
-
-    if (!email.trim()) {
-      setFieldError('Email is required.');
-      return;
-    }
-    if (!EMAIL_PATTERN.test(email.trim())) {
-      setFieldError('Please enter a valid email address.');
+    if (!email.trim() || !EMAIL_PATTERN.test(email.trim())) {
+      setFormError('Please enter a valid email address.');
       return;
     }
 
-    setStatus('loading');
+    setLoading(true);
     const result = await requestPasswordReset(email.trim());
+    setLoading(false);
+
     if (!result.ok) {
-      setStatus('error');
       setFormError(result.message);
       return;
     }
-    setStatus('success');
+
+    setSuccessMsg(result.message);
+    setStep('reset');
   };
 
-  const busy = status === 'loading';
+  const handleReset = async (e: FormEvent) => {
+    e.preventDefault();
+    setFormError(null);
+
+    if (newPassword.length < MIN_PASSWORD_LENGTH) {
+      setFormError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setFormError('Passwords do not match.');
+      return;
+    }
+
+    setLoading(true);
+    const result = await confirmPasswordReset(email.trim(), newPassword);
+    setLoading(false);
+
+    if (!result.ok) {
+      setFormError(result.message);
+      return;
+    }
+
+    setStep('completed');
+  };
 
   return (
-    <div className="auth-stagger">
-      <div className="auth-icon-badge" aria-hidden="true">
-        <KeyRound size={22} strokeWidth={2} />
+    <div className="auth-card-body">
+      <div className="auth-header-block">
+        <div className="auth-icon-circle-badge">
+          <KeyRound size={22} className="text-emerald-700" />
+        </div>
+        <h1 className="auth-main-title">
+          {step === 'completed' ? 'Password updated' : step === 'reset' ? 'Create new password' : 'Reset your password'}
+        </h1>
+        <p className="auth-main-subtitle">
+          {step === 'completed'
+            ? 'Your credentials have been securely updated. You can now access your Voyana account.'
+            : step === 'reset'
+            ? `Enter your new secure password for ${email}.`
+            : 'Enter the email associated with your account to receive password recovery instructions.'}
+        </p>
       </div>
-      <h1 className="auth-heading">Reset your password</h1>
-      <p className="auth-subheading">
-        Enter the email linked to your account and we will send you a reset link.
-      </p>
 
       {formError && (
-        <div className="auth-alert auth-alert-error" role="alert">
+        <div className="auth-alert-box error animate-fade-in" role="alert">
           <AlertCircle size={16} />
           <span>{formError}</span>
         </div>
       )}
 
-      {status === 'success' ? (
-        <div className="auth-alert auth-alert-success" role="status">
-          <CheckCircle2 size={16} />
-          <span>Reset link sent. Check your inbox and follow the instructions.</span>
-        </div>
-      ) : (
-        <form className="auth-form" onSubmit={handleSubmit} noValidate>
-          <div className="auth-field">
-            <label htmlFor="forgot-email">Email</label>
-            <div className={`auth-input-wrap ${fieldError ? 'has-error' : ''}`}>
-              <Mail size={17} aria-hidden="true" />
-              <input
-                id="forgot-email"
-                type="email"
-                autoComplete="email"
-                placeholder="you@example.com"
-                value={email}
-                disabled={busy}
-                aria-invalid={Boolean(fieldError)}
-                aria-describedby={fieldError ? 'forgot-email-error' : undefined}
-                onChange={(event) => {
-                  setEmail(event.target.value);
-                  setFieldError(null);
-                }}
-              />
-            </div>
-            {fieldError && <p className="auth-field-error" id="forgot-email-error">{fieldError}</p>}
+      {step === 'completed' ? (
+        <div className="auth-success-flow animate-fade-in">
+          <div className="auth-alert-box success">
+            <CheckCircle2 size={18} />
+            <span>Password successfully changed. You can now sign in with your new password.</span>
           </div>
 
-          <button type="submit" className="auth-submit" disabled={busy}>
-            {busy ? (
+          <a href="#/login" className="btn-auth-submit mt-4 text-center">
+            <span>Sign In to Voyana</span>
+            <ArrowRight size={15} />
+          </a>
+        </div>
+      ) : step === 'reset' ? (
+        <form className="auth-actual-form" onSubmit={handleReset}>
+          {successMsg && (
+            <div className="auth-alert-box success animate-fade-in">
+              <ShieldCheck size={16} />
+              <span>{successMsg}</span>
+            </div>
+          )}
+
+          <div className="auth-input-group">
+            <label className="auth-input-label" htmlFor="new-pass">New Password</label>
+            <div className="auth-input-wrapper">
+              <Lock size={17} className="auth-input-icon" />
+              <input
+                id="new-pass"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="At least 6 characters"
+                disabled={loading}
+                className="auth-text-field"
+              />
+            </div>
+          </div>
+
+          <div className="auth-input-group">
+            <label className="auth-input-label" htmlFor="confirm-new-pass">Confirm New Password</label>
+            <div className="auth-input-wrapper">
+              <Lock size={17} className="auth-input-icon" />
+              <input
+                id="confirm-new-pass"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Re-enter new password"
+                disabled={loading}
+                className="auth-text-field"
+              />
+            </div>
+          </div>
+
+          <button type="submit" disabled={loading} className="btn-auth-submit">
+            {loading ? (
               <>
-                <Loader2 size={18} className="auth-spinner" aria-hidden="true" /> Sending link…
+                <Loader2 size={17} className="animate-spin" />
+                <span>Updating password…</span>
               </>
             ) : (
               <>
-                Send Reset Link <ArrowRight size={18} aria-hidden="true" />
+                <span>Set New Password</span>
+                <ArrowRight size={16} />
               </>
             )}
           </button>
         </form>
-      )}
+      ) : (
+        <form className="auth-actual-form" onSubmit={handleRequest} noValidate>
+          <div className="auth-input-group">
+            <label className="auth-input-label" htmlFor="reset-email">Email Address</label>
+            <div className="auth-input-wrapper">
+              <Mail size={17} className="auth-input-icon" />
+              <input
+                id="reset-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@domain.com"
+                disabled={loading}
+                className="auth-text-field"
+              />
+            </div>
+          </div>
 
-      <p className="auth-switch">
-        <a href="#/login" className="auth-back-link">
-          <ArrowLeft size={15} aria-hidden="true" /> Back to Sign In
-        </a>
-      </p>
+          <button type="submit" disabled={loading} className="btn-auth-submit">
+            {loading ? (
+              <>
+                <Loader2 size={17} className="animate-spin" />
+                <span>Sending instructions…</span>
+              </>
+            ) : (
+              <>
+                <span>Send Reset Link</span>
+                <ArrowRight size={16} />
+              </>
+            )}
+          </button>
+
+          <div className="auth-back-button-wrap">
+            <a href="#/login" className="auth-text-back-link">
+              <ArrowLeft size={14} />
+              <span>Back to Sign In</span>
+            </a>
+          </div>
+        </form>
+      )}
     </div>
   );
 }
