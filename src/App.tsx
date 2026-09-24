@@ -1,30 +1,24 @@
-import { useEffect, useRef, useState } from 'react';
-import {
-  Compass,
-  Plus,
-  Minus,
-  RotateCw,
-  Pause,
-  ArrowRight,
-  Globe2,
-  MapPin,
-  Users,
-} from 'lucide-react';
-import VoyanaGlobe from '@/components/Globe/VoyanaGlobe';
+import { useState, useRef, useEffect } from 'react';
 import type { GlobeLocation, GlobeRoute, VoyanaGlobeHandle } from '@/components/Globe/globe.types';
-import Header from '@/components/layout/Header';
+import VoyanaGlobe from '@/components/Globe/VoyanaGlobe';
+import { Header } from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import TravelSearch from '@/components/Search/TravelSearch';
-import QuickExploreStrip from '@/components/Destinations/QuickExploreStrip';
+import DestinationRail from '@/components/Destinations/DestinationRail';
 import DestinationGrid from '@/components/Destinations/DestinationGrid';
 import TravelSuiteHub from '@/components/Services/TravelSuiteHub';
 import FeaturedJourneys from '@/components/Journeys/FeaturedJourneys';
 
-// Modals & Sub-experiences
+// Auth & Modals
+import { AuthProvider, useAuth } from '@/context/AuthContext';
 import AuthLayout from '@/pages/AuthLayout';
 import LoginPage from '@/pages/LoginPage';
 import SignupPage from '@/pages/SignupPage';
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
+import ProfileModal from '@/pages/ProfileModal';
+import AdminDashboardModal from '@/pages/AdminDashboardModal';
+
+// Travel Services Modals
 import FlightBookingModal from '@/components/Booking/FlightBookingModal';
 import HotelBookingModal from '@/components/Booking/HotelBookingModal';
 import TransportBookingModal from '@/components/Booking/TransportBookingModal';
@@ -39,11 +33,21 @@ import TravelReviewsModal from '@/components/Reviews/TravelReviewsModal';
 import TravelMemoriesModal from '@/components/Memories/TravelMemoriesModal';
 import type { Trip } from '@/services/tripService';
 
-type Route = 'home' | 'login' | 'signup' | 'forgot-password';
+type Route = 'home' | 'login' | 'signup' | 'forgot-password' | 'profile' | 'admin' | 'trips' | 'bookings';
 
 function readRoute(): Route {
   const hash = window.location.hash.replace(/^#\/?/, '');
-  if (hash === 'login' || hash === 'signup' || hash === 'forgot-password') return hash;
+  if (
+    hash === 'login' ||
+    hash === 'signup' ||
+    hash === 'forgot-password' ||
+    hash === 'profile' ||
+    hash === 'admin' ||
+    hash === 'trips' ||
+    hash === 'bookings'
+  ) {
+    return hash as Route;
+  }
   return 'home';
 }
 
@@ -60,11 +64,12 @@ function useHashRoute(): Route {
   return route;
 }
 
-export function App() {
+function MainAppContent() {
+  const { user, isAuthenticated, loading } = useAuth();
   const route = useHashRoute();
 
-  // Active globe location
-  const [selectedLocation, setSelectedLocation] = useState<GlobeLocation>({
+  // Global Destination State driving the 3D Earth and UI
+  const [selectedDestination, setSelectedDestination] = useState<GlobeLocation>({
     name: 'Paris',
     city: 'Paris',
     country: 'France',
@@ -74,7 +79,6 @@ export function App() {
   });
 
   const [activeRoutes, setActiveRoutes] = useState<GlobeRoute[]>([]);
-  const [autoRotate, setAutoRotate] = useState(true);
 
   // Modals state
   const [flightModalOpen, setFlightModalOpen] = useState(false);
@@ -90,6 +94,7 @@ export function App() {
   const [myBookingsOpen, setMyBookingsOpen] = useState(false);
 
   const [chatModalOpen, setChatModalOpen] = useState(false);
+  const [chatInitialPrompt, setChatInitialPrompt] = useState<string | undefined>(undefined);
   const [budgetModalOpen, setBudgetModalOpen] = useState(false);
   const [packingModalOpen, setPackingModalOpen] = useState(false);
 
@@ -101,30 +106,47 @@ export function App() {
 
   const [memoriesModalOpen, setMemoriesModalOpen] = useState(false);
 
+  // New Profile & Admin Modals
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [adminModalOpen, setAdminModalOpen] = useState(false);
+
   const globeRef = useRef<VoyanaGlobeHandle>(null);
 
-  // Geographic selection handler (slerp fly-to globe)
-  const handleLocationSelect = (location: GlobeLocation) => {
-    setSelectedLocation(location);
+  // Handle protected and action routes
+  useEffect(() => {
+    if (loading) return;
+
+    if (route === 'profile') {
+      if (!isAuthenticated) {
+        window.location.hash = '/login';
+      } else {
+        setProfileModalOpen(true);
+      }
+    } else if (route === 'admin') {
+      setAdminModalOpen(true);
+    } else if (route === 'trips') {
+      setTripDashboardOpen(true);
+    } else if (route === 'bookings') {
+      setMyBookingsOpen(true);
+    }
+  }, [route, isAuthenticated, loading]);
+
+  // Geographic Selection Handler (Shared State: UI <-> 3D Earth)
+  const handleSelectLocation = (location: GlobeLocation) => {
+    setSelectedDestination(location);
     globeRef.current?.focusOnLocation(location.latitude, location.longitude, location.type);
     globeRef.current?.setMarker(location);
   };
 
-  // Route preview handler (draws great circle lines on globe)
   const handleSelectRoute = (routes: GlobeRoute[], startLocation: GlobeLocation) => {
     setActiveRoutes(routes);
-    handleLocationSelect(startLocation);
-  };
-
-  // Open workspace with customized route
-  const handleOpenWorkspaceWithRoute = (title: string, destination: string) => {
-    setTripDashboardOpen(true);
+    handleSelectLocation(startLocation);
   };
 
   // Auth pages view
-  if (route !== 'home') {
+  if (route === 'login' || route === 'signup' || route === 'forgot-password') {
     return (
-      <main className="voyana-app">
+      <main className="voyana-editorial-shell">
         <AuthLayout route={route}>
           {route === 'login' && <LoginPage />}
           {route === 'signup' && <SignupPage />}
@@ -134,146 +156,140 @@ export function App() {
     );
   }
 
+  // Active Current User representation passed to all modules
+  const activeUserContext = user
+    ? { id: user.id, name: user.name, email: user.email }
+    : { id: 'usr-traveler-03', name: 'Alex Morgan', email: 'traveler@voyana.com' };
+
   return (
-    <div className="voyana-app">
-      {/* 1. STICKY NAVIGATION HEADER */}
+    <div className="voyana-editorial-shell">
+      {/* 1. TOP EDITORIAL NAVIGATION BAR */}
       <Header
         onOpenTrips={() => setTripDashboardOpen(true)}
-        onOpenFlight={() => { setFlightModalDestination(selectedLocation.city || selectedLocation.name); setFlightModalOpen(true); }}
-        onOpenHotel={() => { setHotelModalDestination(selectedLocation.city || selectedLocation.name); setHotelModalOpen(true); }}
-        onOpenTransport={() => { setTransportModalDestination(selectedLocation.city || selectedLocation.name); setTransportModalOpen(true); }}
-        onOpenBundle={() => setBundleBookingModalOpen(true)}
         onOpenMyBookings={() => setMyBookingsOpen(true)}
         onOpenChat={() => setChatModalOpen(true)}
-        onOpenBudget={() => setBudgetModalOpen(true)}
+        onOpenFlight={() => { setFlightModalDestination(selectedDestination.city || selectedDestination.name); setFlightModalOpen(true); }}
+        onOpenHotel={() => { setHotelModalDestination(selectedDestination.city || selectedDestination.name); setHotelModalOpen(true); }}
+        onOpenTransport={() => { setTransportModalDestination(selectedDestination.city || selectedDestination.name); setTransportModalOpen(true); }}
+        onOpenBundle={() => setBundleBookingModalOpen(true)}
         onOpenPacking={() => setPackingModalOpen(true)}
-        onOpenReviews={() => { setReviewsDestination(selectedLocation.name); setReviewsModalOpen(true); }}
+        onOpenBudget={() => setBudgetModalOpen(true)}
+        onOpenReviews={() => { setReviewsDestination(selectedDestination.name); setReviewsModalOpen(true); }}
         onOpenMemories={() => setMemoriesModalOpen(true)}
+        onOpenProfile={() => setProfileModalOpen(true)}
+        onOpenAdmin={() => setAdminModalOpen(true)}
       />
 
-      {/* 2. HERO SECTION & 3D EARTH GLOBE */}
-      <section className="hero-section" id="top">
-        <div className="hero-grid">
-          {/* Left Hero Column */}
-          <div className="hero-content-col">
-            <div className="hero-eyebrow">
-              <Compass size={14} className="text-emerald-700" />
-              <span>EXPLORE WITHOUT LIMITS</span>
-            </div>
+      {/* 2. HERO SECTION — LARGE 3D EARTH + EDITORIAL DISCOVERY */}
+      <section className="editorial-hero" id="top">
+        <div className="hero-container">
+          {/* Left Column (45-50%): Editorial Headline, Search & Fast Explore */}
+          <div className="hero-copy-column">
+            <span className="editorial-eyebrow">EXPLORE THE WORLD</span>
 
-            <h1 className="hero-heading">
-              Your world, waiting to be <em>discovered</em>.
+            <h1 className="hero-editorial-headline">
+              The world is<br />
+              <span className="serif-highlight">yours to explore.</span>
             </h1>
 
-            <p className="hero-lede">
-              The intelligent travel discovery platform. Explore real-time geography on an interactive 3D Earth, collaborate on shared itineraries, and orchestrate verified global journeys.
+            <p className="hero-editorial-lede">
+              Voyana connects travelers with authentic geographic discovery. Select any destination to navigate coordinates, curate collaborative journeys, and explore global culture.
             </p>
 
-            {/* Structured Multi-field Travel Search */}
+            {/* Primary Exploration Control */}
             <TravelSearch
-              onLocationSelect={handleLocationSelect}
+              onLocationSelect={handleSelectLocation}
             />
 
-            {/* Global Stats */}
-            <div className="hero-stats-row">
-              <div className="stat-item">
-                <span className="stat-val">250+</span>
-                <span className="stat-label">Countries & Territories</span>
+            {/* Quick Context & Fast Explore Switcher (1-Click Earth Rotation) */}
+            <div className="hero-quick-switch">
+              <span className="quick-switch-label">POPULAR DESTINATIONS</span>
+              <div className="quick-switch-chips">
+                {[
+                  { name: 'Paris', country: 'France', latitude: 48.8566, longitude: 2.3522, style: 'Art & Architecture' },
+                  { name: 'Tokyo', country: 'Japan', latitude: 35.6762, longitude: 139.6503, style: 'Modern & Traditional' },
+                  { name: 'Bali', country: 'Indonesia', latitude: -8.4095, longitude: 115.1889, style: 'Island Sanctuaries' },
+                  { name: 'Rome', country: 'Italy', latitude: 41.9028, longitude: 12.4964, style: 'Antiquity & Cuisine' },
+                  { name: 'Kyoto', country: 'Japan', latitude: 35.0116, longitude: 135.7681, style: 'Zen Gardens & Shrines' },
+                  { name: 'Reykjavik', country: 'Iceland', latitude: 64.1466, longitude: -21.9426, style: 'Glaciers & Aurora' },
+                ].map((city) => {
+                  const isActive = selectedDestination.name.toLowerCase() === city.name.toLowerCase();
+                  return (
+                    <button
+                      key={city.name}
+                      type="button"
+                      className={`hero-chip-btn ${isActive ? 'active' : ''}`}
+                      onClick={() => handleSelectLocation({
+                        name: city.name,
+                        city: city.name,
+                        country: city.country,
+                        latitude: city.latitude,
+                        longitude: city.longitude,
+                        type: 'city',
+                      })}
+                    >
+                      {city.name}
+                    </button>
+                  );
+                })}
               </div>
-              <div className="stat-item">
-                <span className="stat-val">10K+</span>
-                <span className="stat-label">Curated Destinations</span>
+            </div>
+
+            {/* Minimalist Destination Information Telemetry */}
+            <div className="hero-destination-telemetry">
+              <div className="telemetry-header">
+                <span className="telemetry-pulse-dot" />
+                <span className="telemetry-city">{selectedDestination.name.toUpperCase()}</span>
+                <span className="telemetry-country">{selectedDestination.country || 'Global'}</span>
               </div>
-              <div className="stat-item">
-                <span className="stat-val">100%</span>
-                <span className="stat-label">Real-time Coordinates</span>
+              <div className="telemetry-coords">
+                {Math.abs(selectedDestination.latitude).toFixed(4)}° {selectedDestination.latitude >= 0 ? 'N' : 'S'} · {Math.abs(selectedDestination.longitude).toFixed(4)}° {selectedDestination.longitude >= 0 ? 'E' : 'W'}
+              </div>
+              <div className="telemetry-style">
+                {selectedDestination.style || 'Culture · Architecture · Discovery'}
               </div>
             </div>
           </div>
 
-          {/* Right Hero Column: Large 3D Earth Globe */}
-          <div className="hero-globe-col">
-            <div className="globe-stage-container">
+          {/* Right Column: Massive 3D Earth Globe Visual Anchored to Right Wall */}
+          <div className="hero-globe-column" aria-label="3D Earth Hemisphere">
+            <div className="hero-globe-stage">
               <VoyanaGlobe
                 ref={globeRef}
-                selectedLocation={selectedLocation}
+                selectedLocation={selectedDestination}
                 routes={activeRoutes}
-                autoRotate={autoRotate}
-                onLocationSelect={handleLocationSelect}
+                autoRotate={true}
+                onLocationSelect={handleSelectLocation}
+                metadata={{
+                  temperature: selectedDestination.temperature || '21°C',
+                  style: selectedDestination.style || 'Culture & Discovery',
+                }}
               />
-
-              {/* Minimal Floating Globe Controls */}
-              <div className="globe-floating-controls">
-                <button
-                  type="button"
-                  className="btn-globe-ctrl"
-                  onClick={() => globeRef.current?.zoomIn()}
-                  aria-label="Zoom in on Earth"
-                  title="Zoom in"
-                >
-                  <Plus size={16} />
-                </button>
-                <button
-                  type="button"
-                  className="btn-globe-ctrl"
-                  onClick={() => globeRef.current?.zoomOut()}
-                  aria-label="Zoom out on Earth"
-                  title="Zoom out"
-                >
-                  <Minus size={16} />
-                </button>
-                <button
-                  type="button"
-                  className="btn-globe-ctrl"
-                  onClick={() => setAutoRotate(!autoRotate)}
-                  aria-label={autoRotate ? 'Pause Earth rotation' : 'Resume Earth rotation'}
-                  title={autoRotate ? 'Pause rotation' : 'Resume rotation'}
-                >
-                  {autoRotate ? <Pause size={15} /> : <RotateCw size={15} />}
-                </button>
-                <button
-                  type="button"
-                  className="btn-globe-ctrl"
-                  onClick={() => globeRef.current?.reset()}
-                  aria-label="Reset Earth view"
-                  title="Reset view"
-                >
-                  <Compass size={15} />
-                </button>
-              </div>
-
-              {/* Geographic Focus Tag */}
-              <div className="globe-focus-chip animate-fade-in">
-                <span className="focus-dot" />
-                <span>
-                  Focused on <b>{selectedLocation.name}</b>
-                  {selectedLocation.country ? `, ${selectedLocation.country}` : ''}
-                </span>
-              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 3. QUICK EXPLORE STRIP (Instant geographic chips) */}
-      <QuickExploreStrip
-        selectedLocationName={selectedLocation.name}
-        onSelect={handleLocationSelect}
+      {/* 3. DESTINATION DISCOVERY SECTION (Connecting Content to Earth) */}
+      <DestinationRail
+        selectedLocationName={selectedDestination.name}
+        onSelect={(loc) => {
+          handleSelectLocation(loc);
+          document.getElementById('top')?.scrollIntoView({ behavior: 'smooth' });
+        }}
       />
 
-      {/* 4. CURATED DESTINATIONS GRID */}
-      <DestinationGrid
-        selectedLocationName={selectedLocation.name}
-        onSelectOnGlobe={handleLocationSelect}
-        onBookFlight={(city) => { setFlightModalDestination(city); setFlightModalOpen(true); }}
-        onBookHotel={(city) => { setHotelModalDestination(city); setHotelModalOpen(true); }}
-        onViewReviews={(city) => { setReviewsDestination(city); setReviewsModalOpen(true); }}
-      />
-
-      {/* 5. MULTI-STOP EXPEDITIONS & ROUTE PREVIEW */}
+      {/* 4. EXPEDITIONS & MULTI-STOP FLIGHT ARCS */}
       <FeaturedJourneys
         onSelectRoute={handleSelectRoute}
-        onOpenWorkspaceWithRoute={handleOpenWorkspaceWithRoute}
+      />
+
+      {/* 5. EDITORIAL DESTINATIONS GRID */}
+      <DestinationGrid
+        onSelectDestination={handleSelectLocation}
+        onOpenFlight={(dest) => { setFlightModalDestination(dest); setFlightModalOpen(true); }}
+        onOpenHotel={(dest) => { setHotelModalDestination(dest); setHotelModalOpen(true); }}
+        onOpenReviews={(dest) => { setReviewsDestination(dest); setReviewsModalOpen(true); }}
       />
 
       {/* 6. INTELLIGENT TRAVEL SUITE (Workspace, AI, Packing, Budget, Reviews, Memories) */}
@@ -282,66 +298,48 @@ export function App() {
         onOpenChat={() => setChatModalOpen(true)}
         onOpenPacking={() => setPackingModalOpen(true)}
         onOpenBudget={() => setBudgetModalOpen(true)}
-        onOpenReviews={() => { setReviewsDestination(selectedLocation.name); setReviewsModalOpen(true); }}
+        onOpenReviews={() => { setReviewsDestination(selectedDestination.name); setReviewsModalOpen(true); }}
         onOpenMemories={() => setMemoriesModalOpen(true)}
       />
 
-      {/* 7. FOOTER */}
+      {/* 7. SOPHISTICATED EDITORIAL FOOTER */}
       <Footer />
 
       {/* ==========================================================================
-         TRAVEL EXPERIENCE MODALS (Preserved 100% functionality)
+         TRAVEL APPLICATION MODALS (100% Functionality Preserved & Connected)
          ========================================================================== */}
-      {/* Floating Travel Assistant Trigger (bottom right) */}
-      {!chatModalOpen && (
-        <button
-          type="button"
-          className="floating-ai-trigger"
-          onClick={() => setChatModalOpen(true)}
-          aria-label="Open Voyana AI Travel Assistant"
-        >
-          <Compass size={17} />
-          <span>Travel Assistant</span>
-        </button>
-      )}
-
-      {/* Voyana AI Travel Assistant Modal */}
       <ChatAssistantModal
         isOpen={chatModalOpen}
         onClose={() => setChatModalOpen(false)}
-        destination={selectedLocation.city || selectedLocation.name}
+        destination={selectedDestination.city || selectedDestination.name}
         onOpenBudget={() => setBudgetModalOpen(true)}
         onOpenPacking={() => setPackingModalOpen(true)}
       />
 
-      {/* Flight Booking Modal */}
       <FlightBookingModal
         isOpen={flightModalOpen}
         onClose={() => setFlightModalOpen(false)}
-        initialDestination={flightModalDestination || selectedLocation.city || selectedLocation.name}
+        initialDestination={flightModalDestination || selectedDestination.city || selectedDestination.name}
       />
 
-      {/* Hotel Booking Modal */}
       <HotelBookingModal
         isOpen={hotelModalOpen}
         onClose={() => setHotelModalOpen(false)}
-        initialDestination={hotelModalDestination || selectedLocation.city || selectedLocation.name}
+        initialDestination={hotelModalDestination || selectedDestination.city || selectedDestination.name}
       />
 
-      {/* Ground Transport Booking Modal */}
       <TransportBookingModal
         isOpen={transportModalOpen}
         onClose={() => setTransportModalOpen(false)}
-        defaultDestination={transportModalDestination || selectedLocation.city || selectedLocation.name}
+        defaultDestination={transportModalDestination || selectedDestination.city || selectedDestination.name}
       />
 
-      {/* Unified Bundle Booking Modal */}
       <UnifiedBundleBookingModal
         isOpen={bundleBookingModalOpen}
         onClose={() => setBundleBookingModalOpen(false)}
+        currentUser={activeUserContext}
       />
 
-      {/* My Bookings Modal */}
       <MyBookingsModal
         isOpen={myBookingsOpen}
         onClose={() => setMyBookingsOpen(false)}
@@ -350,23 +348,39 @@ export function App() {
         onOpenTransportModal={() => setTransportModalOpen(true)}
       />
 
-      {/* Smart Packing Checklist Modal */}
       <PackingChecklistModal
         isOpen={packingModalOpen}
         onClose={() => setPackingModalOpen(false)}
-        destination={selectedLocation.city || selectedLocation.name}
-        onOpenChatWithPrompt={() => setChatModalOpen(true)}
+        destination={selectedDestination.city || selectedDestination.name}
+        onOpenChatWithPrompt={(prompt) => {
+          setChatInitialPrompt(prompt);
+          setChatModalOpen(true);
+        }}
       />
 
-      {/* Budget Planner Modal */}
       <BudgetPlannerModal
         isOpen={budgetModalOpen}
         onClose={() => setBudgetModalOpen(false)}
-        destination={selectedLocation.city || selectedLocation.name}
-        onOpenChatWithPrompt={() => setChatModalOpen(true)}
+        destination={selectedDestination.city || selectedDestination.name}
+        onOpenChatWithPrompt={(prompt) => {
+          setChatInitialPrompt(prompt);
+          setChatModalOpen(true);
+        }}
       />
 
-      {/* Trip Planning Dashboard */}
+      {/* AI Travel Assistant & Concierge Modal */}
+      <ChatAssistantModal
+        isOpen={chatModalOpen}
+        onClose={() => {
+          setChatModalOpen(false);
+          setChatInitialPrompt(undefined);
+        }}
+        destination={selectedDestination.city || selectedDestination.name}
+        initialPrompt={chatInitialPrompt}
+        onOpenBudget={() => setBudgetModalOpen(true)}
+        onOpenPacking={() => setPackingModalOpen(true)}
+      />
+
       <TripDashboardModal
         isOpen={tripDashboardOpen}
         onClose={() => setTripDashboardOpen(false)}
@@ -376,27 +390,53 @@ export function App() {
         }}
       />
 
-      {/* Trip Collaborative Workspace */}
       <TripWorkspaceModal
         isOpen={!!activeWorkspaceTrip}
         onClose={() => setActiveWorkspaceTrip(null)}
         trip={activeWorkspaceTrip}
+        currentUser={activeUserContext}
       />
 
-      {/* Travel Reviews & Ratings Modal */}
       <TravelReviewsModal
         isOpen={reviewsModalOpen}
         onClose={() => setReviewsModalOpen(false)}
-        initialTargetId={(reviewsDestination || selectedLocation.name).toLowerCase()}
-        initialTargetTitle={reviewsDestination || selectedLocation.name}
+        initialTargetId={(reviewsDestination || selectedDestination.name).toLowerCase()}
+        initialTargetTitle={reviewsDestination || selectedDestination.name}
+        currentUser={activeUserContext}
       />
 
-      {/* Travel Memories & Photo Journal */}
       <TravelMemoriesModal
         isOpen={memoriesModalOpen}
         onClose={() => setMemoriesModalOpen(false)}
+        currentUser={activeUserContext}
+      />
+
+      {/* User Profile & Preferences Modal */}
+      <ProfileModal
+        isOpen={profileModalOpen}
+        onClose={() => {
+          setProfileModalOpen(false);
+          if (route === 'profile') window.location.hash = '/';
+        }}
+      />
+
+      {/* Admin Ecosystem Oversight Modal */}
+      <AdminDashboardModal
+        isOpen={adminModalOpen}
+        onClose={() => {
+          setAdminModalOpen(false);
+          if (route === 'admin') window.location.hash = '/';
+        }}
       />
     </div>
+  );
+}
+
+export function App() {
+  return (
+    <AuthProvider>
+      <MainAppContent />
+    </AuthProvider>
   );
 }
 
