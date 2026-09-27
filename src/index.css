@@ -671,7 +671,7 @@
   max-width: 1440px;
   margin: 0 auto;
   width: 100%;
-  overflow: hidden;
+  overflow: visible;
   min-height: 760px;
   display: flex;
   align-items: center;
@@ -869,11 +869,11 @@
 /* Right Stage: Massive 3D Earth Globe Visual Anchored to Right Wall (Curved Sphere Perimeter) */
 .hero-globe-column {
   position: absolute;
-  right: -430px;
+  right: -320px;
   top: 50%;
   transform: translateY(-50%);
-  width: 860px;
-  height: 860px;
+  width: 960px;
+  height: 960px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -902,7 +902,7 @@
 
 .globe-circular-aura {
   position: absolute;
-  top: 50%;
+  top: 53%;
   left: 50%;
   transform: translate(-50%, -50%);
   width: 94%;
