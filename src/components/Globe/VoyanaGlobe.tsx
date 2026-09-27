@@ -48,8 +48,7 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
   const autoRotateRef = useRef(autoRotate);
   const apiRef = useRef<VoyanaGlobeHandle | null>(null);
 
-  // Floating label projected coordinates on 2D screen
-  const [labelPos, setLabelPos] = useState<{ x: number; y: number; visible: boolean } | null>(null);
+  // Floating label removed as requested
 
   selectedRef.current = selectedLocation;
   onLocationSelectRef.current = onLocationSelect;
@@ -74,7 +73,8 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
 
     // Perspective camera positioned for a commanding planetary presence with generous breathing room
     const camera = new THREE.PerspectiveCamera(44, 1, 0.1, 100);
-    camera.position.set(0, 0, 3.20);
+    // Moved camera slightly up to shift the entire globe and atmosphere down visually without misalignment
+    camera.position.set(0, 0.15, 3.20);
 
     let renderer: THREE.WebGLRenderer;
     try {
@@ -97,7 +97,7 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
     scene.add(earthGroup);
 
     // Natural axial tilt (23.5 degrees)
-    earthGroup.rotation.z = THREE.MathUtils.degToRad(16);
+    earthGroup.rotation.z = THREE.MathUtils.degToRad(23.5);
 
     // 1. HIGH-TESSELLATION 3D SPHERICAL EARTH (128x128 vertices)
     const sphereGeometry = new THREE.SphereGeometry(1, 128, 128);
@@ -195,7 +195,6 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
       }
 
       if (!location) {
-        setLabelPos(null);
         return;
       }
 
@@ -203,6 +202,10 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
 
       activeMarker = new THREE.Group();
       activeMarker.position.copy(normal.clone().multiplyScalar(1.032));
+
+      // Orient the pin so it stands upright on the surface
+      // Local +Y becomes "up out of the ground" at this point on the sphere.
+      activeMarker.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
 
       // Central emerald beacon dot
       const centerDot = new THREE.Mesh(
@@ -221,7 +224,7 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
         new THREE.RingGeometry(0.046, 0.066, 36),
         new THREE.MeshBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0.9, side: THREE.DoubleSide })
       );
-      ring.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal);
+      ring.rotation.x = -Math.PI / 2;
 
       activeMarker.add(centerDot, coreDot, ring);
       earthGroup.add(activeMarker);
@@ -439,7 +442,7 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
         earthGroup.rotateY(0.00065);
       }
 
-      if (!pointerDown && rotationPaused && autoRotateRef.current && now - lastInteraction > 5000 && !selectedRef.current) {
+      if (!pointerDown && rotationPaused && autoRotateRef.current && now - lastInteraction > 2500) {
         rotationPaused = false;
       }
 
@@ -452,23 +455,6 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
         if (activeMarker.children[2]) {
           activeMarker.children[2].scale.setScalar(ringPulse);
         }
-
-        // Project 3D marker position to 2D screen coordinates
-        const markerWorldPos = activeMarker.getWorldPosition(new THREE.Vector3());
-        const camDir = camera.position.clone().sub(markerWorldPos).normalize();
-        const normalWorld = markerWorldPos.clone().normalize();
-        const isFacing = normalWorld.dot(camDir) > 0.05; // Visible on facing hemisphere
-
-        if (isFacing) {
-          const screenPos = markerWorldPos.clone().project(camera);
-          const x = (screenPos.x * 0.5 + 0.5) * container.clientWidth;
-          const y = (-screenPos.y * 0.5 + 0.5) * container.clientHeight;
-          setLabelPos({ x, y, visible: true });
-        } else {
-          setLabelPos(null);
-        }
-      } else {
-        setLabelPos(null);
       }
 
       // Camera easing
@@ -515,28 +501,6 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
       {/* WebGL Canvas mount */}
       <div ref={containerRef} className="globe-canvas-mount" aria-label="Interactive 3D Earth Globe" />
 
-      {/* Projected Editorial 2D Location Pin Label */}
-      {labelPos && labelPos.visible && selectedLocation && (
-        <div
-          className="editorial-globe-label animate-fade-in"
-          style={{
-            left: `${labelPos.x}px`,
-            top: `${labelPos.y}px`,
-          }}
-        >
-          <div className="label-stem" />
-          <div className="label-content">
-            <div className="label-city">{selectedLocation.name}</div>
-            <div className="label-country">{selectedLocation.country || 'Global Destination'}</div>
-            {metadata?.temperature && (
-              <div className="label-meta">
-                <span>{metadata.temperature}</span>
-                {metadata.style && <span>&bull; {metadata.style}</span>}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 });
