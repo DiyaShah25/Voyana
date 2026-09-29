@@ -1,3 +1,9 @@
+/**
+ * VPM-5: AI Travel Services & Intelligent Suite Integration
+ * Assignee: Jagrat Kumar (202512079)
+ * Connects AI travel assistant, smart packing generator, destination recommendations, and budget planning.
+ */
+
 import { useState, useRef, useEffect } from 'react';
 import type { GlobeLocation, GlobeRoute, VoyanaGlobeHandle } from '@/components/Globe/globe.types';
 import VoyanaGlobe from '@/components/Globe/VoyanaGlobe';
