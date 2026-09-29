@@ -1,5 +1,5 @@
 /**
- * VPM-39: AI Itinerary Generator Engine
+ * VPM-49 / VPM-5: AI Itinerary Generator Engine
  * Assignee: Jagrat Kumar (202512079)
  * Generates custom day-by-day travel schedules tailored by destination, duration, pacing, and group interests.
  */
