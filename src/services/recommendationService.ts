@@ -1,7 +1,7 @@
 /**
- * VPM-40: Destination Recommendation Engine
+ * VPM-40 / VPM-53: Destination Recommendation & Discovery Engine
  * Assignee: Jagrat Kumar (202512079)
- * Intelligent destination discovery, multi-criteria filtering, and recommendation scoring.
+ * Intelligent destination discovery, multi-criteria filtering (vibe, budget, continent), and recommendation match scoring.
  */
 
 export interface RecommendedDestination {
