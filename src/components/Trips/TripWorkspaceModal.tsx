@@ -1,3 +1,9 @@
+/**
+ * VPM-247 / VPM-90: Trip Workspace & Interactive Itinerary Creation Modal
+ * Assignee: Jagrat Kumar (202512079)
+ * Supports multi-day schedule creation, activity builder, drag/drop reordering, and budget integration.
+ */
+
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Calendar, MessageSquare, CheckSquare, BarChart3,
