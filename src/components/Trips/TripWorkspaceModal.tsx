@@ -45,6 +45,7 @@ import {
   uploadTripMemory,
   likeTripMemory,
   deleteTripMemory,
+  downloadTripTransactionsCSV,
   type TripChatMessage,
   type TripTask,
   type TripPoll,
@@ -957,13 +958,23 @@ export default function TripWorkspaceModal({
                   <h3 className="text-base font-bold text-white">Group Expense Splitter</h3>
                   <p className="text-xs text-slate-400">Total Group Spend: ${debtSummary.totalSpent} USD</p>
                 </div>
-                <button
-                  onClick={() => setShowAddExpense(true)}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold"
-                >
-                  <Plus size={14} />
-                  <span>Log Expense</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => downloadTripTransactionsCSV(expenses, debtSummary.settlements, trip?.title || 'Trip')}
+                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-indigo-300 border border-white/10 text-xs font-semibold transition-all hover:scale-105 active:scale-95"
+                    title="Export all expenses & debt settlement to CSV (VPM-76)"
+                  >
+                    <Download size={14} />
+                    <span>Export CSV</span>
+                  </button>
+                  <button
+                    onClick={() => setShowAddExpense(true)}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold"
+                  >
+                    <Plus size={14} />
+                    <span>Log Expense</span>
+                  </button>
+                </div>
               </div>
 
               {/* Debt Settlement Banner ("Who Owes Who") */}

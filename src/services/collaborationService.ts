@@ -574,6 +574,78 @@ export function calculateDebtSettlement(
   return { balances, settlements, totalSpent };
 }
 
+/**
+ * Export Trip Expenses and Settlement Ledger to CSV format (VPM-76)
+ */
+export function exportTripExpensesCSV(
+  expenses: TripExpense[],
+  settlements: DebtSettlement[] = [],
+  tripTitle: string = 'Trip'
+): string {
+  const safeTitle = tripTitle.replace(/"/g, '""');
+  const now = new Date().toISOString();
+
+  const lines: string[] = [
+    `"Voyana Travel Platform - Trip Transaction Ledger"`,
+    `"Trip:","${safeTitle}"`,
+    `"Exported At:","${now}"`,
+    `"Total Expenses Count:",${expenses.length}`,
+    `"Total Spend:",${expenses.reduce((s, e) => s + e.amount, 0)}`,
+    ``,
+    `"--- ITEMIZED EXPENSES ---"`,
+    `"Expense ID","Date","Title","Category","Paid By","Split Among","Amount","Currency","Share Per Person"`,
+  ];
+
+  expenses.forEach((e) => {
+    const splitCount = e.splitAmong.length || 1;
+    const perPerson = (e.amount / splitCount).toFixed(2);
+    lines.push(
+      [
+        `"${e.id}"`,
+        `"${e.date}"`,
+        `"${e.title.replace(/"/g, '""')}"`,
+        `"${e.category}"`,
+        `"${e.paidBy.replace(/"/g, '""')}"`,
+        `"${e.splitAmong.join(', ').replace(/"/g, '""')}"`,
+        e.amount,
+        `"${e.currency}"`,
+        perPerson,
+      ].join(',')
+    );
+  });
+
+  if (settlements.length > 0) {
+    lines.push(``);
+    lines.push(`"--- DEBT SETTLEMENT LEDGER (WHO OWES WHOM) ---"`);
+    lines.push(`"Debtor (Owes)","Creditor (Owed)","Settlement Amount"`);
+    settlements.forEach((s) => {
+      lines.push([`"${s.from.replace(/"/g, '""')}"`, `"${s.to.replace(/"/g, '""')}"`, s.amount].join(','));
+    });
+  }
+
+  return lines.join('\n');
+}
+
+/**
+ * Triggers browser download of the trip transaction CSV file (VPM-76)
+ */
+export function downloadTripTransactionsCSV(
+  expenses: TripExpense[],
+  settlements: DebtSettlement[] = [],
+  tripTitle: string = 'Trip'
+): void {
+  const csvContent = exportTripExpensesCSV(expenses, settlements, tripTitle);
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const sanitizedTitle = tripTitle.replace(/[^a-zA-Z0-9_-]/g, '_');
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `Voyana_${sanitizedTitle}_Transactions.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
 // ---------------------------------------------------------------------------
 // 5. Travel Documents Repository
 // ---------------------------------------------------------------------------
