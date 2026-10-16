@@ -15,6 +15,7 @@ import {
   uploadTripMemory,
   likeTripMemory,
   deleteTripMemory,
+  generateAiJournalStory,
   type TripMemory,
 } from '@/services/collaborationService';
 import { getUserTrips, type Trip } from '@/services/tripService';
@@ -1122,9 +1123,43 @@ export default function TravelMemoriesModal({
 
               {/* Caption */}
               <div>
-                <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '4px', fontWeight: 600 }}>
-                  Caption / Story
-                </label>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>
+                    Caption / Story Note
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const story = generateAiJournalStory({
+                        title: uploadTitle,
+                        location: uploadLocation,
+                        destination: getTripNameById(uploadTripTarget),
+                      });
+                      setUploadCaption(story.caption);
+                      if (uploadTags === 'Travel, Moments' || !uploadTags.trim()) {
+                        setUploadTags(story.tags.join(', '));
+                      }
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      background: 'rgba(236,72,153,0.15)',
+                      border: '1px solid rgba(236,72,153,0.3)',
+                      color: '#f472b6',
+                      borderRadius: '8px',
+                      padding: '2px 8px',
+                      fontSize: '10px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}
+                    title="Generate AI Travel Journal reflection (VPM-63)"
+                  >
+                    <Sparkles size={11} />
+                    <span>AI Generate Story</span>
+                  </button>
+                </div>
                 <textarea
                   rows={2}
                   value={uploadCaption}

@@ -46,6 +46,7 @@ import {
   likeTripMemory,
   deleteTripMemory,
   downloadTripTransactionsCSV,
+  generateAiJournalStory,
   type TripChatMessage,
   type TripTask,
   type TripPoll,
@@ -1614,7 +1615,28 @@ export default function TripWorkspaceModal({
               </div>
 
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Caption / Story Note</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs text-slate-400">Caption / Story Note</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const story = generateAiJournalStory({
+                        title: memTitle,
+                        location: memLocation,
+                        destination: trip.destination,
+                      });
+                      setMemCaption(story.caption);
+                      if (memTagInput === 'Sightseeing, Sunset' || !memTagInput.trim()) {
+                        setMemTagInput(story.tags.join(', '));
+                      }
+                    }}
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-pink-500/15 border border-pink-500/30 text-pink-300 text-[10px] font-bold hover:bg-pink-500/25 transition-all"
+                    title="Generate AI Travel Journal reflection (VPM-63)"
+                  >
+                    <Sparkles size={11} />
+                    <span>AI Generate Story</span>
+                  </button>
+                </div>
                 <textarea
                   rows={2}
                   value={memCaption}
