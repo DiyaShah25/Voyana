@@ -1,3 +1,9 @@
+/**
+ * Forgot Password Page
+ * Two-step password recovery flow: email submission for reset link,
+ * then new password entry with validation and confirmation.
+ */
+
 import { useState, type FormEvent } from 'react';
 import {
   AlertCircle,

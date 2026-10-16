@@ -1,5 +1,13 @@
+/**
+ * Globe Type Definitions
+ * Declares interfaces for globe locations, travel routes,
+ * globe component ref handle, and props for VoyanaGlobe.
+ */
+
+// Location classification on the globe
 export type GlobeLocationType = 'city' | 'state' | 'country' | 'region' | 'landmark';
 
+// Geographic point with metadata
 export interface GlobeLocation {
   name: string;
   city?: string;
@@ -10,11 +18,13 @@ export interface GlobeLocation {
   type: GlobeLocationType;
 }
 
+// Travel route between two locations
 export interface GlobeRoute {
   from: GlobeLocation;
   to: GlobeLocation;
 }
 
+// Imperative handle exposed via React ref
 export interface VoyanaGlobeHandle {
   focusOnLocation: (latitude: number, longitude: number, type?: GlobeLocationType) => void;
   setMarker: (location?: GlobeLocation) => void;
@@ -25,6 +35,7 @@ export interface VoyanaGlobeHandle {
   zoomOut: () => void;
 }
 
+// Props accepted by the VoyanaGlobe component
 export interface VoyanaGlobeProps {
   selectedLocation?: GlobeLocation;
   routes?: GlobeRoute[];

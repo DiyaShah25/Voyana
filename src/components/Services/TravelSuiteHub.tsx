@@ -1,3 +1,9 @@
+/**
+ * Travel Suite Hub Component
+ * Central dashboard linking to all travel services: bookings,
+ * trip workspace, budget planner, packing, reviews, and memories.
+ */
+
 import React from 'react';
 import {
   Compass,

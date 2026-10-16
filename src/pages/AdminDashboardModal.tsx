@@ -1,3 +1,9 @@
+/**
+ * Admin Dashboard Modal
+ * Platform administration panel with user management, analytics,
+ * booking oversight, and system configuration controls.
+ */
+
 import React, { useState, useEffect } from 'react';
 import {
   X,

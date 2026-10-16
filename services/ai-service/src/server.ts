@@ -1,3 +1,9 @@
+/**
+ * Server Entry Point
+ * Bootstraps the Express app, connects to MongoDB,
+ * and starts the HTTP server on the configured port.
+ */
+
 import { createApp } from './app.js';
 import { config } from './config/env.js';
 import { connectMongo } from './db/mongo.js';

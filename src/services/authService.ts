@@ -1,3 +1,10 @@
+/**
+ * Authentication Service
+ * Handles sign-in, sign-up, sign-out, session management, password reset,
+ * and social OAuth. Supports both Supabase backend and local localStorage
+ * fallback with seeded demo users for role testing.
+ */
+
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type {
   AuthResult,
@@ -7,15 +14,17 @@ import type {
   UserRole,
 } from '@/types/auth.types';
 
+// Validation constants
 export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const MIN_PASSWORD_LENGTH = 6;
 
+// LocalStorage keys for persistent state
 const REMEMBER_KEY = 'voyana.rememberedEmail';
 const USERS_STORAGE_KEY = 'voyana.auth_users_registry';
 const SESSION_STORAGE_KEY = 'voyana.active_session';
 const TOKEN_STORAGE_KEY = 'voyana.auth_token';
 
-// Supabase client initialization (if environment variables are provided)
+// --- Supabase Client Initialization ---
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
@@ -28,9 +37,7 @@ if (supabaseUrl && supabaseAnonKey) {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Seeded Demo Users (for immediate role testing: Admin, Organizer, Traveler)
-// ---------------------------------------------------------------------------
+// --- Seeded Demo Users (Admin, Organizer, Traveler) ---
 const SEEDED_USERS: StoredUserRecord[] = [
   {
     id: 'usr-admin-01',
@@ -88,9 +95,12 @@ const SEEDED_USERS: StoredUserRecord[] = [
   },
 ];
 
-// Helper to simulate slight natural network latency
+// --- Internal Helpers ---
+
+// Simulate network latency
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// Load user registry from localStorage, seeding defaults if empty
 function loadUserRegistry(): StoredUserRecord[] {
   try {
     const raw = localStorage.getItem(USERS_STORAGE_KEY);
@@ -99,7 +109,6 @@ function loadUserRegistry(): StoredUserRecord[] {
       return SEEDED_USERS;
     }
     const parsed = JSON.parse(raw) as StoredUserRecord[];
-    // Ensure seeded accounts always exist if user registry was initialized empty
     const emails = new Set(parsed.map((u) => u.email.toLowerCase()));
     let updated = false;
     for (const seed of SEEDED_USERS) {
@@ -117,6 +126,7 @@ function loadUserRegistry(): StoredUserRecord[] {
   }
 }
 
+// Persist user registry to localStorage
 function saveUserRegistry(users: StoredUserRecord[]): void {
   try {
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
@@ -125,12 +135,14 @@ function saveUserRegistry(users: StoredUserRecord[]): void {
   }
 }
 
+// Strip password from a stored record to produce a safe profile
 function sanitizeUser(record: StoredUserRecord): UserProfile {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { passwordHash, ...profile } = record;
   return profile;
 }
 
+// Generate a mock JWT-style token for local auth
 function generateMockToken(userId: string): string {
   const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
   const payload = btoa(
@@ -138,21 +150,18 @@ function generateMockToken(userId: string): string {
       sub: userId,
       iss: 'voyana.travel',
       iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + 86400 * 7, // 7 days
+      exp: Math.floor(Date.now() / 1000) + 86400 * 7,
     })
   );
   const signature = btoa(`sig_${userId}_${Date.now()}`);
   return `${header}.${payload}.${signature}`;
 }
 
-// ---------------------------------------------------------------------------
-// Authentication API
-// ---------------------------------------------------------------------------
-
+// --- Sign In ---
 export async function signIn(email: string, password: string): Promise<AuthResult> {
   const trimmedEmail = email.trim().toLowerCase();
 
-  // Field validation
+  // Input validation
   if (!trimmedEmail) {
     return { ok: false, message: 'Please enter your email address.', fieldErrors: { email: 'Email is required' } };
   }
@@ -163,7 +172,7 @@ export async function signIn(email: string, password: string): Promise<AuthResul
     return { ok: false, message: 'Please enter your password.', fieldErrors: { password: 'Password is required' } };
   }
 
-  // 1. Supabase real backend path (if configured)
+  // Attempt Supabase authentication first
   if (supabase) {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email: trimmedEmail, password });
@@ -192,11 +201,11 @@ export async function signIn(email: string, password: string): Promise<AuthResul
       saveSession(session);
       return { ok: true, message: 'Welcome back!', session };
     } catch {
-      // Fall through to local auth engine if network or supabase fails
+      // Fall through to local auth engine
     }
   }
 
-  // 2. Local Authoritative Auth Engine
+  // Fallback: Local auth engine with localStorage
   await wait(300);
   const users = loadUserRegistry();
   const record = users.find((u) => u.email.toLowerCase() === trimmedEmail);
@@ -228,6 +237,7 @@ export async function signIn(email: string, password: string): Promise<AuthResul
   return { ok: true, message: `Welcome back, ${profile.name.split(' ')[0]}!`, session };
 }
 
+// --- Sign Up ---
 export async function signUp(
   name: string,
   email: string,
@@ -237,7 +247,7 @@ export async function signUp(
   const trimmedName = name.trim();
   const trimmedEmail = email.trim().toLowerCase();
 
-  // Comprehensive validation
+  // Input validation
   if (!trimmedName || trimmedName.length < 2) {
     return { ok: false, message: 'Please enter your full name.', fieldErrors: { name: 'Full name is required (min 2 chars)' } };
   }
@@ -255,7 +265,7 @@ export async function signUp(
     };
   }
 
-  // 1. Supabase path
+  // Attempt Supabase registration first
   if (supabase) {
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -293,7 +303,7 @@ export async function signUp(
     }
   }
 
-  // 2. Local Authoritative Registry
+  // Fallback: Local registry
   await wait(350);
   const users = loadUserRegistry();
   const existing = users.find((u) => u.email.toLowerCase() === trimmedEmail);
@@ -337,6 +347,7 @@ export async function signUp(
   return { ok: true, message: 'Account created! Welcome aboard.', session };
 }
 
+// --- Sign Out ---
 export function signOut(): void {
   try {
     localStorage.removeItem(SESSION_STORAGE_KEY);
@@ -349,6 +360,9 @@ export function signOut(): void {
   }
 }
 
+// --- Session Management ---
+
+// Restore a previously saved session if it hasn't expired
 export function restoreSession(): AuthSession | null {
   try {
     const raw = localStorage.getItem(SESSION_STORAGE_KEY);
@@ -364,6 +378,7 @@ export function restoreSession(): AuthSession | null {
   }
 }
 
+// Persist session data to localStorage
 export function saveSession(session: AuthSession): void {
   try {
     localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
@@ -373,6 +388,9 @@ export function saveSession(session: AuthSession): void {
   }
 }
 
+// --- Profile Management ---
+
+// Update a user's profile fields and sync active session
 export async function updateUserProfile(userId: string, updates: Partial<UserProfile>): Promise<UserProfile | null> {
   const users = loadUserRegistry();
   const idx = users.findIndex((u) => u.id === userId);
@@ -392,7 +410,7 @@ export async function updateUserProfile(userId: string, updates: Partial<UserPro
 
   const updatedProfile = sanitizeUser(users[idx]);
 
-  // Update active session if it belongs to current user
+  // Sync active session if updating the current user
   const currentSession = restoreSession();
   if (currentSession && currentSession.user.id === userId) {
     currentSession.user = updatedProfile;
@@ -402,15 +420,20 @@ export async function updateUserProfile(userId: string, updates: Partial<UserPro
   return updatedProfile;
 }
 
+// Switch user's active role (delegates to updateUserProfile)
 export async function switchUserRole(userId: string, newRole: UserRole): Promise<UserProfile | null> {
   return updateUserProfile(userId, { role: newRole });
 }
 
+// Retrieve all registered users (admin utility)
 export function getAllUsers(): UserProfile[] {
   const users = loadUserRegistry();
   return users.map(sanitizeUser);
 }
 
+// --- Password Reset ---
+
+// Request a password reset email
 export async function requestPasswordReset(email: string): Promise<AuthResult> {
   const trimmed = email.trim().toLowerCase();
   if (!trimmed || !EMAIL_PATTERN.test(trimmed)) {
@@ -431,13 +454,14 @@ export async function requestPasswordReset(email: string): Promise<AuthResult> {
   const users = loadUserRegistry();
   const exists = users.some((u) => u.email.toLowerCase() === trimmed);
   if (!exists) {
-    // Return friendly generic confirmation to avoid email enumeration
+    // Generic message to prevent email enumeration
     return { ok: true, message: 'If an account exists for this email, password reset instructions have been dispatched.' };
   }
 
   return { ok: true, message: 'Password reset instructions have been sent to your email.' };
 }
 
+// Confirm password reset with a new password
 export async function confirmPasswordReset(email: string, newPassword: string): Promise<AuthResult> {
   if (newPassword.length < MIN_PASSWORD_LENGTH) {
     return { ok: false, message: `Password must be at least ${MIN_PASSWORD_LENGTH} characters.` };
@@ -456,15 +480,18 @@ export async function confirmPasswordReset(email: string, newPassword: string): 
   return { ok: true, message: 'Password updated successfully. You may now sign in.' };
 }
 
+// --- Social / OAuth Sign-In ---
+
 export type OAuthProvider = 'google' | 'apple';
 
+// Initiate sign-in via a third-party provider
 export async function signInWithProvider(provider: OAuthProvider): Promise<AuthResult | null> {
   if (supabase) {
     const { error } = await supabase.auth.signInWithOAuth({ provider });
     if (error) return { ok: false, message: 'Social sign-in failed. Please try again.' };
-    return null; // Browser redirect
+    return null; // Browser redirect handles the rest
   }
-  // Fast social sign-in simulation with Alex Morgan
+  // Simulate social sign-in with demo traveler account
   await wait(500);
   const alex = SEEDED_USERS[2];
   const profile = sanitizeUser(alex);
@@ -477,6 +504,9 @@ export async function signInWithProvider(provider: OAuthProvider): Promise<AuthR
   return { ok: true, message: `Connected with ${provider === 'google' ? 'Google' : 'Apple'}. Welcome back!`, session };
 }
 
+// --- Remember Me Helpers ---
+
+// Save email for "Remember Me" checkbox
 export function rememberEmail(email: string): void {
   try {
     localStorage.setItem(REMEMBER_KEY, email);
@@ -485,6 +515,7 @@ export function rememberEmail(email: string): void {
   }
 }
 
+// Recall a previously remembered email
 export function recallEmail(): string | null {
   try {
     return localStorage.getItem(REMEMBER_KEY);
@@ -493,6 +524,7 @@ export function recallEmail(): string | null {
   }
 }
 
+// Clear remembered email
 export function forgetEmail(): void {
   try {
     localStorage.removeItem(REMEMBER_KEY);

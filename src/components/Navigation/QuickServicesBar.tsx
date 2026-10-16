@@ -1,3 +1,9 @@
+/**
+ * Quick Services Bar Component
+ * Floating action bar providing one-tap access to key travel
+ * services: flights, hotels, transport, trips, and AI chat.
+ */
+
 import React from 'react';
 import {
   Plane,

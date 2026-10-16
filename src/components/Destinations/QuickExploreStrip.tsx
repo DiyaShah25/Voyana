@@ -1,3 +1,9 @@
+/**
+ * Quick Explore Strip Component
+ * Compact horizontal strip of quick-access destination chips
+ * for rapid location exploration from the home page.
+ */
+
 import React from 'react';
 import { MapPin, Sparkles } from 'lucide-react';
 import type { GlobeLocation } from '@/components/Globe/globe.types';

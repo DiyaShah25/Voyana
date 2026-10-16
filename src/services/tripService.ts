@@ -1,6 +1,5 @@
 /**
- * VPM-90: Trip Creation & Itinerary Management Engine
- * Assignee: Megha Lalwani (202512054) <lalwani2406@gmail.com>
+ * Trip Creation & Itinerary Management Engine
  * Provides custom trip creation wizards, curated destination templates,
  * multi-collaborator invitations, and auto-generated initial day schedules.
  */
@@ -575,7 +574,7 @@ export async function deleteTrip(tripId: string): Promise<{ success: boolean }> 
 }
 
 // ---------------------------------------------------------------------------
-// 7. Trip Sharing & Public Invite Links (VPM-4 / VPM-8)
+// 7. Trip Sharing & Public Invite Links
 // ---------------------------------------------------------------------------
 export function generateShareLink(tripId: string, role: TripMemberRole = 'editor'): string {
   const origin = window.location.origin;
@@ -610,7 +609,7 @@ export async function updateTripVisibility(
 }
 
 // ---------------------------------------------------------------------------
-// 8. Trip Activity Management & Dynamic Builder (VPM-4)
+// 8. Trip Activity Management & Dynamic Builder
 // ---------------------------------------------------------------------------
 export async function addTripActivity(
   tripId: string,
