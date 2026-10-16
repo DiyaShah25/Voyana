@@ -39,7 +39,7 @@ export interface PaymentSummaryItem {
 export interface PaymentProps {
   bookingId: string;
   bookingReference: string;
-  bookingType: 'flight' | 'hotel' | 'transport';
+  bookingType: 'flight' | 'hotel' | 'transport' | 'package';
   title: string;
   subtitle: string;
   amount: number;
