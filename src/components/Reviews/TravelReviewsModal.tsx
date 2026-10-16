@@ -1,3 +1,9 @@
+/**
+ * Travel Reviews Modal
+ * Displays and collects user reviews and ratings for destinations,
+ * hotels, and experiences with star ratings and text feedback.
+ */
+
 import React, { useState, useEffect } from 'react';
 import {
   Star, ThumbsUp, MessageSquare, ShieldCheck,
@@ -42,7 +48,7 @@ export default function TravelReviewsModal({
   initialTargetType = 'destination',
   initialTargetId = 'paris',
   initialTargetTitle = 'Paris, France',
-  currentUser = { name: 'Manav Vyas', email: 'manavvyas2004@gmail.com' },
+  currentUser = { name: 'Travel Explorer', email: 'traveler@voyana.com' },
 }: TravelReviewsModalProps) {
   const [selectedTargetId, setSelectedTargetId] = useState<string>(initialTargetId);
   const [selectedTravelerType, setSelectedTravelerType] = useState<string>('all');
@@ -154,7 +160,7 @@ export default function TravelReviewsModal({
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-bold text-white">Travel Reviews & Community Ratings</h2>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                  VPM-122
+                  Community Verified
                 </span>
               </div>
               <p className="text-xs text-slate-400">

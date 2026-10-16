@@ -1,3 +1,10 @@
+/**
+ * Flight Booking Modal
+ * Full-screen modal for searching, filtering, and booking flights.
+ * Includes departure/arrival selection, date pickers, class filters,
+ * and integration with payment processing.
+ */
+
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Plane, MapPin, Calendar, Users, ArrowRight, Search,

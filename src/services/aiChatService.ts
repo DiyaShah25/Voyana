@@ -1,7 +1,7 @@
 /**
- * VPM-5 / VPM-38 / VPM-46: AI Travel Chatbot & Contextual Response Generation Engine
- * Assignee: Jagrat Kumar (202512079)
- * Provides context-aware AI travel reasoning, citation tracking, and action suggestions.
+ * AI Travel Chatbot Service
+ * Provides conversational travel reasoning, destination recommendations,
+ * itinerary advice, packing suggestions, citation tracking, and proposed action objects.
  */
 
 export interface ChatMessage {
@@ -101,7 +101,7 @@ function generateContextualResponse(
 } {
   const q = query.toLowerCase();
 
-  // VPM-40: Destination Recommendation Intelligence
+  // Destination Recommendation Intelligence
   if (
     q.includes('recommend') ||
     q.includes('where to go') ||
@@ -142,7 +142,7 @@ function generateContextualResponse(
     };
   }
 
-  // VPM-138: Weather Forecast & Climate Intelligence
+  // Weather Forecast & Climate Intelligence
   if (q.includes('weather') || q.includes('forecast') || q.includes('rain') || q.includes('temperature') || q.includes('climate')) {
     return {
       content: `### 🌦️ Current & Forecasted Weather for ${destination}\n\n` +

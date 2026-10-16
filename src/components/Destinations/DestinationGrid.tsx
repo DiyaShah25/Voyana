@@ -1,3 +1,9 @@
+/**
+ * Destination Grid Component
+ * Displays a responsive grid of destination cards for browsing
+ * and discovering popular travel locations.
+ */
+
 import React, { useState } from 'react';
 import { Compass, Filter, Sparkles } from 'lucide-react';
 import type { GlobeLocation } from '@/components/Globe/globe.types';

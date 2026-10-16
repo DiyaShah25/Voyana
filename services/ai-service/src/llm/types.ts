@@ -1,3 +1,9 @@
+/**
+ * LLM Type Definitions
+ * Declares interfaces for LLM messages, completion responses,
+ * and the common LlmClient contract used by all providers.
+ */
+
 export interface LlmMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;

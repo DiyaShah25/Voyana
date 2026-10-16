@@ -1,7 +1,7 @@
 /**
- * VPM-42 / VPM-191: Smart Packing Checklist & Member Task Assignment Service
- * Assignee: Jagrat Kumar (202512079)
- * Manages category-based packing items, progress calculations, weather syncing, and member assignments.
+ * Smart Packing Checklist & Member Task Assignment Service
+ * Manages category-based packing items, checklist progress tracking,
+ * weather-aware recommendations, and member item assignments.
  */
 
 export type PackingCategory =

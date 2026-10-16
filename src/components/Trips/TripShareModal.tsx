@@ -1,3 +1,9 @@
+/**
+ * Trip Share Modal
+ * Handles trip sharing via invite links, email invitations,
+ * and social media sharing with permission controls.
+ */
+
 import React, { useState } from 'react';
 import {
   Share2, Copy, Check, QrCode, Globe2, Lock,

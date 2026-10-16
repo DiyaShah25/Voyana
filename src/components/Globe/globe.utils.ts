@@ -1,12 +1,19 @@
+/**
+ * Globe Utility Functions
+ * Provides math helpers for converting between geographic coordinates
+ * (lat/lng) and Three.js 3D vectors, computing focus quaternions,
+ * and generating great-circle arc points for route rendering.
+ */
 
 import * as THREE from 'three';
 
+// Convert geographic lat/lng to a 3D point on a sphere
 export function latLngToVector3(latitude: number, longitude: number, radius: number): THREE.Vector3 {
   const lat = THREE.MathUtils.degToRad(latitude);
   const lon = THREE.MathUtils.degToRad(longitude);
   const cosLat = Math.cos(lat);
   
-  // This specific mapping ensures Greenwich sits on +X, 90E on -Z and 90W on +Z.
+  // Greenwich sits on +X, 90E on -Z and 90W on +Z
   return new THREE.Vector3(
     radius * cosLat * Math.cos(lon),
     radius * Math.sin(lat),
@@ -14,6 +21,7 @@ export function latLngToVector3(latitude: number, longitude: number, radius: num
   );
 }
 
+// Convert a 3D vector back to geographic coordinates
 export function vector3ToLatLng(position: THREE.Vector3): { latitude: number; longitude: number } {
   const normalized = position.clone().normalize();
   return {
@@ -22,16 +30,17 @@ export function vector3ToLatLng(position: THREE.Vector3): { latitude: number; lo
   };
 }
 
+// Build a quaternion that rotates the globe to bring a lat/lng into view
 export function makeFocusQuaternion(latitude: number, longitude: number): THREE.Quaternion {
   const lat = THREE.MathUtils.degToRad(latitude);
   const lon = THREE.MathUtils.degToRad(longitude);
   
-  // Ry swings the meridian round to face the camera; Rx tilts the parallel up.
-  // The 'XYZ' order is important to prevent roll.
+  // Ry swings the meridian round to face the camera; Rx tilts the parallel up
   const euler = new THREE.Euler(lat, -(Math.PI / 2 + lon), 0, 'XYZ');
   return new THREE.Quaternion().setFromEuler(euler);
 }
 
+// Generate interpolated points along a great-circle arc between two locations
 export function greatCirclePoints(from: GlobeLocationPoint, to: GlobeLocationPoint, radius: number, segments = 64): THREE.Vector3[] {
   const start = latLngToVector3(from.latitude, from.longitude, 1).normalize();
   const end = latLngToVector3(to.latitude, to.longitude, 1).normalize();
@@ -49,6 +58,7 @@ export function greatCirclePoints(from: GlobeLocationPoint, to: GlobeLocationPoi
   return points;
 }
 
+// Minimal lat/lng point interface used by utility functions
 export interface GlobeLocationPoint {
   latitude: number;
   longitude: number;

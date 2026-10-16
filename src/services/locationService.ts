@@ -1,3 +1,10 @@
+/**
+ * Location Search & Geocoding Service
+ * Provides location search with a local seed database of popular destinations
+ * and Nominatim API fallback for geocoding. Powers globe focus, destination
+ * suggestions, and travel search autocomplete.
+ */
+
 import type { GlobeLocation, GlobeLocationType } from '@/components/Globe/globe.types';
 
 interface LocationSeed {

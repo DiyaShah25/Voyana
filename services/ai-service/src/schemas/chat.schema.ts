@@ -1,3 +1,9 @@
+/**
+ * Chat Request Validation Schema
+ * Zod schema for validating incoming chat API request payloads
+ * including message format, conversation history, and options.
+ */
+
 import { z } from 'zod';
 
 export const ChatMessageHistorySchema = z.object({

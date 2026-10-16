@@ -1,3 +1,9 @@
+/**
+ * Authentication Context & Provider
+ * Manages global user authentication state, active sessions,
+ * role permissions (traveler, organizer, admin), and login/signup/logout actions.
+ */
+
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import type {
   AuthResult,
@@ -13,6 +19,7 @@ import {
   switchUserRole as apiSwitchRole,
 } from '@/services/authService';
 
+// Shape of values exposed by the auth context
 interface AuthContextValue {
   user: UserProfile | null;
   role: UserRole;
@@ -31,6 +38,7 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+// Auth Provider - wraps the app to supply auth state globally
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -51,6 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
+  // Sign in with email and password
   const signIn = async (email: string, password: string): Promise<AuthResult> => {
     const result = await apiSignIn(email, password);
     if (result.ok && result.session) {
@@ -60,6 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return result;
   };
 
+  // Register a new user account
   const signUp = async (
     name: string,
     email: string,
@@ -74,12 +84,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return result;
   };
 
+  // Clear auth state and end session
   const signOut = () => {
     apiSignOut();
     setUser(null);
     setToken(null);
   };
 
+  // Update current user's profile data
   const updateProfile = async (updates: Partial<UserProfile>): Promise<boolean> => {
     if (!user) return false;
     const updated = await apiUpdateProfile(user.id, updates);
@@ -90,6 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return false;
   };
 
+  // Switch user's active role
   const switchRole = async (newRole: UserRole) => {
     if (!user) return;
     const updated = await apiSwitchRole(user.id, newRole);
@@ -98,9 +111,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Derived role flags for quick permission checks
   const role: UserRole = user?.role || 'traveler';
   const isAuthenticated = Boolean(user && token);
 
+  // Memoized context value to avoid unnecessary re-renders
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
@@ -123,6 +138,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
+// Custom hook to consume auth context
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);
   if (!context) {

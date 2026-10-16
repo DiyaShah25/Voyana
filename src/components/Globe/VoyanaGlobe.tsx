@@ -1,3 +1,10 @@
+/**
+ * Voyana 3D Interactive Globe Component
+ * Renders an interactive Three.js Earth globe with location markers,
+ * travel route arcs, auto-rotation, and camera focus animations.
+ * Exposes imperative handle for external control via React ref.
+ */
+
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import * as THREE from 'three';
 import type { GlobeLocation, GlobeLocationType, GlobeRoute, VoyanaGlobeHandle, VoyanaGlobeProps } from './globe.types';

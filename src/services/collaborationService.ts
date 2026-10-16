@@ -1,8 +1,13 @@
+/**
+ * Trip Collaboration Service
+ * Powers multi-user trip collaboration features: group chat, task boards,
+ * voting polls, expense splitting with debt settlement, shared documents,
+ * and travel memories/journal entries. Uses localStorage for preview mode.
+ */
+
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-// ---------------------------------------------------------------------------
-// Types & Interfaces
-// ---------------------------------------------------------------------------
+// --- Types & Interfaces ---
 export type TaskStatus = 'todo' | 'in_progress' | 'completed';
 
 export interface TripChatMessage {
@@ -476,7 +481,7 @@ export async function voteTripPoll(
 }
 
 // ---------------------------------------------------------------------------
-// 4. Expense Splitting & Debt Settlement Calculator (Epic VPM-7 / VPM-8)
+// 4. Expense Splitting & Debt Settlement Calculator
 // ---------------------------------------------------------------------------
 export async function getTripExpenses(tripId: string): Promise<TripExpense[]> {
   try {
@@ -604,7 +609,7 @@ export async function uploadTripDocument(
 }
 
 // ---------------------------------------------------------------------------
-// 6. Trip Memories & Travel Journal (VPM-9)
+// 6. Trip Memories & Travel Journal
 // ---------------------------------------------------------------------------
 export async function getTripMemories(tripId: string): Promise<TripMemory[]> {
   try {

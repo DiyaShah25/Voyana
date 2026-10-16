@@ -1,3 +1,9 @@
+/**
+ * Featured Journeys Component
+ * Showcases curated multi-destination journey itineraries
+ * with preview cards, pricing, and booking call-to-action.
+ */
+
 import React from 'react';
 import { Compass, Plane, Calendar, MapPin, ArrowRight } from 'lucide-react';
 import type { GlobeLocation, GlobeRoute } from '@/components/Globe/globe.types';

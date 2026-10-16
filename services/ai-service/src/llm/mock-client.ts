@@ -1,8 +1,15 @@
+/**
+ * Mock LLM Provider Implementation
+ * Provides deterministic, offline-friendly travel assistance responses
+ * for packing, budget calculations, dietary options, and activity proposals.
+ */
+
 import { LlmClient, LlmMessage, LlmOptions, LlmResponse } from './types.js';
 
 export class MockLlmClient implements LlmClient {
   public readonly providerName = 'mock';
 
+  // Generate Mock Completion Based on User Query Keywords
   async generate(messages: LlmMessage[], options?: LlmOptions): Promise<LlmResponse> {
     const startTime = Date.now();
     const userMessage = messages.find((m) => m.role === 'user')?.content.toLowerCase() || '';
@@ -11,6 +18,7 @@ export class MockLlmClient implements LlmClient {
     let days: number[] = [1];
     let proposedChanges: Array<{ day: number; activity: string; rationale: string }> = [];
 
+    // Context-sensitive query matching
     if (userMessage.includes('pack') || userMessage.includes('hiking') || userMessage.includes('batur') || userMessage.includes('day 4')) {
       days = [4];
       content =
@@ -50,7 +58,7 @@ export class MockLlmClient implements LlmClient {
       proposedChanges,
     };
 
-    const latencyMs = Date.now() - startTime + 10; // realistic mock latency
+    const latencyMs = Date.now() - startTime + 10;
     const serialized = JSON.stringify(jsonPayload);
 
     return {
@@ -61,8 +69,8 @@ export class MockLlmClient implements LlmClient {
         totalTokens: 335,
       },
       latencyMs,
-      provider: 'mock',
-      model: 'mock-llama-3.3-70b-versatile',
+      provider: this.providerName,
+      model: 'mock-deterministic-v1',
     };
   }
 }

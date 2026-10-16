@@ -1,3 +1,9 @@
+/**
+ * Travel Memories Modal
+ * Photo journal and travel memories gallery with upload,
+ * location tagging, captions, likes, and memory deletion.
+ */
+
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Camera, X, Heart, MapPin, Calendar, Tag, Search,
@@ -296,7 +302,7 @@ export default function TravelMemoriesModal({
                     border: '1px solid rgba(236,72,153,0.3)',
                   }}
                 >
-                  VPM-106
+                  Memories Vault
                 </span>
               </h2>
               <p className="modal-subtitle">

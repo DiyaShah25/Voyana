@@ -1,3 +1,9 @@
+/**
+ * Environment Configuration
+ * Loads environment variables from .env and exports typed config
+ * for server port, MongoDB URI, Groq API key, and LLM model settings.
+ */
+
 import dotenv from 'dotenv';
 import path from 'path';
 

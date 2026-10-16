@@ -1,3 +1,10 @@
+/**
+ * Hotel Booking Modal
+ * Full-screen modal for searching and booking hotel accommodations.
+ * Supports location search, date ranges, guest count, star ratings,
+ * amenity filters, and payment integration.
+ */
+
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Building2, MapPin, Calendar, Users, ArrowRight, Search,

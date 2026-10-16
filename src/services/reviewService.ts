@@ -1,8 +1,7 @@
 /**
- * VPM-122: Travel Reviews & Ratings Engine
- * Assignee: Manav Vyas <manavvyas2004@gmail.com>
- * Provides crowdsourced traveler ratings, category sub-scores, verified traveler reviews,
- * photo attachments, and community helpfulness voting.
+ * Travel Reviews & Ratings Engine
+ * Provides crowdsourced traveler ratings, category sub-scores,
+ * verified traveler reviews, photo attachments, and community helpfulness voting.
  */
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
@@ -300,7 +299,7 @@ export function getReviewStats(reviews: TravelReview[]): ReviewStats {
 }
 
 // ---------------------------------------------------------------------------
-// 3. Submit New Travel Review (VPM-122)
+// 3. Submit New Travel Review
 // ---------------------------------------------------------------------------
 export async function submitReview(
   input: CreateReviewInput

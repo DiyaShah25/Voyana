@@ -1,7 +1,7 @@
 /**
- * VPM-191 / VPM-42: Smart Packing Checklist & Member Task Assignment Modal
- * Assignee: Jagrat Kumar (202512079)
- * Supports member-specific task assignments, category filters, progress indicators, and weather AI sync.
+ * Smart Packing Checklist & Member Task Assignment Modal
+ * Supports member-specific luggage item assignments, category filters,
+ * packing progress indicators, and weather-aware AI suggestion sync.
  */
 
 import React, { useState, useEffect } from 'react';

@@ -1,3 +1,9 @@
+/**
+ * Groq Cloud LLM Client Implementation
+ * Connects to Groq cloud API utilizing high-speed Llama models,
+ * enforces strict JSON response mode, and tracks latency and token consumption.
+ */
+
 import Groq from 'groq-sdk';
 import { LlmClient, LlmMessage, LlmOptions, LlmResponse } from './types.js';
 
@@ -14,6 +20,7 @@ export class GroqLlmClient implements LlmClient {
     this.defaultModel = defaultModel;
   }
 
+  // Generate Completion with Timeout & JSON Mode Enforcement
   async generate(messages: LlmMessage[], options?: LlmOptions): Promise<LlmResponse> {
     const startTime = Date.now();
     const model = options?.model || this.defaultModel;
@@ -32,11 +39,11 @@ export class GroqLlmClient implements LlmClient {
       response_format: { type: 'json_object' },
     });
 
+    // Request Timeout Race
     const timeoutPromise = new Promise<never>((_, reject) => {
       const timer = setTimeout(() => {
         reject(new Error(`Groq LLM request timed out after ${timeoutMs}ms`));
       }, timeoutMs);
-      // Ensure timer doesn't prevent Node from exiting
       if (typeof timer.unref === 'function') {
         timer.unref();
       }
@@ -59,37 +66,24 @@ export class GroqLlmClient implements LlmClient {
           totalTokens,
         },
         latencyMs,
-        provider: 'groq',
+        provider: this.providerName,
         model,
       };
-    } catch (error: any) {
+    } catch (err: any) {
       const latencyMs = Date.now() - startTime;
-      // Check for rate limit 429 or timeout
-      const isRateLimit = error?.status === 429 || error?.message?.includes('429') || error?.message?.includes('rate limit');
-      const isTimeout = error?.message?.includes('timed out');
+      const isTimeout = err?.message?.includes('timed out');
+      const isRateLimit = err?.status === 429 || err?.message?.includes('rate limit');
 
-      if (isRateLimit) {
-        const err: any = new Error('Groq LLM rate limit reached (429). Service temporarily unavailable.');
-        err.statusCode = 503;
-        err.latencyMs = latencyMs;
-        err.provider = 'groq';
-        throw err;
-      }
-
-      if (isTimeout) {
-        const err: any = new Error(`Groq LLM request timed out after ${timeoutMs}ms.`);
-        err.statusCode = 503;
-        err.latencyMs = latencyMs;
-        err.provider = 'groq';
-        throw err;
-      }
-
-      // Default upstream failure mapped to 503
-      const err: any = new Error(`Groq LLM provider error: ${error?.message || 'Unknown error'}`);
-      err.statusCode = 503;
-      err.latencyMs = latencyMs;
-      err.provider = 'groq';
-      throw err;
+      const customError: any = new Error(
+        isTimeout
+          ? `Groq LLM call timed out after ${timeoutMs}ms`
+          : isRateLimit
+          ? 'Groq rate limit exceeded. Please try again shortly.'
+          : `Groq LLM generation failed: ${err?.message || err}`
+      );
+      customError.statusCode = isTimeout ? 504 : isRateLimit ? 429 : 503;
+      customError.latencyMs = latencyMs;
+      throw customError;
     }
   }
 }

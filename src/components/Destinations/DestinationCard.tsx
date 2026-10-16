@@ -1,3 +1,9 @@
+/**
+ * Destination Card Component
+ * Renders an individual destination card with image, name,
+ * location metadata, and click-to-explore interaction.
+ */
+
 import React from 'react';
 import { ArrowRight, Plane, Building2, Star, Compass } from 'lucide-react';
 import type { GlobeLocation } from '@/components/Globe/globe.types';

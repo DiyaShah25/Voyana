@@ -1,7 +1,7 @@
 /**
- * VPM-247 / VPM-90: Trip Workspace & Interactive Itinerary Creation Modal
- * Assignee: Jagrat Kumar (202512079)
- * Supports multi-day schedule creation, activity builder, drag/drop reordering, and budget integration.
+ * Trip Workspace & Interactive Itinerary Creation Modal
+ * Supports multi-day schedule creation, activity builder, drag/drop reordering,
+ * group chat, expense splitting, photo journal, and printable travel vouchers.
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -132,7 +132,7 @@ export default function TripWorkspaceModal({
   const [selectedTagFilter, setSelectedTagFilter] = useState('all');
   const [activePhotoViewer, setActivePhotoViewer] = useState<TripMemory | null>(null);
 
-  // VPM-39: AI Itinerary Generator State
+  // AI Itinerary Generator State
   const [showAiItineraryModal, setShowAiItineraryModal] = useState(false);
   const [aiDays, setAiDays] = useState(3);
   const [aiPace, setAiPace] = useState<'relaxed' | 'balanced' | 'packed'>('balanced');
@@ -323,7 +323,7 @@ export default function TripWorkspaceModal({
     loadWorkspaceData();
   };
 
-  // 9. Memory Actions (VPM-9)
+  // 9. Memory & Photo Journal Actions
   const handleUploadMemory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!memTitle.trim() || !memImageUrl.trim()) return;
@@ -1044,7 +1044,7 @@ export default function TripWorkspaceModal({
             </div>
           )}
 
-          {/* 7. MEMORIES & JOURNAL TAB (VPM-9) */}
+          {/* 7. MEMORIES & JOURNAL TAB */}
           {activeTab === 'memories' && (
             <div className="space-y-6">
               {/* Header & Upload Button */}
@@ -1518,7 +1518,7 @@ export default function TripWorkspaceModal({
         </div>
       )}
 
-      {/* ─── ADD TRIP MEMORY / PHOTO MODAL (VPM-9) ────────────────────────── */}
+      {/* ADD TRIP MEMORY / PHOTO MODAL */}
       {showAddMemory && (
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-2xl animate-fade-in">
           <div className="relative w-full max-w-md bg-slate-900 border border-white/15 rounded-3xl p-6 shadow-2xl">
@@ -1722,7 +1722,7 @@ export default function TripWorkspaceModal({
         />
       )}
 
-      {/* ─── PRINTABLE ITINERARY & TRAVEL VOUCHER MODAL (VPM-4 / VPM-8) ──── */}
+      {/* PRINTABLE ITINERARY & TRAVEL VOUCHER MODAL */}
       {showExportModal && (
         <TripExportModal
           isOpen={showExportModal}
@@ -1733,7 +1733,7 @@ export default function TripWorkspaceModal({
         />
       )}
 
-      {/* ─── AI ITINERARY GENERATOR MODAL (VPM-39 / Jagrat Kumar) ───────── */}
+      {/* AI ITINERARY GENERATOR MODAL */}
       {showAiItineraryModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
           <div className="relative w-full max-w-2xl bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
@@ -1746,7 +1746,7 @@ export default function TripWorkspaceModal({
                   <h3 className="text-base font-bold text-white flex items-center gap-2">
                     AI Itinerary Generator
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30">
-                      VPM-39
+                      Smart Co-Pilot
                     </span>
                   </h3>
                   <p className="text-xs text-slate-400">Curating schedules for {trip.destination}</p>

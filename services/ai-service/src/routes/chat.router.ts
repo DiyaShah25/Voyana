@@ -1,3 +1,9 @@
+/**
+ * Chat API Router
+ * Defines the POST /chat endpoint for AI travel assistant queries.
+ * Validates request body, delegates to chat service, and returns responses.
+ */
+
 import { Router, Request, Response, NextFunction } from 'express';
 import { ChatService } from '../services/chat.service.js';
 import { ChatRequestSchema } from '../schemas/chat.schema.js';
