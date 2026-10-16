@@ -197,9 +197,11 @@ export default function TripWorkspaceModal({
       await addTripExpense(trip.id, {
         title: `Activity: ${actTitle}`,
         amount: actCost,
+        currency: trip.currency || 'USD',
         paidBy: currentUser.name,
         category: actCategory === 'Dining' ? 'Dining' : actCategory === 'Transport' ? 'Transport' : 'Activities',
-        splitBetween: membersList,
+        splitAmong: membersList,
+        date: new Date().toISOString().split('T')[0],
       });
     }
 
@@ -237,9 +239,11 @@ export default function TripWorkspaceModal({
     await addTripExpense(trip.id, {
       title: `Activity: ${act.title}`,
       amount: act.cost,
+      currency: trip.currency || 'USD',
       paidBy: currentUser.name,
       category: act.category === 'Dining' ? 'Dining' : act.category === 'Transport' ? 'Transport' : 'Activities',
-      splitBetween: membersList,
+      splitAmong: membersList,
+      date: new Date().toISOString().split('T')[0],
     });
     sendTripChatMessage(
       trip.id,
