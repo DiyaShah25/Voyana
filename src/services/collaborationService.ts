@@ -751,3 +751,40 @@ export async function deleteTripMemory(
   return { success: true };
 }
 
+/**
+ * AI Travel Journal Content Generator (VPM-63)
+ * Automatically synthesizes an evocative travel journal reflection and tags
+ * based on photo title, location, and destination context.
+ */
+export function generateAiJournalStory(params: {
+  title?: string;
+  location?: string;
+  destination?: string;
+}): { caption: string; tags: string[] } {
+  const { title = '', location = '', destination = 'the journey' } = params;
+  const place = location || destination || 'this unforgettable spot';
+  const subject = title || 'travel moment';
+
+  const reflections = [
+    {
+      caption: `Paused in the quiet glow of ${place} to take in "${subject}". There's a singular magic to traveling when the bustling world fades into soft light, leaving behind only the timeless pulse of discovery and genuine gratitude.`,
+      tags: ['TravelMoments', 'Wanderlust', 'GoldenHour', 'ExploreMore'],
+    },
+    {
+      caption: `Unscripted memories are always the ones that linger longest. Finding ourselves surrounded by the sights, sounds, and vibrant rhythms of ${place} felt like stepping into an intimate postcard from "${subject}".`,
+      tags: ['TravelDiary', 'HiddenGems', 'AdventureAwaits', 'LocalVibes'],
+    },
+    {
+      caption: `Every street corner in ${place} carries its own quiet poetry. Standing here capturing "${subject}", you are reminded that the truest luxury of travel is time well shared with companions and open horizons.`,
+      tags: ['MemoriesInTheMaking', 'CultureTrip', 'TravelInspiration', 'JourneyOn'],
+    },
+    {
+      caption: `A snapshot that captures far more than just a photo—the laughter, the crisp morning breeze in ${place}, and the thrill of exploring "${subject}" together. Definitely one for the permanent travel journal.`,
+      tags: ['TravelJournal', 'FriendshipTrip', 'PostcardsFromEverywhere', 'Wanderer'],
+    },
+  ];
+
+  const hash = (subject + place).split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  return reflections[hash % reflections.length];
+}
+
