@@ -157,7 +157,7 @@ export async function confirmPayment(
   bookingId: string,
   bookingDetails?: {
     bookingReference: string;
-    bookingType: 'flight' | 'hotel' | 'transport';
+    bookingType: 'flight' | 'hotel' | 'transport' | 'package';
     title: string;
     description: string;
     userId?: string;
@@ -221,7 +221,7 @@ export async function confirmPayment(
       booking_id: bookingId,
       booking_reference: bookingDetails.bookingReference,
       booking_type: bookingDetails.bookingType,
-      title: `${bookingDetails.bookingType === 'flight' ? 'Flight' : 'Hotel'} Booking Confirmed`,
+      title: `${bookingDetails.bookingType === 'flight' ? 'Flight' : bookingDetails.bookingType === 'hotel' ? 'Hotel' : bookingDetails.bookingType === 'transport' ? 'Transport' : 'Package'} Booking Confirmed`,
       message: `${bookingDetails.description} (Payment Ref: ${fallbackRef})`,
       severity: 'success',
       old_status: 'pending',
