@@ -11,7 +11,7 @@ import {
   FileText, Sparkles, Plane, Compass
 } from 'lucide-react';
 import type { Trip } from '@/services/tripService';
-import type { DebtSettlement, TripExpense } from '@/services/collaborationService';
+import { downloadTripTransactionsCSV, type DebtSettlement, type TripExpense } from '@/services/collaborationService';
 
 export interface TripExportModalProps {
   isOpen: boolean;
@@ -110,6 +110,17 @@ export default function TripExportModal({
               <Download size={14} />
               <span>JSON</span>
             </button>
+
+            {expenses && expenses.length > 0 && (
+              <button
+                onClick={() => downloadTripTransactionsCSV(expenses, debtSummary?.settlements || [], trip.title)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-emerald-300 border border-white/10 text-xs font-semibold transition-all"
+                title="Download Itemized Transactions CSV Ledger (VPM-76)"
+              >
+                <Download size={14} />
+                <span>Ledger CSV</span>
+              </button>
+            )}
 
             <button
               onClick={handlePrint}
