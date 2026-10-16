@@ -32,6 +32,7 @@ import {
   Car,
   ShoppingBag,
   Layers,
+  type LucideIcon,
 } from 'lucide-react';
 import {
   getTripBudget,
@@ -83,7 +84,7 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
   AED: 'د.إ',
 };
 
-const CATEGORY_ICONS: Record<ExpenseCategory, React.ComponentType<{ size?: number; className?: string }>> = {
+const CATEGORY_ICONS: Record<ExpenseCategory, LucideIcon> = {
   Flights: Plane,
   Accommodations: Building2,
   'Food & Dining': Utensils,
