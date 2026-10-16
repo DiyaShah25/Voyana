@@ -1,3 +1,9 @@
+/**
+ * Trip Export Modal
+ * Exports trip itinerary and details to PDF, calendar (ICS),
+ * or shareable link formats for offline access and sharing.
+ */
+
 import React, { useState } from 'react';
 import {
   Printer, Download, Copy, Check, X, MapPin,

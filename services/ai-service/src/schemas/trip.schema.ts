@@ -1,3 +1,9 @@
+/**
+ * Trip Schema Validation
+ * Zod schema for validating trip-related data structures
+ * used in AI-generated itinerary responses.
+ */
+
 import { z } from 'zod';
 
 export const MemberPreferencesSchema = z.object({

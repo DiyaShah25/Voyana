@@ -1,3 +1,9 @@
+/**
+ * Application Navigation Header
+ * Provides brand identity, desktop & mobile navigation menus,
+ * service dropdowns (Bookings, Tools), real-time alerts, and user auth actions.
+ */
+
 import React, { useState, useRef, useEffect } from 'react';
 import {
   Sparkles,

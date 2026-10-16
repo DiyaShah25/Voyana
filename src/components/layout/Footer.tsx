@@ -1,3 +1,9 @@
+/**
+ * Footer Component
+ * Renders the global footer with branding, directory links,
+ * trust badges, copyright info, and regional currency selector.
+ */
+
 import React from 'react';
 import { Compass, Globe2, ShieldCheck, Heart } from 'lucide-react';
 

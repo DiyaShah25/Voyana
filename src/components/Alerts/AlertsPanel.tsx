@@ -1,3 +1,9 @@
+/**
+ * Alerts Panel Component
+ * Displays real-time booking alerts with severity indicators,
+ * read/unread state, toast notifications, and bulk mark-as-read.
+ */
+
 import React, { useState, useRef, useEffect } from 'react';
 import {
   Bell,

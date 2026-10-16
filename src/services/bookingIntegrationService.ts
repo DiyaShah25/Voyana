@@ -1,3 +1,10 @@
+/**
+ * Unified Booking Integration Service
+ * Handles cross-service bundle bookings (flight + hotel + transport),
+ * calculates bundle discounts, processes checkout, auto-syncs bookings
+ * to Trip Workspace, and maintains bundle history.
+ */
+
 import type { Flight } from './flightService';
 import type { Hotel } from './hotelService';
 import type { TransportOption } from './transportService';
@@ -5,9 +12,7 @@ import { createAlert } from './alertService';
 import { addTripActivity, getStoredTrips, saveStoredTrips } from './tripService';
 import { addTripExpense } from './collaborationService';
 
-// ---------------------------------------------------------------------------
-// Types & Interfaces for VPM-204: Unified Booking Integration
-// ---------------------------------------------------------------------------
+// --- Types & Interfaces ---
 export interface BundledBookingItem {
   type: 'flight' | 'hotel' | 'transport';
   id: string;
@@ -75,7 +80,7 @@ export function calculateBundlePricing(items: BundledBookingItem[]): {
 }
 
 // ---------------------------------------------------------------------------
-// 2. Process Unified Bundle Checkout & Workspace Integration (VPM-204)
+// 2. Process Unified Bundle Checkout & Workspace Integration
 // ---------------------------------------------------------------------------
 export async function processUnifiedBundleCheckout(
   req: UnifiedBundleCheckoutRequest

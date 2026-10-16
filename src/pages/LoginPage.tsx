@@ -1,3 +1,9 @@
+/**
+ * User Login Page
+ * Handles user authentication with email/password validation,
+ * quick demo role autofill, remember-me persistence, and social login hooks.
+ */
+
 import { useEffect, useState, type FormEvent } from 'react';
 import {
   AlertCircle,

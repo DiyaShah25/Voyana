@@ -1,7 +1,7 @@
 /**
- * VPM-41: Trip Budget Planner & Category Allocation Dashboard Modal
- * Assignee: Jagrat Kumar (202512079)
- * Provides comprehensive budget visualization, burn rates, health scores, and expense summaries.
+ * Trip Budget Planner & Category Allocation Dashboard Modal
+ * Provides comprehensive budget visualization, burn rates, health scores,
+ * expense tracking, AI budget planning, and group debt settlements.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -102,7 +102,7 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
   const [budget, setBudget] = useState<TripBudget>(getTripBudget);
   const [activeTab, setActiveTab] = useState<'overview' | 'expenses' | 'split' | 'ai-report'>('overview');
 
-  // VPM-78: Record Transactions & Expense Management State
+  // Expense recording and transaction management state
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const [expenseTitle, setExpenseTitle] = useState('');
   const [expenseAmount, setExpenseAmount] = useState('');
@@ -125,7 +125,7 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
   const [aiReport, setAiReport] = useState<AiBudgetReport | null>(null);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
 
-  // VPM-57: AI Generate Budget Plan Wizard State
+  // AI budget plan generator wizard state
   const [isAiWizardOpen, setIsAiWizardOpen] = useState(false);
   const [wizardTravelers, setWizardTravelers] = useState(3);
   const [wizardDays, setWizardDays] = useState(5);
@@ -201,7 +201,7 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
     }, 600);
   };
 
-  // VPM-57: Run AI Budget Plan Generator Preview
+  // Run AI budget plan generator preview
   const handleGeneratePlanPreview = () => {
     const customVal = parseFloat(wizardCustomBudget);
     const plan = generateAiBudgetPlan({
@@ -223,7 +223,7 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
     setWizardPreview(null);
   };
 
-  // VPM-85: Settle a peer transfer
+  // Settle a peer transfer
   const handleSettleUp = (from: string, to: string, amount: number) => {
     const updated = settleDebtTransfer(from, to, amount);
     setBudget(updated);
@@ -231,7 +231,7 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
     setTimeout(() => setSettledSuccessNotice(null), 4000);
   };
 
-  // VPM-70: Export CSV
+  // Export expense data to CSV
   const handleExportCsv = () => {
     const csvContent = exportExpensesCsv(budget);
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -266,7 +266,7 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
               <div className="flex items-center gap-2">
                 <h2 id="budget-modal-title" className="modal-title">Trip Budget Planner</h2>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                  VPM-57 • VPM-70 • VPM-85
+                  Smart Allocation & Splits
                 </span>
               </div>
               <p className="modal-subtitle">{destination} • {budget.members.length} Travelers Collaborative Budget</p>
@@ -422,7 +422,7 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
             </div>
           </div>
 
-          {/* TAB 1: OVERVIEW & CATEGORIES (VPM-88) */}
+          {/* TAB 1: OVERVIEW & CATEGORIES */}
           {activeTab === 'overview' && (
             <div className="tab-content-fade">
               <div className="section-title-row">
@@ -520,7 +520,7 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
             </div>
           )}
 
-          {/* TAB 2: EXPENSES HISTORY & TRACKING (VPM-70) */}
+          {/* TAB 2: EXPENSES HISTORY & TRACKING */}
           {activeTab === 'expenses' && (
             <div className="tab-content-fade">
               <div className="expense-toolbar">
@@ -652,7 +652,7 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
             </div>
           )}
 
-          {/* TAB 3: GROUP SPLIT & CALCULATE SHARES (VPM-85) */}
+          {/* TAB 3: GROUP SPLIT & CALCULATE SHARES */}
           {activeTab === 'split' && (
             <div className="tab-content-fade">
               <div className="split-grid">
@@ -980,7 +980,7 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
           </div>
         )}
 
-        {/* ─── MODAL: AI GENERATE BUDGET PLAN WIZARD (VPM-57) ─────────────── */}
+        {/* MODAL: AI GENERATE BUDGET PLAN WIZARD */}
         {isAiWizardOpen && (
           <div className="sub-modal-overlay">
             <div className="sub-modal-card" style={{ maxWidth: '560px' }}>

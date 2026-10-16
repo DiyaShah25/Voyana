@@ -1,7 +1,7 @@
 /**
- * VPM-41 / VPM-67 / VPM-78: Trip Budget Planner, Transaction History & Expense Recording Service
- * Assignee: Jagrat Kumar (202512079)
- * Manages category allocations, multi-member expense tracking, transaction ledger, and debt settlement.
+ * Trip Budget Planner & Expense Recording Service
+ * Manages category allocations, multi-member expense tracking,
+ * AI budget planning, transaction ledger, and debt settlement.
  */
 
 export type ExpenseCategory =
@@ -369,7 +369,7 @@ export function generateAiBudgetAnalysis(budget: TripBudget): AiBudgetReport {
 }
 
 /**
- * VPM-57: Generate AI Budget Plan
+ * Generate AI Budget Plan
  * Intelligently generates category allocations based on destination, travel style, duration, and traveler count.
  */
 export interface GenerateBudgetPlanOptions {
@@ -493,7 +493,7 @@ export function generateAiBudgetPlan(options: GenerateBudgetPlanOptions): {
 }
 
 /**
- * VPM-85: Settle a peer-to-peer balance
+ * Settle a peer-to-peer balance
  */
 export function settleDebtTransfer(from: string, to: string, amount: number): TripBudget {
   const current = getTripBudget();
@@ -521,7 +521,7 @@ export function settleDebtTransfer(from: string, to: string, amount: number): Tr
 }
 
 /**
- * VPM-70 / VPM-88: Export expenses to CSV
+ * Export expenses to CSV
  */
 export function exportExpensesCsv(budget: TripBudget): string {
   const headers = ['ID', 'Date', 'Description', 'Category', 'Paid By', 'Split Among', 'Amount', 'Currency', 'Payment Method', 'Notes'];

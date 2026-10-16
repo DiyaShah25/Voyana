@@ -1,3 +1,9 @@
+/**
+ * Unified Bundle Booking Modal
+ * Allows users to combine flight, hotel, and transport bookings
+ * into a single discounted bundle checkout with auto trip sync.
+ */
+
 import React, { useState } from 'react';
 import {
   Package, Plane, Hotel, Car, Check, X, ShieldCheck,
@@ -111,7 +117,7 @@ export default function UnifiedBundleBookingModal({
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-bold text-white">Unified Trip Bundle Checkout</h3>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                  VPM-204 Integration
+                  Multi-Service Bundle
                 </span>
               </div>
               <p className="text-xs text-slate-400">

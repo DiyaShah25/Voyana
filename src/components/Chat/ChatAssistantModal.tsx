@@ -1,7 +1,7 @@
 /**
- * VPM-46 / VPM-5: AI Travel Assistant Modal & Contextual Response Generation UI
- * Assignee: Jagrat Kumar (202512079)
- * Renders streaming chat bubbles, citation badges, action proposal cards, and quick prompts.
+ * AI Travel Assistant Modal
+ * Interactive conversational travel planner featuring streaming chat bubbles,
+ * contextual recommendations, citation badges, action proposal cards, and quick prompts.
  */
 
 import React, { useState, useRef, useEffect } from 'react';

@@ -1,3 +1,9 @@
+/**
+ * Payment Modal Component
+ * Multi-step payment flow with card input, digital wallet options,
+ * UPI QR code, order summary, and transaction confirmation.
+ */
+
 import React, { useState, useEffect } from 'react';
 import {
   CreditCard,

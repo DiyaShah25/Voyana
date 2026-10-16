@@ -1,3 +1,10 @@
+/*
+ * Global Stylesheet
+ * Master CSS file for Voyana. Includes Tailwind directives, base resets,
+ * custom property tokens, component styles (header, footer, globe, modals,
+ * destinations, search, booking cards), animations, and responsive overrides.
+ */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

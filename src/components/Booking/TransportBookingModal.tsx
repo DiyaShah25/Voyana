@@ -1,3 +1,9 @@
+/**
+ * Transport Booking Modal
+ * Handles ground transport reservations including taxis, private cars,
+ * and airport transfers with route, vehicle type, and price selection.
+ */
+
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Car, Train, Bus, MapPin, Calendar, Users, ArrowRight, Search,
@@ -318,7 +324,7 @@ export default function TransportBookingModal({
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-bold text-white">Local Transport & Transfers</h2>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                  VPM-215
+                  Transfers & Rentals
                 </span>
               </div>
               <p className="text-xs text-slate-400">High-speed rail, airport chauffeurs, car rentals & coaches</p>

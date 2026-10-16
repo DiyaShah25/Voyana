@@ -1,3 +1,9 @@
+/**
+ * Social Authentication Component
+ * Provides Google and Apple OAuth sign-in buttons with loading
+ * states and provider-specific error handling.
+ */
+
 import { useState } from 'react';
 import { Info } from 'lucide-react';
 import { signInWithProvider, type OAuthProvider } from '@/services/authService';

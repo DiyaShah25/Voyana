@@ -1,3 +1,9 @@
+/**
+ * User Profile Modal
+ * Displays and allows editing of user profile information including
+ * avatar, personal details, travel preferences, and notification settings.
+ */
+
 import React, { useState, useEffect } from 'react';
 import {
   X,

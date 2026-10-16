@@ -1,3 +1,9 @@
+/**
+ * Destination Rail Component
+ * Horizontal scrolling rail showcasing featured or trending
+ * destinations with smooth scroll navigation.
+ */
+
 import React from 'react';
 import { ArrowRight, Compass } from 'lucide-react';
 import type { GlobeLocation } from '@/components/Globe/globe.types';

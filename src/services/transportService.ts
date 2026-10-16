@@ -1,6 +1,5 @@
 /**
- * VPM-202: Transport Booking Service
- * Assignee: Megha Lalwani (202512054) <lalwani2406@gmail.com>
+ * Transport Booking Service
  * Provides transport search (trains, rental cars, buses, private transfers, ferries),
  * seat/class booking reservations, and real-time status management.
  */
@@ -434,7 +433,7 @@ export function getTransportById(id: string): TransportItem | undefined {
 }
 
 // ---------------------------------------------------------------------------
-// Core Search Function (VPM-213)
+// Core Search Function
 // ---------------------------------------------------------------------------
 export async function searchTransport(
   origin?: string,
@@ -601,8 +600,7 @@ export async function searchTransport(
 }
 
 // ---------------------------------------------------------------------------
-// Booking Function (VPM-215 / Manage Transport Booking)
-// Pattern matching createFlightBooking and bookHotel exactly
+// Booking Function
 // ---------------------------------------------------------------------------
 export async function bookTransport(
   transportOrId: TransportItem | string,
@@ -774,7 +772,7 @@ export async function bookTransport(
 }
 
 // ---------------------------------------------------------------------------
-// Cancel Transport Booking Function (VPM-215 / Manage Transport Booking)
+// Cancel Transport Booking Function
 // ---------------------------------------------------------------------------
 export async function cancelTransportBooking(
   bookingId: string,

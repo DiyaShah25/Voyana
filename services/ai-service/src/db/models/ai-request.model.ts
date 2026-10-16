@@ -1,3 +1,9 @@
+/**
+ * AI Request Mongoose Model
+ * Schema definition for logging AI chat requests to MongoDB
+ * including user messages, model responses, tokens used, and latency.
+ */
+
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IAiRequest extends Document {

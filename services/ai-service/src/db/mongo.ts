@@ -1,3 +1,9 @@
+/**
+ * MongoDB Connection Manager
+ * Establishes and manages the Mongoose connection to MongoDB
+ * with retry logic and graceful shutdown handling.
+ */
+
 import mongoose from 'mongoose';
 import { config } from '../config/env.js';
 

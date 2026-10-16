@@ -1,3 +1,9 @@
+/**
+ * Trip Dashboard Modal
+ * Overview dashboard for all user trips showing active, upcoming,
+ * and past trips with quick-action cards and trip creation.
+ */
+
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Compass, Plus, Calendar, MapPin, Users, Sparkles,
@@ -174,7 +180,7 @@ export default function TripDashboardModal({
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-bold text-white">Trip Planning & Workspace</h2>
                 <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                  VPM-4 / VPM-8
+                  Workspace Hub
                 </span>
               </div>
               <p className="text-xs text-slate-400">Collaborative itineraries, shared calendar, group chat & voting</p>
@@ -413,7 +419,7 @@ export default function TripDashboardModal({
                   <div className="flex items-center gap-2">
                     <h3 className="text-base font-bold text-white">Create Trip Workspace</h3>
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                      VPM-90
+                      New Expedition
                     </span>
                   </div>
                   <p className="text-xs text-slate-400">Set destination, travel style, budget, and invite friends</p>

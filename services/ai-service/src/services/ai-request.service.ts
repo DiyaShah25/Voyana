@@ -1,3 +1,9 @@
+/**
+ * AI Request Logging Service
+ * Persists AI chat request/response records to MongoDB
+ * for analytics, debugging, and usage tracking.
+ */
+
 import { AiRequestModel } from '../db/models/ai-request.model.js';
 import { getMongoStatus } from '../db/mongo.js';
 

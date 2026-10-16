@@ -1,3 +1,9 @@
+/**
+ * Geographic Hero Spotlight Component
+ * Full-width hero section highlighting a featured destination
+ * with large imagery, descriptive overlay, and call-to-action.
+ */
+
 import React from 'react';
 import {
   Compass,

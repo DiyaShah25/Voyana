@@ -1,3 +1,9 @@
+/**
+ * Authentication Split-Screen Layout
+ * Provides a responsive layout with an editorial brand/quote banner
+ * on the left and dedicated auth forms (Login, Signup, Forgot Password) on the right.
+ */
+
 import { type ReactNode } from 'react';
 import { Compass, ArrowLeft, Star, ShieldCheck } from 'lucide-react';
 import './auth.css';

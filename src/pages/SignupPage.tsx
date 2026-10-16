@@ -1,3 +1,9 @@
+/**
+ * User Registration Page
+ * Collects name, email, role selection (traveler vs organizer),
+ * and password validation to register new user accounts.
+ */
+
 import { useState, type FormEvent } from 'react';
 import {
   AlertCircle,

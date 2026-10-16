@@ -1,3 +1,9 @@
+/**
+ * Travel Search Component
+ * Main search bar with location autocomplete, date selection,
+ * traveler count, and globe focus integration for destination search.
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, MapPin, ArrowRight, SlidersHorizontal, Check } from 'lucide-react';
 import type { GlobeLocation } from '@/components/Globe/globe.types';

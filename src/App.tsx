@@ -1,7 +1,7 @@
 /**
- * VPM-5: AI Travel Services & Intelligent Suite Integration
- * Assignee: Jagrat Kumar (202512079)
- * Connects AI travel assistant, smart packing generator, destination recommendations, and budget planning.
+ * Voyana Main Application Component
+ * Orchestrates core page layout, 3D interactive globe view, search bar,
+ * destination spotlights, intelligent travel suite, and modal management.
  */
 
 import { useState, useRef, useEffect } from 'react';

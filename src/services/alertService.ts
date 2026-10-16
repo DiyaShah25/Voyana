@@ -1,3 +1,10 @@
+/**
+ * Booking Alert Service
+ * Manages real-time booking alerts and notifications with Supabase backend
+ * and localStorage fallback. Handles alert creation, read-status tracking,
+ * booking status changes, and real-time subscriptions.
+ */
+
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 export type BookingStatus = 'pending' | 'confirmed' | 'delayed' | 'cancelled' | 'completed';

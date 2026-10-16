@@ -1,3 +1,9 @@
+/**
+ * Health Check Router
+ * Provides GET /health endpoint for service monitoring
+ * and uptime/readiness probes.
+ */
+
 import { Router, Request, Response } from 'express';
 import { getMongoStatus } from '../db/mongo.js';
 import { getLlmClient } from '../llm/client-factory.js';

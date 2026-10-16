@@ -1,9 +1,14 @@
+/**
+ * Payment Processing Service
+ * Handles payment initiation, gateway settlement simulation, card validation,
+ * transaction history, and booking confirmation alerts. Supports Supabase
+ * backend and localStorage mock mode for preview.
+ */
+
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { createAlert } from './alertService';
 
-// ---------------------------------------------------------------------------
-// Types & Interfaces
-// ---------------------------------------------------------------------------
+// --- Types & Interfaces ---
 export type PaymentMethod = 'credit_card' | 'apple_pay' | 'google_pay' | 'paypal' | 'upi_qr';
 export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded';
 
@@ -144,10 +149,8 @@ export async function initiatePayment(params: InitiatePaymentParams): Promise<Pa
 // 2. Confirm Payment (Settlement & Linked Booking Confirmation)
 // ---------------------------------------------------------------------------
 /**
- * MOCK / SIMULATED PAYMENT GATEWAY SETTLEMENT
- * Note: A mock gateway authorization and latency is simulated here for VPM-68.
- * Real payment gateway integration (Stripe / Razorpay / Adyen) is scheduled
- * for future task VPM-82 (Integrate Payment Gateway).
+ * Simulated Payment Gateway Settlement
+ * Simulates gateway authorization, latency, and linked booking confirmation.
  */
 export async function confirmPayment(
   paymentId: string,
@@ -260,7 +263,7 @@ export function formatExpiryDate(value: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// 3. Transaction History Queries (VPM-67: Transaction History)
+// 3. Transaction History Queries
 // ---------------------------------------------------------------------------
 export async function getTransactionHistory(userId: string = 'usr-demo-01'): Promise<PaymentRecord[]> {
   if (supabase) {

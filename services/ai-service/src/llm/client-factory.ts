@@ -1,3 +1,9 @@
+/**
+ * LLM Client Factory
+ * Creates and returns the appropriate LLM client (Groq or Mock)
+ * based on environment configuration for AI chat processing.
+ */
+
 import { config } from '../config/env.js';
 import { GroqLlmClient } from './groq-client.js';
 import { MockLlmClient } from './mock-client.js';

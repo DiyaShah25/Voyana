@@ -1,3 +1,9 @@
+/**
+ * My Bookings Modal
+ * Displays the user's booking history across flights, hotels,
+ * and transport. Supports filtering by status, type, and search.
+ */
+
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Briefcase, Plane, Building2, Car, Calendar, Users, MapPin,

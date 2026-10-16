@@ -1,3 +1,9 @@
+/**
+ * Express Application Setup
+ * Configures the Express app with CORS, JSON parsing, rate limiting,
+ * route mounting (chat, health), and global error handling middleware.
+ */
+
 import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { healthRouter } from './routes/health.router.js';

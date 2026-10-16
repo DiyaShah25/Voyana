@@ -1,3 +1,9 @@
+/**
+ * Chat Processing Service
+ * Core AI chat logic: builds system prompts, manages conversation
+ * context, calls the LLM client, and formats travel assistant responses.
+ */
+
 import fs from 'fs';
 import path from 'path';
 import { getLlmClient } from '../llm/client-factory.js';
