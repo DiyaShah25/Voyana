@@ -8,6 +8,7 @@ import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { healthRouter } from './routes/health.router.js';
 import { chatRouter } from './routes/chat.router.js';
+import { apiRouter } from './routes/api.router.js';
 
 export function createApp(): Express {
   const app = express();
@@ -19,6 +20,7 @@ export function createApp(): Express {
   // Routes
   app.use('/', healthRouter);
   app.use('/ai', chatRouter);
+  app.use('/api', apiRouter);
 
   // 404 Handler
   app.use((req: Request, res: Response) => {
