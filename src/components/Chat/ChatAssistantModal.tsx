@@ -19,6 +19,7 @@ import {
   ChevronDown,
   ArrowRight,
   RotateCcw,
+  Calendar,
 } from 'lucide-react';
 import { sendChatMessage, type ChatMessage } from '@/services/aiChatService';
 import {
@@ -33,6 +34,7 @@ interface ChatAssistantModalProps {
   initialPrompt?: string;
   onOpenBudget?: () => void;
   onOpenPacking?: () => void;
+  onOpenTrips?: () => void;
 }
 
 export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
@@ -42,6 +44,7 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
   initialPrompt,
   onOpenBudget,
   onOpenPacking,
+  onOpenTrips,
 }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -435,6 +438,18 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
                                 onClick={() => setShowExploreDestinations(true)}
                               >
                                 <Compass size={12} /> Explore Recommendations
+                              </button>
+                            )}
+                            {change.type === 'add_activity' && onOpenTrips && (
+                              <button
+                                type="button"
+                                className="action-link-btn"
+                                onClick={() => {
+                                  onOpenTrips();
+                                  onClose();
+                                }}
+                              >
+                                <Calendar size={12} /> View Itinerary
                               </button>
                             )}
                           </div>

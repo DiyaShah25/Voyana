@@ -69,10 +69,18 @@ The objective of **VPM-16 (Analyze Requirements)** is to conduct a detailed func
 
 ## 5. Traceability & Sign-Off
 
-| Requirement ID | Module | Jira Key | Implementation Status |
-| :--- | :--- | :--- | :--- |
-| FR-AI-01/02 | AI Chatbot & Interface | VPM-38, VPM-44, VPM-46 | Done |
-| FR-AI-04 | Itinerary Generator | VPM-49, VPM-5 | Done |
-| FR-BUD-01/04 | Budget Planner | VPM-41 | Done |
-| FR-BUD-02/03 | Expense & Transactions | VPM-67, VPM-78 | Done |
-| FR-PCK-01/03 | Packing & Task Assignment | VPM-42, VPM-191 | Done |
+| Requirement ID | Module | Jira Key | Implementation Status | Verification Details |
+| :--- | :--- | :--- | :--- | :--- |
+| **FR-AI-01** | AI Chat Drawer & Streaming/Fallback | VPM-38, VPM-44 | Done | `ChatAssistantModal.tsx`, `aiChatService.ts` |
+| **FR-AI-02** | Contextual Citation Chips | VPM-46 | Done | Citation badges linking itinerary days and budget |
+| **FR-AI-03** | 1-Click Action Proposals | VPM-44 | Done | Interactive proposal buttons for packing, budget & itinerary |
+| **FR-AI-04** | AI Multi-Day Itinerary Generator | VPM-49, VPM-5 | Done | `itineraryService.ts`, `TripWorkspaceModal.tsx` |
+| **FR-BUD-01** | Dynamic Category Allocations | VPM-41 | Done | `budgetService.ts`, `BudgetPlannerModal.tsx` |
+| **FR-BUD-02** | Multi-Member Expense Splits | VPM-67 | Done | Equal/custom splits, payer assignment & receipt notes |
+| **FR-BUD-03** | Transaction Ledger & CSV Export | VPM-78 | Done | Search, category filtering, and one-click CSV export |
+| **FR-BUD-04** | Debt Minimization Settlement | VPM-41 | Done | Greedy debt settlement algorithm & settle-up actions |
+| **FR-PCK-01** | Categorized Packing Checklist | VPM-42 | Done | `packingService.ts`, `PackingChecklistModal.tsx` |
+| **FR-PCK-02** | Priority Tagging & Progress Track | VPM-42 | Done | Essential/optional badges, packed progress bar |
+| **FR-PCK-03** | Member Task Assignment & Workload | VPM-191 | Done | Inline traveler dropdown, auto-distribute & stats bar |
+| **FR-PCK-04** | AI Climate & Forecast Generation | VPM-42 | Done | Weather-aware AI checklist generator synced to city |
+
