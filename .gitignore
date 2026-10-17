@@ -20,5 +20,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# Environment files
 .env
+.env.local
+.env.*.local
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
 powershell.cmd
+
