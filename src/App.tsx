@@ -385,6 +385,7 @@ function MainAppContent() {
         initialPrompt={chatInitialPrompt}
         onOpenBudget={() => setBudgetModalOpen(true)}
         onOpenPacking={() => setPackingModalOpen(true)}
+        onOpenTrips={() => setTripDashboardOpen(true)}
       />
 
       <TripDashboardModal

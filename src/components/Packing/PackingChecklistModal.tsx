@@ -29,6 +29,9 @@ import {
   deletePackingItem,
   markAllItems,
   generateAiChecklist,
+  assignPackingItem,
+  distributeTasksEqually,
+  getMemberTaskStats,
   type PackingListState,
   type PackingItem,
   type PackingCategory,
@@ -136,6 +139,19 @@ export const PackingChecklistModal: React.FC<PackingChecklistModalProps> = ({
     }, 800);
   };
 
+  const handleAssignItem = (itemId: string, newMember: string) => {
+    const updated = assignPackingItem(itemId, newMember);
+    setPackingState(updated);
+  };
+
+  const handleAutoDistribute = () => {
+    const tripMembers = ['Diya Shah', 'Nigam Sanghvi', 'Tirth Gandhi', 'Jagrat Kumar'];
+    const updated = distributeTasksEqually(tripMembers);
+    setPackingState(updated);
+  };
+
+  const memberStats = getMemberTaskStats(packingState);
+
   const filteredItems = packingState.items.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || (item.notes && item.notes.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesCat = selectedCategory === 'all' || item.category === selectedCategory;
@@ -179,6 +195,26 @@ export const PackingChecklistModal: React.FC<PackingChecklistModalProps> = ({
             </div>
 
             <div className="flex items-center gap-2">
+              <button
+                className="ai-gen-checklist-btn"
+                onClick={handleAutoDistribute}
+                title="Automatically distribute shared/everyone items equally among travelers"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  padding: '7px 14px',
+                  borderRadius: '10px',
+                  background: 'rgba(99,91,255,0.15)',
+                  border: '1px solid rgba(99,91,255,0.3)',
+                  color: '#a5a0ff',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                <Users size={14} /> Auto-Distribute
+              </button>
               <button
                 className="ai-gen-checklist-btn"
                 onClick={handleGenerateAiList}
@@ -276,6 +312,26 @@ export const PackingChecklistModal: React.FC<PackingChecklistModalProps> = ({
           </div>
         </div>
 
+        {/* Member Task Assignment Statistics */}
+        {memberStats.length > 0 && (
+          <div className="packing-member-stats-bar">
+            {memberStats.map((ms) => (
+              <div key={ms.member} className="member-stat-chip">
+                <span className="member-stat-name">{ms.member}</span>
+                <span className="member-stat-count">
+                  {ms.packed}/{ms.total}
+                </span>
+                <div className="member-stat-bar">
+                  <div
+                    className="member-stat-fill"
+                    style={{ width: `${ms.percentage}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Checklist Scrollable View */}
         <div className="modal-body-scroll">
           {filteredItems.length === 0 ? (
@@ -322,10 +378,20 @@ export const PackingChecklistModal: React.FC<PackingChecklistModalProps> = ({
 
                     <div className="packing-item-meta">
                       <span className="category-meta-tag">{item.category}</span>
-                      <span className="traveler-meta-tag">
-                        <Users size={11} className="inline mr-1 opacity-70" />
-                        {item.assignedTo}
-                      </span>
+                      <select
+                        className="traveler-reassign-select"
+                        value={item.assignedTo}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          handleAssignItem(item.id, e.target.value);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        title="Reassign this item to another traveler"
+                      >
+                        {TRAVELERS.map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                      </select>
                       {item.weatherTag && (
                         <span className="weather-meta-tag">
                           <SunMedium size={11} className="inline mr-1 opacity-70" />
