@@ -241,6 +241,90 @@ export function markAllItems(packed: boolean): PackingListState {
   return updated;
 }
 
+// ---------------------------------------------------------------------------
+// Member Task Assignment & Workload Management
+// ---------------------------------------------------------------------------
+
+/**
+ * Assign or reassign a specific packing task/item to a member
+ */
+export function assignPackingItem(itemId: string, assignedTo: string): PackingListState {
+  const current = getPackingList();
+  const updated: PackingListState = {
+    ...current,
+    items: current.items.map((item) =>
+      item.id === itemId ? { ...item, assignedTo: assignedTo.trim() || 'Everyone' } : item
+    ),
+  };
+  savePackingList(updated);
+  return updated;
+}
+
+/**
+ * Batch assign multiple items to a member
+ */
+export function batchAssignPackingItems(itemIds: string[], assignedTo: string): PackingListState {
+  const current = getPackingList();
+  const updated: PackingListState = {
+    ...current,
+    items: current.items.map((item) =>
+      itemIds.includes(item.id) ? { ...item, assignedTo: assignedTo.trim() || 'Everyone' } : item
+    ),
+  };
+  savePackingList(updated);
+  return updated;
+}
+
+/**
+ * Automatically distribute shared/unassigned packing items equally among travelers
+ */
+export function distributeTasksEqually(members: string[]): PackingListState {
+  if (!members || members.length === 0) return getPackingList();
+  const current = getPackingList();
+  let memberIdx = 0;
+
+  const updated: PackingListState = {
+    ...current,
+    items: current.items.map((item) => {
+      // Re-distribute items marked 'Shared' or 'Everyone'
+      if (item.assignedTo === 'Shared' || item.assignedTo === 'Everyone') {
+        const assignedMember = members[memberIdx % members.length];
+        memberIdx++;
+        return { ...item, assignedTo: assignedMember };
+      }
+      return item;
+    }),
+  };
+
+  savePackingList(updated);
+  return updated;
+}
+
+/**
+ * Calculate member task assignment statistics
+ */
+export function getMemberTaskStats(state: PackingListState): Array<{ member: string; total: number; packed: number; percentage: number }> {
+  const memberMap: Record<string, { total: number; packed: number }> = {};
+
+  state.items.forEach((item) => {
+    const mem = item.assignedTo || 'Everyone';
+    if (!memberMap[mem]) {
+      memberMap[mem] = { total: 0, packed: 0 };
+    }
+    memberMap[mem].total += 1;
+    if (item.isPacked) {
+      memberMap[mem].packed += 1;
+    }
+  });
+
+  return Object.entries(memberMap).map(([member, stats]) => ({
+    member,
+    total: stats.total,
+    packed: stats.packed,
+    percentage: stats.total > 0 ? Math.round((stats.packed / stats.total) * 100) : 0,
+  }));
+}
+
 export function generateAiChecklist(destination: string, days: number = 5): PackingListState {
   const current = getPackingList();
 
