@@ -16,7 +16,7 @@
 
 ## 1. System Architecture Overview
 
-Voyana is architected as a modular, cloud-native collaborative travel platform composed of a reactive single-page frontend application, a BaaS (Backend-as-a-Service) persistence tier, and an intelligent AI co-pilot integration service.
+Voyana is architected as a modular, cloud-native collaborative travel platform composed of a reactive single-page frontend application (React + Vite + TypeScript), an Express.js backend service (`services/ai-service`), a MongoDB document database with Mongoose ODM, and an intelligent Groq Cloud AI co-pilot integration service.
 
 ```mermaid
 graph TD
@@ -28,10 +28,12 @@ graph TD
         BudgetEngine[Budget Planner & Split Matrix]
         PackingEngine[Smart Packing Checklist]
         BookingSuite[Multi-Service Booking: Flights, Hotels, Transport]
+        LocalStorage[(Client Storage Cache & Fallback)]
     end
 
-    subgraph Service Tier [Voyana Core Services Layer]
-        AIService[AI Travel Assistant Service]
+    subgraph Backend & Service Tier [Express.js Backend & Core Services Layer]
+        APIGateway[Express.js REST API Gateway /api/v1]
+        AIService[AI Travel Assistant Service - Groq LLM / Fallback]
         ItinService[Itinerary Generation Service]
         RecomService[Destination Match & Recommendation Engine]
         BudService[Budget & Expense Ledger Service]
@@ -40,22 +42,25 @@ graph TD
         BookingService[Unified Reservation & Checkout Pipeline]
     end
 
-    subgraph Storage Tier [Persistence & Real-time BaaS]
-        Supabase[(PostgreSQL / Supabase BaaS)]
-        RLS[Row Level Security Policies]
-        LocalStorage[(Client Storage Cache & Fallback)]
+    subgraph Storage Tier [Persistence & Database Tier]
+        MongoDB[(MongoDB Atlas / Document Store)]
+        Mongoose[Mongoose ODM Schemas]
+        Collections[Collections: trips, bookings, expenses, packing_lists, booking_alerts, ai_requests]
     end
 
-    UI --> Service Tier
-    Globe --> Service Tier
+    UI --> Backend & Service Tier
+    Globe --> Backend & Service Tier
     ChatModal --> AIService
     ItineraryEngine --> ItinService
     BudgetEngine --> BudService
     PackingEngine --> PackService
     BookingSuite --> BookingService
+    UI -.-> LocalStorage
 
-    Service Tier --> Supabase
-    Service Tier --> LocalStorage
+    Backend & Service Tier --> APIGateway
+    APIGateway --> Mongoose
+    Mongoose --> MongoDB
+    MongoDB --- Collections
 ```
 
 ---
@@ -68,7 +73,7 @@ graph TD
 - **Workspaces & Modal Drawers (`ChatAssistantModal`, `BudgetPlannerModal`, `PackingChecklistModal`, `TripWorkspaceModal`, `UnifiedBundleBookingModal`)**: Modals with full responsive support and animations.
 
 ### 2.2 Domain Services & State Managers
-- **`aiChatService.ts`**: AI prompt chaining, fallback intelligence, context citation chips, and action proposals.
+- **`aiChatService.ts`**: AI prompt chaining, Groq Cloud / Fallback intelligence, context citation chips, and action proposals.
 - **`itineraryService.ts`**: Dynamic day-by-day scheduler matching pace (relaxed, balanced, packed) with destination points of interest.
 - **`budgetService.ts`**: Multi-currency expense ledger, dynamic category allocation, debt settlement calculations, and CSV export.
 - **`packingService.ts`**: Weather-aware checklist generation, item priority categorization, and member task assignments.
@@ -79,6 +84,6 @@ graph TD
 
 ## 3. Data Flow & Communication Patterns
 
-1. **State Synchronization**: Optimistic UI updates with client-side caching in `localStorage`, backed by asynchronous Supabase synchronization.
-2. **AI Telemetry & Fallback Protocol**: Transparent failover to high-fidelity client-side recommendation and heuristic engines whenever external AI endpoints are unreachable.
+1. **State Synchronization**: Optimistic UI updates with client-side caching in `localStorage`, backed by asynchronous REST API calls to the Express.js backend and MongoDB persistence via Mongoose.
+2. **AI Telemetry & Fallback Protocol**: Groq Cloud API (`llama-3.3-70b-versatile`) execution with transparent failover to high-fidelity client-side recommendation and heuristic engines whenever external AI endpoints are unreachable.
 3. **Cross-Module Actions**: 1-click execution bridges between AI chat suggestions, budget allocations, and packing lists.
