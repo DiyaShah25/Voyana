@@ -191,19 +191,31 @@ export const curatedDestinations: DestinationItem[] = [
 
 interface DestinationGridProps {
   selectedLocationName?: string;
-  onSelectOnGlobe: (loc: GlobeLocation) => void;
-  onBookFlight: (city: string) => void;
-  onBookHotel: (city: string) => void;
-  onViewReviews: (city: string) => void;
+  onSelectOnGlobe?: (loc: GlobeLocation) => void;
+  onSelectDestination?: (loc: GlobeLocation) => void;
+  onBookFlight?: (city: string) => void;
+  onOpenFlight?: (city: string) => void;
+  onBookHotel?: (city: string) => void;
+  onOpenHotel?: (city: string) => void;
+  onViewReviews?: (city: string) => void;
+  onOpenReviews?: (city: string) => void;
 }
 
 export const DestinationGrid: React.FC<DestinationGridProps> = ({
   selectedLocationName,
   onSelectOnGlobe,
+  onSelectDestination,
   onBookFlight,
+  onOpenFlight,
   onBookHotel,
+  onOpenHotel,
   onViewReviews,
+  onOpenReviews,
 }) => {
+  const handleSelectOnGlobe = onSelectOnGlobe || onSelectDestination || (() => {});
+  const handleBookFlight = onBookFlight || onOpenFlight || (() => {});
+  const handleBookHotel = onBookHotel || onOpenHotel || (() => {});
+  const handleViewReviews = onViewReviews || onOpenReviews || (() => {});
   const [activeRegion, setActiveRegion] = useState<string>('All');
   const [destinations, setDestinations] = useState<DestinationItem[]>(curatedDestinations);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -282,10 +294,10 @@ export const DestinationGrid: React.FC<DestinationGridProps> = ({
             key={dest.id}
             destination={dest}
             isSelected={selectedLocationName?.toLowerCase() === dest.name.toLowerCase()}
-            onSelectOnGlobe={onSelectOnGlobe}
-            onBookFlight={onBookFlight}
-            onBookHotel={onBookHotel}
-            onViewReviews={onViewReviews}
+            onSelectOnGlobe={handleSelectOnGlobe}
+            onBookFlight={handleBookFlight}
+            onBookHotel={handleBookHotel}
+            onViewReviews={handleViewReviews}
           />
         ))}
       </div>
