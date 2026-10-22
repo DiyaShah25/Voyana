@@ -277,7 +277,7 @@ export const Header: React.FC<HeaderProps> = ({
               aria-label="Open AI Travel Assistant"
             >
               <Sparkles size={13} className="text-emerald-700" />
-              <span>AI Concierge</span>
+              <span>VoyaBot</span>
             </button>
 
             {/* Notifications Panel */}
@@ -435,7 +435,7 @@ export const Header: React.FC<HeaderProps> = ({
               <span>My Bookings</span>
             </button>
             <button type="button" className="arch-mobile-item" onClick={() => { setMobileMenuOpen(false); onOpenChat(); }}>
-              <span>AI Concierge</span>
+              <span>VoyaBot</span>
             </button>
             <button type="button" className="arch-mobile-item" onClick={() => { setMobileMenuOpen(false); onOpenPacking(); }}>
               <span>Smart Packing List</span>

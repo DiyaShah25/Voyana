@@ -14,6 +14,7 @@ export const ChatMessageHistorySchema = z.object({
 export const ChatRequestSchema = z.object({
   message: z.string().min(1, 'Message cannot be empty'),
   tripId: z.string().optional().default('trip-bali-001'),
+  destination: z.string().optional(),
   history: z.array(ChatMessageHistorySchema).optional().default([]),
 });
 

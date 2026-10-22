@@ -43,13 +43,14 @@ export async function sendChatMessage(options: SendMessageOptions): Promise<Chat
   // Attempt backend AI service if reachable
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2500);
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
 
     const response = await fetch(`${AI_SERVICE_URL}/ai/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         tripId,
+        destination,
         message,
         history: history.slice(-6),
       }),

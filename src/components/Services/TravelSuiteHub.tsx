@@ -74,7 +74,7 @@ export const TravelSuiteHub: React.FC<TravelSuiteHubProps> = ({
           <div className="suite-icon-box">
             <Sparkles size={22} className="text-emerald-700" />
           </div>
-          <h3 className="suite-card-title">Travel Assistant & Intelligence</h3>
+          <h3 className="suite-card-title">VoyaBot Travel Assistant</h3>
           <p className="suite-card-desc">
             Destination matching, climate analysis, weather forecasts, and tailored logistical advice directly aligned with your travel dates.
           </p>
@@ -84,7 +84,7 @@ export const TravelSuiteHub: React.FC<TravelSuiteHubProps> = ({
             <li><CheckCircle2 size={13} className="text-emerald-700" /> 3-day and 7-day custom itineraries</li>
           </ul>
           <button type="button" className="suite-card-cta">
-            <span>Launch Assistant</span>
+            <span>Launch VoyaBot</span>
             <ArrowRight size={14} />
           </button>
         </div>

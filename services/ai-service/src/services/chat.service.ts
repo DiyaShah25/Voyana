@@ -56,9 +56,10 @@ export class ChatService {
     throw new Error('Trip fixture not found at fixtures/trip-bali.json');
   }
 
-  public renderSystemPrompt(trip: Trip): string {
+  public renderSystemPrompt(trip: Trip, requestedDestination?: string): string {
+    const destination = requestedDestination || trip.destination;
     let prompt = this.promptTemplate;
-    prompt = prompt.replace('{{destination}}', trip.destination);
+    prompt = prompt.replace('{{destination}}', destination);
     prompt = prompt.replace('{{startDate}}', trip.startDate);
     prompt = prompt.replace('{{endDate}}', trip.endDate);
     prompt = prompt.replace('{{totalBudget}}', String(trip.totalBudget));
@@ -72,7 +73,19 @@ export class ChatService {
   public async processChat(chatRequest: ChatRequest): Promise<ChatResponse> {
     const startTime = Date.now();
     const trip = this.tripFixture;
-    const systemPrompt = this.renderSystemPrompt(trip);
+
+    // Detect if user is asking about a specific destination
+    let targetDest = chatRequest.destination;
+    if (!targetDest) {
+      const msgLower = chatRequest.message.toLowerCase();
+      const popularCities = ['paris', 'tokyo', 'rome', 'santorini', 'bali', 'new york', 'london', 'dubai', 'kyoto', 'barcelona', 'sydney', 'amsterdam', 'singapore'];
+      const found = popularCities.find((c) => msgLower.includes(c));
+      if (found) {
+        targetDest = found.charAt(0).toUpperCase() + found.slice(1);
+      }
+    }
+
+    const systemPrompt = this.renderSystemPrompt(trip, targetDest);
 
     const messages: LlmMessage[] = [
       { role: 'system', content: systemPrompt },
