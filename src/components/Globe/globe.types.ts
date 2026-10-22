@@ -35,6 +35,7 @@ export interface VoyanaGlobeHandle {
   resumeRotation: () => void;
   zoomIn: () => void;
   zoomOut: () => void;
+  setRoutes?: (routes: GlobeRoute[]) => void;
 }
 
 // Props accepted by the VoyanaGlobe component

@@ -72,6 +72,7 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
     resumeRotation: () => apiRef.current?.resumeRotation(),
     zoomIn: () => apiRef.current?.zoomIn(),
     zoomOut: () => apiRef.current?.zoomOut(),
+    setRoutes: (newRoutes: GlobeRoute[]) => apiRef.current?.setRoutes?.(newRoutes),
   }), []);
 
   useEffect(() => {
@@ -239,26 +240,42 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
     let routeGroup = new THREE.Group();
     earthGroup.add(routeGroup);
 
-    const rebuildRoutes = () => {
+    const setRoutes = (newRoutes: GlobeRoute[] = []) => {
       earthGroup.remove(routeGroup);
       routeGroup.traverse((obj) => {
-        if (obj instanceof THREE.Line) {
+        if (obj instanceof THREE.Mesh || obj instanceof THREE.Line) {
           obj.geometry.dispose();
-          (obj.material as THREE.Material).dispose();
+          if (Array.isArray(obj.material)) obj.material.forEach((m) => m.dispose());
+          else obj.material.dispose();
         }
       });
       routeGroup = new THREE.Group();
-      routes.forEach((route) => {
-        const points = greatCirclePoints(route.from, route.to, 1.032);
+      newRoutes.forEach((route) => {
+        const points = greatCirclePoints(route.from, route.to, 1.028, 80);
         const line = new THREE.Line(
           new THREE.BufferGeometry().setFromPoints(points),
-          new THREE.LineBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0.85, linewidth: 2 })
+          new THREE.LineBasicMaterial({
+            color: 0x10b981,
+            transparent: true,
+            opacity: 0.95,
+          })
         );
         routeGroup.add(line);
+
+        // Waypoint beacon dots at route origin and destination
+        [route.from, route.to].forEach((waypoint) => {
+          const wpPos = latLngToVector3(waypoint.latitude, waypoint.longitude, 1.026);
+          const wpDot = new THREE.Mesh(
+            new THREE.SphereGeometry(0.016, 14, 14),
+            new THREE.MeshBasicMaterial({ color: 0x34d399 })
+          );
+          wpDot.position.copy(wpPos);
+          routeGroup.add(wpDot);
+        });
       });
       earthGroup.add(routeGroup);
     };
-    rebuildRoutes();
+    setRoutes(routes);
 
     // 8. CAMERA & SLERP ANIMATION INTERPOLATION
     const targetQuaternion = new THREE.Quaternion();
@@ -314,7 +331,7 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
       lastInteraction = performance.now();
     };
 
-    apiRef.current = { focusOnLocation, reset, pauseRotation, resumeRotation, zoomIn, zoomOut, setMarker };
+    apiRef.current = { focusOnLocation, reset, pauseRotation, resumeRotation, zoomIn, zoomOut, setMarker, setRoutes };
 
     // 9. LOAD PHOTOREALISTIC NASA TEXTURES LOCALLY
     const loadTextures = async () => {
@@ -536,7 +553,11 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
       if (container.contains(canvas)) container.removeChild(canvas);
       apiRef.current = null;
     };
-  }, [onGlobeReady, routes]);
+  }, [onGlobeReady]);
+
+  useEffect(() => {
+    apiRef.current?.setRoutes?.(routes);
+  }, [routes]);
 
   useEffect(() => {
     if (selectedLocation) {
