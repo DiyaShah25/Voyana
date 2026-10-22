@@ -437,7 +437,7 @@ export default function MyBookingsModal({
                           <ArrowRight size={12} className="text-slate-500" />
                           <span>{b.flightDetails.destinationCity} ({b.flightDetails.destinationAirport})</span>
                           <span className="text-slate-500 mx-1">·</span>
-                          <span className="capitalize text-indigo-300">{b.flightDetails.cabinClass.replace('_', ' ')} Class</span>
+                          <span className="capitalize text-indigo-300">{(b.flightDetails.cabinClass || 'Economy').replace('_', ' ')} Class</span>
                         </p>
                       </div>
                     )}

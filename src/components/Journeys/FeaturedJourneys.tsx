@@ -81,6 +81,46 @@ export const sampleJourneys: FeaturedJourney[] = [
       },
     ],
   },
+  {
+    id: 'alpine-express',
+    title: 'Swiss Glacier Peaks & Parisian Grandeur',
+    duration: '9 Days',
+    stops: ['Zurich', 'Zermatt', 'Paris'],
+    description: 'Traverse the dramatic Matterhorn glacier railways, crystalline alpine lakes, and arrive on the high-speed TGV Lyria into Paris.',
+    season: 'November – April',
+    style: 'Alpine & Heritage',
+    image: 'https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&h=650&w=940&q=80',
+    routes: [
+      {
+        from: { name: 'Zurich', latitude: 47.3769, longitude: 8.5417, type: 'city' },
+        to: { name: 'Zermatt', latitude: 45.9765, longitude: 7.7491, type: 'city' },
+      },
+      {
+        from: { name: 'Zermatt', latitude: 45.9765, longitude: 7.7491, type: 'city' },
+        to: { name: 'Paris', latitude: 48.8566, longitude: 2.3522, type: 'city' },
+      },
+    ],
+  },
+  {
+    id: 'cyclades-oasis',
+    title: 'Aegean Caldera & Arabian Gulf Oasis',
+    duration: '11 Days',
+    stops: ['Santorini', 'Cairo', 'Dubai'],
+    description: 'From sapphire cliffside Aegean sunsets and Giza ancient pyramids to modern luxury skyscrapers and red-dune desert safaris.',
+    season: 'October – April',
+    style: 'Ancient & Modern Wonders',
+    image: 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&h=650&w=940&q=80',
+    routes: [
+      {
+        from: { name: 'Santorini', latitude: 36.3932, longitude: 25.4615, type: 'region' },
+        to: { name: 'Cairo', latitude: 30.0444, longitude: 31.2357, type: 'city' },
+      },
+      {
+        from: { name: 'Cairo', latitude: 30.0444, longitude: 31.2357, type: 'city' },
+        to: { name: 'Dubai', latitude: 25.2048, longitude: 55.2708, type: 'city' },
+      },
+    ],
+  },
 ];
 
 interface FeaturedJourneysProps {

@@ -6,6 +6,7 @@
  */
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { apiRequest } from './apiClient';
 
 // --- Types & Interfaces ---
 export type TaskStatus = 'todo' | 'in_progress' | 'completed';
@@ -313,13 +314,26 @@ const INITIAL_MEMORIES: Record<string, TripMemory[]> = {
 // ---------------------------------------------------------------------------
 // 1. Group Chat Methods
 // ---------------------------------------------------------------------------
+// 1. Group Chat Methods
+// ---------------------------------------------------------------------------
 export async function getTripChatMessages(tripId: string): Promise<TripChatMessage[]> {
+  try {
+    const res = await apiRequest<{ ok: boolean; messages: TripChatMessage[] }>(`/api/collaboration/${tripId}/chat`);
+    if (res.ok && res.data?.messages && res.data.messages.length > 0) {
+      const raw = localStorage.getItem(CHAT_KEY);
+      const store = raw ? JSON.parse(raw) : INITIAL_CHAT;
+      store[tripId] = res.data.messages;
+      localStorage.setItem(CHAT_KEY, JSON.stringify(store));
+      return res.data.messages;
+    }
+  } catch {}
+
   try {
     const raw = localStorage.getItem(CHAT_KEY);
     const store = raw ? JSON.parse(raw) : INITIAL_CHAT;
-    return store[tripId] || [];
+    return store[tripId] || INITIAL_CHAT['trip-user-01'] || [];
   } catch {
-    return INITIAL_CHAT[tripId] || [];
+    return INITIAL_CHAT[tripId] || INITIAL_CHAT['trip-user-01'] || [];
   }
 }
 
@@ -329,6 +343,21 @@ export async function sendTripChatMessage(
   senderName: string = 'Megha Lalwani',
   messageType: 'text' | 'activity_log' | 'poll_share' | 'image' = 'text'
 ): Promise<TripChatMessage> {
+  try {
+    const res = await apiRequest<{ ok: boolean; message: TripChatMessage }>(`/api/collaboration/${tripId}/chat`, {
+      method: 'POST',
+      body: JSON.stringify({ message, senderName, messageType }),
+    });
+    if (res.ok && res.data?.message) {
+      const raw = localStorage.getItem(CHAT_KEY);
+      const store = raw ? JSON.parse(raw) : INITIAL_CHAT;
+      if (!store[tripId]) store[tripId] = [];
+      store[tripId].push(res.data.message);
+      localStorage.setItem(CHAT_KEY, JSON.stringify(store));
+      return res.data.message;
+    }
+  } catch {}
+
   const raw = localStorage.getItem(CHAT_KEY);
   const store = raw ? JSON.parse(raw) : INITIAL_CHAT;
 
@@ -353,11 +382,22 @@ export async function sendTripChatMessage(
 // ---------------------------------------------------------------------------
 export async function getTripTasks(tripId: string): Promise<TripTask[]> {
   try {
+    const res = await apiRequest<{ ok: boolean; tasks: TripTask[] }>(`/api/collaboration/${tripId}/tasks`);
+    if (res.ok && res.data?.tasks && res.data.tasks.length > 0) {
+      const raw = localStorage.getItem(TASKS_KEY);
+      const store = raw ? JSON.parse(raw) : INITIAL_TASKS;
+      store[tripId] = res.data.tasks;
+      localStorage.setItem(TASKS_KEY, JSON.stringify(store));
+      return res.data.tasks;
+    }
+  } catch {}
+
+  try {
     const raw = localStorage.getItem(TASKS_KEY);
     const store = raw ? JSON.parse(raw) : INITIAL_TASKS;
-    return store[tripId] || [];
+    return store[tripId] || INITIAL_TASKS['trip-user-01'] || [];
   } catch {
-    return INITIAL_TASKS[tripId] || [];
+    return INITIAL_TASKS[tripId] || INITIAL_TASKS['trip-user-01'] || [];
   }
 }
 
@@ -365,6 +405,21 @@ export async function createTripTask(
   tripId: string,
   task: Omit<TripTask, 'id' | 'tripId' | 'createdAt'>
 ): Promise<TripTask> {
+  try {
+    const res = await apiRequest<{ ok: boolean; task: TripTask }>(`/api/collaboration/${tripId}/tasks`, {
+      method: 'POST',
+      body: JSON.stringify(task),
+    });
+    if (res.ok && res.data?.task) {
+      const raw = localStorage.getItem(TASKS_KEY);
+      const store = raw ? JSON.parse(raw) : INITIAL_TASKS;
+      if (!store[tripId]) store[tripId] = [];
+      store[tripId].unshift(res.data.task);
+      localStorage.setItem(TASKS_KEY, JSON.stringify(store));
+      return res.data.task;
+    }
+  } catch {}
+
   const raw = localStorage.getItem(TASKS_KEY);
   const store = raw ? JSON.parse(raw) : INITIAL_TASKS;
 
@@ -387,6 +442,13 @@ export async function updateTripTaskStatus(
   taskId: string,
   newStatus: TaskStatus
 ): Promise<boolean> {
+  try {
+    await apiRequest(`/api/collaboration/${tripId}/tasks/${taskId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ status: newStatus }),
+    });
+  } catch {}
+
   const raw = localStorage.getItem(TASKS_KEY);
   const store = raw ? JSON.parse(raw) : INITIAL_TASKS;
 
@@ -406,11 +468,22 @@ export async function updateTripTaskStatus(
 // ---------------------------------------------------------------------------
 export async function getTripPolls(tripId: string): Promise<TripPoll[]> {
   try {
+    const res = await apiRequest<{ ok: boolean; polls: TripPoll[] }>(`/api/collaboration/${tripId}/polls`);
+    if (res.ok && res.data?.polls && res.data.polls.length > 0) {
+      const raw = localStorage.getItem(POLLS_KEY);
+      const store = raw ? JSON.parse(raw) : INITIAL_POLLS;
+      store[tripId] = res.data.polls;
+      localStorage.setItem(POLLS_KEY, JSON.stringify(store));
+      return res.data.polls;
+    }
+  } catch {}
+
+  try {
     const raw = localStorage.getItem(POLLS_KEY);
     const store = raw ? JSON.parse(raw) : INITIAL_POLLS;
-    return store[tripId] || [];
+    return store[tripId] || INITIAL_POLLS['trip-user-01'] || [];
   } catch {
-    return INITIAL_POLLS[tripId] || [];
+    return INITIAL_POLLS[tripId] || INITIAL_POLLS['trip-user-01'] || [];
   }
 }
 
@@ -684,6 +757,17 @@ export async function uploadTripDocument(
 // 6. Trip Memories & Travel Journal
 // ---------------------------------------------------------------------------
 export async function getTripMemories(tripId: string): Promise<TripMemory[]> {
+  try {
+    const res = await apiRequest<{ ok: boolean; memories: TripMemory[] }>(`/api/collaboration/${tripId}/memories`);
+    if (res.ok && res.data?.memories && res.data.memories.length > 0) {
+      const raw = localStorage.getItem(MEMORIES_KEY);
+      const store = raw ? JSON.parse(raw) : INITIAL_MEMORIES;
+      store[tripId] = res.data.memories;
+      localStorage.setItem(MEMORIES_KEY, JSON.stringify(store));
+      return res.data.memories;
+    }
+  } catch {}
+
   try {
     const raw = localStorage.getItem(MEMORIES_KEY);
     const store = raw ? JSON.parse(raw) : INITIAL_MEMORIES;

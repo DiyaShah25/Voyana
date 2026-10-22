@@ -12,7 +12,7 @@ export interface DestinationItem {
   id: string;
   name: string;
   country: string;
-  region: 'Europe' | 'Asia' | 'Americas' | 'Africa' | 'Middle East';
+  region: 'Europe' | 'Asia' | 'Americas' | 'Africa' | 'Middle East' | 'Oceania';
   image: string;
   bestSeason: string;
   highlight: string;

@@ -39,7 +39,17 @@ const DESTINATION_OPTIONS = [
   { id: 'dubai', label: 'Dubai, UAE' },
   { id: 'bali', label: 'Bali, Indonesia' },
   { id: 'rome', label: 'Rome, Italy' },
-  { id: 'new_york', label: 'New York, USA' },
+  { id: 'zurich', label: 'Zurich & Zermatt, Switzerland' },
+  { id: 'santorini', label: 'Santorini, Greece' },
+  { id: 'reykjavik', label: 'Reykjavik, Iceland' },
+  { id: 'cape_town', label: 'Cape Town, South Africa' },
+  { id: 'kyoto', label: 'Kyoto, Japan' },
+  { id: 'new_york', label: 'New York City, USA' },
+  { id: 'barcelona', label: 'Barcelona, Spain' },
+  { id: 'london', label: 'London, United Kingdom' },
+  { id: 'cairo', label: 'Cairo, Egypt' },
+  { id: 'amalfi', label: 'Amalfi Coast, Italy' },
+  { id: 'sydney', label: 'Sydney, Australia' },
 ];
 
 export default function TravelReviewsModal({

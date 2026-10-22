@@ -5,6 +5,7 @@
  */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { createAlert } from './alertService';
+import { apiRequest } from './apiClient';
 
 // ---------------------------------------------------------------------------
 // Types & Interfaces
@@ -116,15 +117,17 @@ export const CURATED_TEMPLATES: Trip[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     members: [
-      { id: 'm-01', tripId: 'tpl-paris-01', name: 'Megha Lalwani', email: 'megha@voyana.com', role: 'owner', joinedAt: new Date().toISOString() },
-      { id: 'm-02', tripId: 'tpl-paris-01', name: 'Bhavika Sainani', email: 'bhavika@voyana.com', role: 'editor', joinedAt: new Date().toISOString() },
+      { id: 'm-01', tripId: 'tpl-paris-01', name: 'Alex Morgan', email: 'traveler@voyana.com', role: 'owner', joinedAt: new Date().toISOString() },
+      { id: 'm-02', tripId: 'tpl-paris-01', name: 'Diya Shah', email: 'diya@voyana.com', role: 'editor', joinedAt: new Date().toISOString() },
+      { id: 'm-03', tripId: 'tpl-paris-01', name: 'Bhavika Sainani', email: 'bhavika@voyana.com', role: 'viewer', joinedAt: new Date().toISOString() },
     ],
     activities: [
-      { id: 'act-01', tripId: 'tpl-paris-01', dayNumber: 1, timeSlot: '10:00 AM', title: 'Arrival & Check-in at Hotel Ritz', locationName: 'Place Vendôme', category: 'Hotel', cost: 750, orderIndex: 1 },
-      { id: 'act-02', tripId: 'tpl-paris-01', dayNumber: 1, timeSlot: '05:30 PM', title: 'Eiffel Tower Sunset Viewing & Champagne', locationName: 'Champ de Mars', category: 'Sightseeing', cost: 65, orderIndex: 2 },
-      { id: 'act-03', tripId: 'tpl-paris-01', dayNumber: 2, timeSlot: '09:30 AM', title: 'Louvre Masterpieces Guided Tour', locationName: 'Musée du Louvre', category: 'Culture', cost: 45, orderIndex: 3 },
-      { id: 'act-04', tripId: 'tpl-paris-01', dayNumber: 2, timeSlot: '07:00 PM', title: 'Seine River Gourmet Dinner Cruise', locationName: 'Port de la Bourdonnais', category: 'Dining', cost: 120, orderIndex: 4 },
-      { id: 'act-05', tripId: 'tpl-paris-01', dayNumber: 3, timeSlot: '11:00 AM', title: 'Montmartre Artists Square & Sacré-Cœur', locationName: 'Montmartre', category: 'Walking Tour', cost: 0, orderIndex: 5 },
+      { id: 'act-01', tripId: 'tpl-paris-01', dayNumber: 1, timeSlot: '11:30 AM', title: 'Arrival & Private Chauffeur to Place Vendôme', locationName: 'Place Vendôme', category: 'Transport', cost: 135, orderIndex: 1 },
+      { id: 'act-02', tripId: 'tpl-paris-01', dayNumber: 1, timeSlot: '05:30 PM', title: 'Eiffel Tower Sunset Viewing & Champagne at Le Jules Verne', locationName: 'Champ de Mars', category: 'Sightseeing', cost: 65, orderIndex: 2 },
+      { id: 'act-03', tripId: 'tpl-paris-01', dayNumber: 2, timeSlot: '09:30 AM', title: 'Musée du Louvre Priority Skip-the-Line & Mona Lisa', locationName: 'Musée du Louvre', category: 'Culture', cost: 46.80, orderIndex: 3 },
+      { id: 'act-04', tripId: 'tpl-paris-01', dayNumber: 2, timeSlot: '07:30 PM', title: 'Bateaux Parisiens Gourmet 3-Course Seine Dinner Cruise', locationName: 'Port de la Bourdonnais', category: 'Dining', cost: 120, orderIndex: 4 },
+      { id: 'act-05', tripId: 'tpl-paris-01', dayNumber: 3, timeSlot: '10:30 AM', title: 'Montmartre Artists Square & Sacré-Cœur Stroll', locationName: 'Montmartre', category: 'Walking Tour', cost: 0, orderIndex: 5 },
+      { id: 'act-06', tripId: 'tpl-paris-01', dayNumber: 3, timeSlot: '03:30 PM', title: 'Angelina Paris Afternoon Tea & African Hot Chocolate', locationName: '226 Rue de Rivoli', category: 'Dining', cost: 31.40, orderIndex: 6 },
     ],
   },
   {
@@ -135,7 +138,7 @@ export const CURATED_TEMPLATES: Trip[] = [
     country: 'Japan',
     startDate: '2026-11-01',
     endDate: '2026-11-08',
-    description: 'From Shibuya scramble and Akihabara tech culture to Senso-ji Temple and Shinkansen day trip to Kyoto.',
+    description: 'From Shibuya Scramble and Akihabara electric town to Asakusa Senso-ji Temple and Shinkansen bullet train to Kyoto.',
     coverImage: 'https://images.pexels.com/photos/2506923/pexels-photo-2506923.jpeg?auto=compress&cs=tinysrgb&w=800',
     visibility: 'public',
     budgetTarget: 3200,
@@ -145,18 +148,126 @@ export const CURATED_TEMPLATES: Trip[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     members: [
-      { id: 'm-03', tripId: 'tpl-tokyo-02', name: 'Megha Lalwani', email: 'megha@voyana.com', role: 'owner', joinedAt: new Date().toISOString() },
+      { id: 'm-04', tripId: 'tpl-tokyo-02', name: 'Jagrat Kumar', email: 'jagrat@voyana.com', role: 'owner', joinedAt: new Date().toISOString() },
+      { id: 'm-05', tripId: 'tpl-tokyo-02', name: 'Elena Rostova', email: 'organizer@voyana.com', role: 'editor', joinedAt: new Date().toISOString() },
     ],
     activities: [
-      { id: 'act-06', tripId: 'tpl-tokyo-02', dayNumber: 1, timeSlot: '06:00 PM', title: 'Shibuya Crossing & Sky Observatory', locationName: 'Shibuya Sky', category: 'Sightseeing', cost: 25, orderIndex: 1 },
-      { id: 'act-07', tripId: 'tpl-tokyo-02', dayNumber: 2, timeSlot: '09:00 AM', title: 'Asakusa Senso-ji Temple & Kimono Walk', locationName: 'Asakusa', category: 'Culture', cost: 35, orderIndex: 2 },
-      { id: 'act-08', tripId: 'tpl-tokyo-02', dayNumber: 3, timeSlot: '08:00 AM', title: 'Shinkansen Bullet Train to Kyoto', locationName: 'Tokyo Station', category: 'Transport', cost: 160, orderIndex: 3 },
+      { id: 'act-08', tripId: 'tpl-tokyo-02', dayNumber: 1, timeSlot: '05:30 PM', title: 'Shibuya Sky 360 Observatory at Twilight', locationName: 'Shibuya Scramble Square', category: 'Sightseeing', cost: 28, orderIndex: 1 },
+      { id: 'act-09', tripId: 'tpl-tokyo-02', dayNumber: 2, timeSlot: '09:00 AM', title: 'Asakusa Senso-ji Temple & Traditional Kimono Stroll', locationName: 'Asakusa', category: 'Culture', cost: 36.50, orderIndex: 2 },
+      { id: 'act-10', tripId: 'tpl-tokyo-02', dayNumber: 2, timeSlot: '01:30 PM', title: 'Tsukiji Outer Market Fresh Nigiri Tasting Walk', locationName: 'Tsukiji Outer Market', category: 'Dining', cost: 32, orderIndex: 3 },
+      { id: 'act-11', tripId: 'tpl-tokyo-02', dayNumber: 3, timeSlot: '08:00 AM', title: 'Shinkansen Nozomi Bullet Train to Kyoto', locationName: 'Tokyo Station', category: 'Transport', cost: 162.40, orderIndex: 4 },
+      { id: 'act-12', tripId: 'tpl-tokyo-02', dayNumber: 4, timeSlot: '11:00 AM', title: 'TeamLab Planets Immersive Digital Art Museum', locationName: 'Toyosu', category: 'Art & Tech', cost: 45, orderIndex: 5 },
     ],
   },
   {
-    id: 'tpl-dubai-03',
+    id: 'tpl-rome-03',
     ownerId: 'system',
-    title: 'Dubai Luxury Oasis & Desert Safari: 4 Days',
+    title: 'Eternal Rome: 6 Days of Classical Antiquity & Culinary Heritage',
+    destination: 'Rome',
+    country: 'Italy',
+    startDate: '2026-10-22',
+    endDate: '2026-10-28',
+    description: 'Walk through 2,000 years of living history: Colosseum underground, Vatican Sistine Chapel, Pantheon, and Trastevere dining.',
+    coverImage: 'https://images.pexels.com/photos/1797161/pexels-photo-1797161.jpeg?auto=compress&cs=tinysrgb&w=800',
+    visibility: 'public',
+    budgetTarget: 2750,
+    currency: 'USD',
+    tags: ['Classical Antiquity', 'Architecture', 'Italian Cuisine'],
+    isTemplate: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    members: [
+      { id: 'm-06', tripId: 'tpl-rome-03', name: 'Diya Shah', email: 'diya@voyana.com', role: 'owner', joinedAt: new Date().toISOString() },
+    ],
+    activities: [
+      { id: 'act-13', tripId: 'tpl-rome-03', dayNumber: 1, timeSlot: '09:30 AM', title: 'Colosseum Gladiator Arena & Roman Forum Underground Tour', locationName: 'Piazza del Colosseo', category: 'Culture', cost: 48.50, orderIndex: 1 },
+      { id: 'act-14', tripId: 'tpl-rome-03', dayNumber: 2, timeSlot: '08:00 AM', title: 'Vatican Museums, Sistine Chapel & St. Peter VIP Early Access', locationName: 'Vatican City', category: 'Culture', cost: 54, orderIndex: 2 },
+      { id: 'act-15', tripId: 'tpl-rome-03', dayNumber: 2, timeSlot: '07:30 PM', title: 'Trastevere Sunset Food & Wine Tasting with Sommelier', locationName: 'Trastevere', category: 'Dining', cost: 68.50, orderIndex: 3 },
+      { id: 'act-16', tripId: 'tpl-rome-03', dayNumber: 3, timeSlot: '03:00 PM', title: 'Borghese Gallery Masterpieces & Gardens', locationName: 'Piazzale Scipione Borghese', category: 'Art', cost: 22, orderIndex: 4 },
+    ],
+  },
+  {
+    id: 'tpl-swiss-04',
+    ownerId: 'system',
+    title: 'Swiss Alpine Panoramas & Glacier Peaks: 5 Days',
+    destination: 'Zurich',
+    country: 'Switzerland',
+    startDate: '2026-11-10',
+    endDate: '2026-11-15',
+    description: 'Majestic peaks, Gornergrat cogwheel train facing the Matterhorn, Glacier Paradise, and luxury alpine spa in Andermatt.',
+    coverImage: 'https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=800',
+    visibility: 'public',
+    budgetTarget: 3400,
+    currency: 'USD',
+    tags: ['Alpine & Peaks', 'Luxury Wellness', 'Glacier Scenic'],
+    isTemplate: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    members: [
+      { id: 'm-07', tripId: 'tpl-swiss-04', name: 'Bhavika Sainani', email: 'bhavika@voyana.com', role: 'owner', joinedAt: new Date().toISOString() },
+    ],
+    activities: [
+      { id: 'act-18', tripId: 'tpl-swiss-04', dayNumber: 1, timeSlot: '10:00 AM', title: 'Scenic Swiss Rail from Zurich to Andermatt Swiss Alps', locationName: 'Zurich HB', category: 'Transport', cost: 74, orderIndex: 1 },
+      { id: 'act-19', tripId: 'tpl-swiss-04', dayNumber: 2, timeSlot: '09:00 AM', title: 'Gornergrat Cogwheel Mountain Railway to Matterhorn Viewpoint', locationName: 'Zermatt', category: 'Sightseeing', cost: 98, orderIndex: 2 },
+      { id: 'act-20', tripId: 'tpl-swiss-04', dayNumber: 3, timeSlot: '10:30 AM', title: 'Matterhorn Glacier Paradise Highest Cable Car in Europe (3,883m)', locationName: 'Zermatt Bergbahnen', category: 'Adventure', cost: 124, orderIndex: 3 },
+    ],
+  },
+  {
+    id: 'tpl-bali-05',
+    ownerId: 'system',
+    title: 'Bali Island Sanctuaries & Volcano Sunrise: 7 Days',
+    destination: 'Bali',
+    country: 'Indonesia',
+    startDate: '2026-11-18',
+    endDate: '2026-11-25',
+    description: 'Emerald Tegallalang rice paddies, Mount Batur sunrise caldera trek, sacred water temples, and Uluwatu cliff sunset.',
+    coverImage: 'https://images.pexels.com/photos/2166559/pexels-photo-2166559.jpeg?auto=compress&cs=tinysrgb&w=800',
+    visibility: 'public',
+    budgetTarget: 1850,
+    currency: 'USD',
+    tags: ['Wellness & Island', 'Spiritual', 'Volcano Adventure'],
+    isTemplate: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    members: [
+      { id: 'm-08', tripId: 'tpl-bali-05', name: 'Alex Morgan', email: 'traveler@voyana.com', role: 'owner', joinedAt: new Date().toISOString() },
+    ],
+    activities: [
+      { id: 'act-22', tripId: 'tpl-bali-05', dayNumber: 1, timeSlot: '08:30 AM', title: 'Tegallalang Terraced Rice Field Walk & Giant Jungle Swing', locationName: 'Ubud', category: 'Nature', cost: 22, orderIndex: 1 },
+      { id: 'act-23', tripId: 'tpl-bali-05', dayNumber: 2, timeSlot: '03:30 AM', title: 'Mount Batur Sunrise Volcano Guided Hike & Geothermal Breakfast', locationName: 'Kintamani', category: 'Adventure', cost: 48, orderIndex: 2 },
+      { id: 'act-24', tripId: 'tpl-bali-05', dayNumber: 3, timeSlot: '05:00 PM', title: 'Uluwatu Sunset Sea Temple & Sacred Kecak Fire Dance', locationName: 'Pecatu', category: 'Culture', cost: 35, orderIndex: 3 },
+    ],
+  },
+  {
+    id: 'tpl-santorini-06',
+    ownerId: 'system',
+    title: 'Santorini Aegean Caldera & Sunset Catamaran: 5 Days',
+    destination: 'Santorini',
+    country: 'Greece',
+    startDate: '2026-10-25',
+    endDate: '2026-10-30',
+    description: 'Perched in Oia above cobalt Aegean waters: private catamaran sailing, volcanic hot springs, and Greek wine tastings.',
+    coverImage: 'https://images.pexels.com/photos/1010657/pexels-photo-1010657.jpeg?auto=compress&cs=tinysrgb&w=800',
+    visibility: 'public',
+    budgetTarget: 2900,
+    currency: 'USD',
+    tags: ['Coastal Escapes', 'Sailing', 'Cycladic Architecture'],
+    isTemplate: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    members: [
+      { id: 'm-09', tripId: 'tpl-santorini-06', name: 'Elena Rostova', email: 'organizer@voyana.com', role: 'owner', joinedAt: new Date().toISOString() },
+    ],
+    activities: [
+      { id: 'act-26', tripId: 'tpl-santorini-06', dayNumber: 1, timeSlot: '02:00 PM', title: 'Semi-Private Luxury Catamaran Caldera Sailing with Barbecue', locationName: 'Amoudi Bay', category: 'Sailing', cost: 145, orderIndex: 1 },
+      { id: 'act-27', tripId: 'tpl-santorini-06', dayNumber: 2, timeSlot: '10:00 AM', title: 'Akrotiri Prehistoric Bronze Age City & Red Beach Excursion', locationName: 'Akrotiri', category: 'Culture', cost: 42, orderIndex: 2 },
+      { id: 'act-28', tripId: 'tpl-santorini-06', dayNumber: 3, timeSlot: '05:30 PM', title: 'Santo Wines Caldera Cliffside Sunset Tasting Flight', locationName: 'Pyrgos Kallistis', category: 'Dining', cost: 65, orderIndex: 3 },
+    ],
+  },
+  {
+    id: 'tpl-dubai-07',
+    ownerId: 'system',
+    title: 'Dubai Futuristic Marvels & Desert Dunes: 4 Days',
     destination: 'Dubai',
     country: 'United Arab Emirates',
     startDate: '2026-11-20',
@@ -170,12 +281,194 @@ export const CURATED_TEMPLATES: Trip[] = [
     isTemplate: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    members: [
-      { id: 'm-04', tripId: 'tpl-dubai-03', name: 'Megha Lalwani', email: 'megha@voyana.com', role: 'owner', joinedAt: new Date().toISOString() },
-    ],
+    members: [{ id: 'm-08', tripId: 'tpl-dubai-07', name: 'Fatima Al-Maktoum', email: 'fatima.m@voyana.com', role: 'owner', joinedAt: new Date().toISOString() }],
     activities: [
-      { id: 'act-09', tripId: 'tpl-dubai-03', dayNumber: 1, timeSlot: '04:00 PM', title: 'Burj Khalifa At the Top (Level 148)', locationName: 'Downtown Dubai', category: 'Sightseeing', cost: 95, orderIndex: 1 },
-      { id: 'act-10', tripId: 'tpl-dubai-03', dayNumber: 2, timeSlot: '03:00 PM', title: 'VIP Desert Safari & 4x4 Dune Bashing', locationName: 'Al Marmoom Desert', category: 'Adventure', cost: 85, orderIndex: 2 },
+      { id: 'act-29', tripId: 'tpl-dubai-07', dayNumber: 1, timeSlot: '04:00 PM', title: 'Burj Khalifa At the Top (Level 148 Lounge)', locationName: 'Downtown Dubai', category: 'Sightseeing', cost: 115, orderIndex: 1 },
+      { id: 'act-30', tripId: 'tpl-dubai-07', dayNumber: 2, timeSlot: '03:00 PM', title: 'VIP Desert Safari & 4x4 Red Dune Bashing with BBQ Dinner', locationName: 'Al Marmoom Desert', category: 'Adventure', cost: 88.50, orderIndex: 2 },
+    ],
+  },
+  {
+    id: 'tpl-reykjavik-08',
+    ownerId: 'system',
+    title: 'Icelandic Aurora & Glacial Wonders: 6 Days',
+    destination: 'Reykjavik',
+    country: 'Iceland',
+    startDate: '2026-11-15',
+    endDate: '2026-11-21',
+    description: 'Blue Lagoon geothermal waters, Gullfoss waterfall super-jeep tour, Jokulsarlon glacial iceberg lagoon, and aurora hunts.',
+    coverImage: 'https://images.pexels.com/photos/1009136/pexels-photo-1009136.jpeg?auto=compress&cs=tinysrgb&w=800',
+    visibility: 'public',
+    budgetTarget: 3100,
+    currency: 'EUR',
+    tags: ['Alpine & Aurora', 'Glaciers', 'Geothermal'],
+    isTemplate: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    members: [{ id: 'm-09', tripId: 'tpl-reykjavik-08', name: 'Lars Lindqvist', email: 'lars.l@voyana.com', role: 'owner', joinedAt: new Date().toISOString() }],
+    activities: [
+      { id: 'act-31', tripId: 'tpl-reykjavik-08', dayNumber: 1, timeSlot: '02:00 PM', title: 'Blue Lagoon Premium Geothermal Bath & Silica Mask', locationName: 'Grindavík', category: 'Wellness', cost: 98, orderIndex: 1 },
+      { id: 'act-32', tripId: 'tpl-reykjavik-08', dayNumber: 2, timeSlot: '08:30 AM', title: 'Golden Circle, Thingvellir & Gullfoss Super-Jeep Tour', locationName: 'Golden Circle', category: 'Adventure', cost: 135, orderIndex: 2 },
+    ],
+  },
+  {
+    id: 'tpl-capetown-09',
+    ownerId: 'system',
+    title: 'Cape Peninsula & Table Mountain Explorer: 5 Days',
+    destination: 'Cape Town',
+    country: 'South Africa',
+    startDate: '2026-12-05',
+    endDate: '2026-12-10',
+    description: 'Table Mountain revolving cableway, Boulders Beach African penguins, Cape Point collision of two oceans, and wine tram.',
+    coverImage: 'https://images.pexels.com/photos/259447/pexels-photo-259447.jpeg?auto=compress&cs=tinysrgb&w=800',
+    visibility: 'public',
+    budgetTarget: 2200,
+    currency: 'USD',
+    tags: ['Ocean & Peaks', 'Wildlife', 'Coastal Scenery'],
+    isTemplate: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    members: [{ id: 'm-10', tripId: 'tpl-capetown-09', name: 'Liam Gallagher', email: 'liam.g@voyana.com', role: 'owner', joinedAt: new Date().toISOString() }],
+    activities: [
+      { id: 'act-33', tripId: 'tpl-capetown-09', dayNumber: 1, timeSlot: '09:00 AM', title: 'Table Mountain Aerial Cableway & Summit Ridge Hike', locationName: 'Table Mountain', category: 'Sightseeing', cost: 32, orderIndex: 1 },
+      { id: 'act-34', tripId: 'tpl-capetown-09', dayNumber: 2, timeSlot: '10:00 AM', title: 'Boulders Beach African Penguin Colony & Cape Point Tour', locationName: 'Simon’s Town', category: 'Wildlife', cost: 45, orderIndex: 2 },
+    ],
+  },
+  {
+    id: 'tpl-kyoto-10',
+    ownerId: 'system',
+    title: 'Kyoto Zen Shrines, Bamboo Groves & Tea Ceremonies: 5 Days',
+    destination: 'Kyoto',
+    country: 'Japan',
+    startDate: '2026-11-04',
+    endDate: '2026-11-09',
+    description: 'Fushimi Inari 1,000 vermilion torii gates, Arashiyama bamboo forest rickshaw tour, Kinkaku-ji golden pavilion, and Uji matcha.',
+    coverImage: 'https://images.pexels.com/photos/1440476/pexels-photo-1440476.jpeg?auto=compress&cs=tinysrgb&w=800',
+    visibility: 'public',
+    budgetTarget: 2600,
+    currency: 'USD',
+    tags: ['Zen & Nature', 'Heritage', 'Tea Culture'],
+    isTemplate: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    members: [{ id: 'm-11', tripId: 'tpl-kyoto-10', name: 'Kenji Sato', email: 'kenji.sato@voyana.com', role: 'owner', joinedAt: new Date().toISOString() }],
+    activities: [
+      { id: 'act-35', tripId: 'tpl-kyoto-10', dayNumber: 1, timeSlot: '07:00 AM', title: 'Fushimi Inari Early Morning Torii Walk & Mountain Summit', locationName: 'Fushimi Ward', category: 'Culture', cost: 0, orderIndex: 1 },
+      { id: 'act-36', tripId: 'tpl-kyoto-10', dayNumber: 2, timeSlot: '10:00 AM', title: 'Arashiyama Bamboo Grove & Tenryu-ji Zen Garden Stroll', locationName: 'Arashiyama', category: 'Nature', cost: 18, orderIndex: 2 },
+    ],
+  },
+  {
+    id: 'tpl-newyork-11',
+    ownerId: 'system',
+    title: 'Manhattan Skyline, Broadway & Art Institutions: 5 Days',
+    destination: 'New York',
+    country: 'United States',
+    startDate: '2026-10-18',
+    endDate: '2026-10-23',
+    description: 'Summit One Vanderbilt glass observatory, Central Park foliage walk, Met Fifth Avenue, and Broadway Hamilton show.',
+    coverImage: 'https://images.pexels.com/photos/802024/pexels-photo-802024.jpeg?auto=compress&cs=tinysrgb&w=800',
+    visibility: 'public',
+    budgetTarget: 2800,
+    currency: 'USD',
+    tags: ['Urban & Modern', 'Broadway', 'Art & Culture'],
+    isTemplate: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    members: [{ id: 'm-12', tripId: 'tpl-newyork-11', name: 'Diya Shah', email: 'diya@voyana.com', role: 'owner', joinedAt: new Date().toISOString() }],
+    activities: [
+      { id: 'act-37', tripId: 'tpl-newyork-11', dayNumber: 1, timeSlot: '04:30 PM', title: 'Summit One Vanderbilt Twilight Immersive Glass Floor', locationName: 'Grand Central', category: 'Sightseeing', cost: 42, orderIndex: 1 },
+      { id: 'act-38', tripId: 'tpl-newyork-11', dayNumber: 2, timeSlot: '07:30 PM', title: 'Broadway Musical Evening (Orchestra Center Seating)', locationName: 'Times Square', category: 'Entertainment', cost: 195, orderIndex: 2 },
+    ],
+  },
+  {
+    id: 'tpl-barcelona-12',
+    ownerId: 'system',
+    title: 'Gaudí Masterpieces, Gothic Quarter & Tapas: 5 Days',
+    destination: 'Barcelona',
+    country: 'Spain',
+    startDate: '2026-11-08',
+    endDate: '2026-11-13',
+    description: 'Basílica de la Sagrada Família tower elevator, Park Güell mosaics, El Born tapas crawl, and sunset sailing on the Mediterranean.',
+    coverImage: 'https://images.pexels.com/photos/1388030/pexels-photo-1388030.jpeg?auto=compress&cs=tinysrgb&w=800',
+    visibility: 'public',
+    budgetTarget: 2300,
+    currency: 'EUR',
+    tags: ['Architecture', 'Gastronomy', 'Mediterranean Coast'],
+    isTemplate: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    members: [{ id: 'm-13', tripId: 'tpl-barcelona-12', name: 'Elena Rostova', email: 'organizer@voyana.com', role: 'owner', joinedAt: new Date().toISOString() }],
+    activities: [
+      { id: 'act-39', tripId: 'tpl-barcelona-12', dayNumber: 1, timeSlot: '10:00 AM', title: 'Sagrada Família Fast Track & Nativity Tower Panoramic Climb', locationName: 'Eixample', category: 'Culture', cost: 36, orderIndex: 1 },
+      { id: 'act-40', tripId: 'tpl-barcelona-12', dayNumber: 2, timeSlot: '06:00 PM', title: 'El Born & Gothic Quarter Artisan Tapas & Cava Walking Tour', locationName: 'Gothic Quarter', category: 'Dining', cost: 65, orderIndex: 2 },
+    ],
+  },
+  {
+    id: 'tpl-london-13',
+    ownerId: 'system',
+    title: 'Royal Heritage, West End & Thames Landmarks: 5 Days',
+    destination: 'London',
+    country: 'United Kingdom',
+    startDate: '2026-10-28',
+    endDate: '2026-11-02',
+    description: 'Tower of London Crown Jewels, British Museum antiquity galleries, Westminster Abbey, and West End theatre evening.',
+    coverImage: 'https://images.pexels.com/photos/460672/pexels-photo-460672.jpeg?auto=compress&cs=tinysrgb&w=800',
+    visibility: 'public',
+    budgetTarget: 2650,
+    currency: 'GBP',
+    tags: ['Royal Heritage', 'Theatre', 'Historic Britain'],
+    isTemplate: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    members: [{ id: 'm-14', tripId: 'tpl-london-13', name: 'Charlotte Wright', email: 'charlotte.w@voyana.com', role: 'owner', joinedAt: new Date().toISOString() }],
+    activities: [
+      { id: 'act-41', tripId: 'tpl-london-13', dayNumber: 1, timeSlot: '10:00 AM', title: 'Tower of London Early Entry & Crown Jewels Exhibition', locationName: 'Tower Hill', category: 'Culture', cost: 34, orderIndex: 1 },
+      { id: 'act-42', tripId: 'tpl-london-13', dayNumber: 2, timeSlot: '07:30 PM', title: 'West End Theatre Stalls Evening Performance', locationName: 'Covent Garden', category: 'Entertainment', cost: 95, orderIndex: 2 },
+    ],
+  },
+  {
+    id: 'tpl-cairo-14',
+    ownerId: 'system',
+    title: 'Pyramids of Giza, Nile River & Antiquities: 5 Days',
+    destination: 'Cairo',
+    country: 'Egypt',
+    startDate: '2026-11-22',
+    endDate: '2026-11-27',
+    description: 'The Great Pyramids of Giza, Great Sphinx, Grand Egyptian Museum King Tut treasures, and sunset private felucca on the Nile.',
+    coverImage: 'https://images.pexels.com/photos/71241/pexels-photo-71241.jpeg?auto=compress&cs=tinysrgb&w=800',
+    visibility: 'public',
+    budgetTarget: 1750,
+    currency: 'USD',
+    tags: ['Ancient Wonders', 'Nile Cruise', 'Archaeology'],
+    isTemplate: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    members: [{ id: 'm-15', tripId: 'tpl-cairo-14', name: 'Anya Sharma', email: 'anya.sharma@voyana.com', role: 'owner', joinedAt: new Date().toISOString() }],
+    activities: [
+      { id: 'act-43', tripId: 'tpl-cairo-14', dayNumber: 1, timeSlot: '08:30 AM', title: 'Great Pyramids of Giza & Sphinx Private Egyptologist Tour', locationName: 'Giza Plateau', category: 'Culture', cost: 55, orderIndex: 1 },
+      { id: 'act-44', tripId: 'tpl-cairo-14', dayNumber: 2, timeSlot: '05:00 PM', title: 'Traditional Nile Wooden Felucca Sunset Sailing', locationName: 'Zamalek', category: 'Sailing', cost: 25, orderIndex: 2 },
+    ],
+  },
+  {
+    id: 'tpl-amalfi-15',
+    ownerId: 'system',
+    title: 'Amalfi Cliffside Villages & Capri Coastal Cruise: 5 Days',
+    destination: 'Amalfi',
+    country: 'Italy',
+    startDate: '2026-10-14',
+    endDate: '2026-10-19',
+    description: 'Pastel cliffside villas in Positano, Path of the Gods panoramic hike, Ravello gardens, and private gozzo boat around Capri.',
+    coverImage: 'https://images.pexels.com/photos/2087391/pexels-photo-2087391.jpeg?auto=compress&cs=tinysrgb&w=800',
+    visibility: 'public',
+    budgetTarget: 3100,
+    currency: 'EUR',
+    tags: ['Coastal Escapes', 'Italian Riviera', 'Sailing'],
+    isTemplate: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    members: [{ id: 'm-16', tripId: 'tpl-amalfi-15', name: 'Marco Bellini', email: 'marco.bellini@voyana.com', role: 'owner', joinedAt: new Date().toISOString() }],
+    activities: [
+      { id: 'act-45', tripId: 'tpl-amalfi-15', dayNumber: 1, timeSlot: '10:00 AM', title: 'Private Gozzo Boat Coastal Excursion around Capri Faraglioni', locationName: 'Marina Grande Capri', category: 'Sailing', cost: 175, orderIndex: 1 },
+      { id: 'act-46', tripId: 'tpl-amalfi-15', dayNumber: 2, timeSlot: '08:00 AM', title: 'Sentiero degli Dei (Path of the Gods) Guided Ridge Trek', locationName: 'Bomerano', category: 'Adventure', cost: 40, orderIndex: 2 },
     ],
   },
 ];
@@ -183,7 +476,7 @@ export const CURATED_TEMPLATES: Trip[] = [
 const INITIAL_USER_TRIPS: Trip[] = [
   {
     id: 'trip-user-01',
-    ownerId: 'usr-demo-01',
+    ownerId: 'usr-traveler-03',
     title: 'Autumn in Paris & Provence',
     destination: 'Paris',
     country: 'France',
@@ -199,17 +492,17 @@ const INITIAL_USER_TRIPS: Trip[] = [
     createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
     updatedAt: new Date().toISOString(),
     members: [
-      { id: 'mb-01', tripId: 'trip-user-01', name: 'Megha Lalwani', email: 'megha@voyana.com', role: 'owner', joinedAt: new Date().toISOString() },
-      { id: 'mb-02', tripId: 'trip-user-01', name: 'Bhavika Sainani', email: 'bhavika@example.com', role: 'editor', joinedAt: new Date().toISOString() },
-      { id: 'mb-03', tripId: 'trip-user-01', name: 'Diya Shah', email: 'diya@voyana.com', role: 'editor', joinedAt: new Date().toISOString() },
+      { id: 'mb-01', tripId: 'trip-user-01', name: 'Alex Morgan', email: 'traveler@voyana.com', role: 'owner', joinedAt: new Date().toISOString() },
+      { id: 'mb-02', tripId: 'trip-user-01', name: 'Diya Shah', email: 'diya@voyana.com', role: 'editor', joinedAt: new Date().toISOString() },
+      { id: 'mb-03', tripId: 'trip-user-01', name: 'Bhavika Sainani', email: 'bhavika@voyana.com', role: 'editor', joinedAt: new Date().toISOString() },
       { id: 'mb-04', tripId: 'trip-user-01', name: 'Jagrat Kumar', email: 'jagrat@voyana.com', role: 'viewer', joinedAt: new Date().toISOString() },
     ],
     activities: [
-      { id: 'act-p1', tripId: 'trip-user-01', dayNumber: 1, timeSlot: '02:00 PM', title: 'Hotel Check-in & Freshen Up', locationName: 'Hôtel Ritz Paris', category: 'Accommodation', cost: 750, orderIndex: 1 },
+      { id: 'act-p1', tripId: 'trip-user-01', dayNumber: 1, timeSlot: '02:00 PM', title: 'Hotel Check-in & Welcome Espresso', locationName: 'Hôtel Ritz Paris', category: 'Accommodation', cost: 1280, orderIndex: 1 },
       { id: 'act-p2', tripId: 'trip-user-01', dayNumber: 1, timeSlot: '06:00 PM', title: 'Welcome Drinks at Trocadéro', locationName: 'Trocadéro Square', category: 'Social', cost: 60, orderIndex: 2 },
-      { id: 'act-p3', tripId: 'trip-user-01', dayNumber: 2, timeSlot: '10:00 AM', title: 'Louvre Guided Group Tour', locationName: 'Musée du Louvre', category: 'Culture', cost: 140, orderIndex: 3 },
-      { id: 'act-p4', tripId: 'trip-user-01', dayNumber: 2, timeSlot: '07:30 PM', title: 'Group Dinner at Le Marais', locationName: 'Le Marais Bistro', category: 'Dining', cost: 180, orderIndex: 4 },
-      { id: 'act-p5', tripId: 'trip-user-01', dayNumber: 3, timeSlot: '09:00 AM', title: 'Day Trip: Palace of Versailles', locationName: 'Versailles', category: 'Excursion', cost: 90, orderIndex: 5 },
+      { id: 'act-p3', tripId: 'trip-user-01', dayNumber: 2, timeSlot: '10:00 AM', title: 'Louvre Guided Group Tour', locationName: 'Musée du Louvre', category: 'Culture', cost: 140.40, orderIndex: 3 },
+      { id: 'act-p4', tripId: 'trip-user-01', dayNumber: 2, timeSlot: '07:30 PM', title: 'Group Dinner at Le Comptoir du Relais', locationName: 'Le Marais Bistro', category: 'Dining', cost: 168.50, orderIndex: 4 },
+      { id: 'act-p5', tripId: 'trip-user-01', dayNumber: 3, timeSlot: '09:00 AM', title: 'Day Trip: Palace of Versailles', locationName: 'Versailles', category: 'Excursion', cost: 58.20, orderIndex: 5 },
     ],
   },
 ];
@@ -239,6 +532,17 @@ export function saveStoredTrips(trips: Trip[]) {
 // 1. Fetch User Trips (getUserTrips)
 // ---------------------------------------------------------------------------
 export async function getUserTrips(userId: string = 'usr-demo-01'): Promise<Trip[]> {
+  // 1. Fetch from shared MongoDB Atlas backend
+  try {
+    const apiRes = await apiRequest<{ ok: boolean; trips: Trip[] }>('/api/trips');
+    if (apiRes.ok && apiRes.data?.trips) {
+      saveStoredTrips(apiRes.data.trips);
+      return apiRes.data.trips;
+    }
+  } catch {
+    // Fall through to other data sources
+  }
+
   if (supabase) {
     try {
       const { data: trips, error } = await supabase
@@ -304,6 +608,12 @@ export async function getUserTrips(userId: string = 'usr-demo-01'): Promise<Trip
 // 2. Fetch Curated Templates
 // ---------------------------------------------------------------------------
 export async function getTripTemplates(): Promise<Trip[]> {
+  try {
+    const apiRes = await apiRequest<{ ok: boolean; trips: Trip[] }>('/api/trips?templateOnly=true');
+    if (apiRes.ok && apiRes.data?.trips && apiRes.data.trips.length > 0) {
+      return apiRes.data.trips;
+    }
+  } catch {}
   return CURATED_TEMPLATES;
 }
 
@@ -413,7 +723,20 @@ export async function createTrip(
     activities: initialActivities,
   };
 
-  // 1. Supabase Persistence
+  // 1. Shared MongoDB Atlas Backend Persistence
+  try {
+    const apiRes = await apiRequest<{ ok: boolean; trip: Trip }>('/api/trips', {
+      method: 'POST',
+      body: JSON.stringify(newTrip),
+    });
+    if (apiRes.ok && apiRes.data?.trip) {
+      newTrip.id = apiRes.data.trip.id;
+    }
+  } catch (apiErr) {
+    console.warn('[TripService] MongoDB Atlas sync error:', apiErr);
+  }
+
+  // 2. Supabase Persistence
   if (supabase) {
     try {
       const { data, error } = await supabase
@@ -564,6 +887,11 @@ export async function deleteTrip(tripId: string): Promise<{ success: boolean }> 
   const filtered = list.filter((t) => t.id !== tripId);
   saveStoredTrips(filtered);
 
+  // Shared MongoDB Atlas Backend deletion
+  try {
+    await apiRequest(`/api/trips/${encodeURIComponent(tripId)}`, { method: 'DELETE' });
+  } catch {}
+
   if (supabase) {
     try {
       await supabase.from('trips').delete().eq('id', tripId);
@@ -635,6 +963,14 @@ export async function addTripActivity(
   trip.activities.push(newActivity);
   trip.updatedAt = new Date().toISOString();
   saveStoredTrips(list);
+
+  // Shared MongoDB Atlas Backend activity insert
+  try {
+    await apiRequest(`/api/trips/${encodeURIComponent(tripId)}/activities`, {
+      method: 'POST',
+      body: JSON.stringify(newActivity),
+    });
+  } catch {}
 
   if (supabase) {
     try {

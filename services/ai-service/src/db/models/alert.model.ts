@@ -1,49 +1,61 @@
 /**
- * Booking Alert Mongoose Model for MongoDB
- * Schema definition for real-time customer notifications on booking status transitions
- * (flight delays, hotel confirmations, cancellations).
+ * Alert / Notification Mongoose Model
+ * Manages booking alerts, status updates, travel notices, and read-states for Voyana.
  */
 
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Model } from 'mongoose';
+
+export type BookingStatus = 'pending' | 'confirmed' | 'delayed' | 'cancelled' | 'completed';
+export type BookingType = 'flight' | 'hotel' | 'transport' | 'package';
+export type AlertSeverity = 'info' | 'success' | 'warning' | 'critical';
 
 export interface IAlert extends Document {
-  alertId: string;
-  userId: string;
-  bookingId?: string;
-  bookingReference?: string;
-  bookingType?: 'flight' | 'hotel' | 'transport';
+  id: string;
+  user_id: string;
+  booking_id?: string;
+  booking_reference?: string;
+  booking_type?: BookingType;
   title: string;
   message: string;
-  severity: 'info' | 'warning' | 'success' | 'critical';
-  isRead: boolean;
-  oldStatus?: string;
-  newStatus?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  severity: AlertSeverity;
+  old_status?: BookingStatus;
+  new_status?: BookingStatus;
+  is_read: boolean;
+  created_at: Date;
 }
 
-const AlertSchema: Schema = new Schema(
+const AlertSchema = new Schema<IAlert>(
   {
-    alertId: { type: String, required: true, unique: true, index: true },
-    userId: { type: String, required: true, index: true },
-    bookingId: { type: String, index: true },
-    bookingReference: { type: String },
-    bookingType: { type: String, enum: ['flight', 'hotel', 'transport'] },
+    id: { type: String, required: true, unique: true, index: true },
+    user_id: { type: String, required: true, index: true },
+    booking_id: { type: String },
+    booking_reference: { type: String },
+    booking_type: {
+      type: String,
+      enum: ['flight', 'hotel', 'transport', 'package'],
+    },
     title: { type: String, required: true },
     message: { type: String, required: true },
     severity: {
       type: String,
-      enum: ['info', 'warning', 'success', 'critical'],
+      enum: ['info', 'success', 'warning', 'critical'],
       default: 'info',
     },
-    isRead: { type: Boolean, default: false, index: true },
-    oldStatus: { type: String },
-    newStatus: { type: String },
+    old_status: { type: String },
+    new_status: { type: String },
+    is_read: { type: Boolean, default: false },
   },
   {
-    timestamps: true,
+    timestamps: { createdAt: 'created_at', updatedAt: false },
+    toJSON: {
+      transform(_doc, ret: Record<string, any>) {
+        delete ret._id;
+        delete ret.__v;
+        return ret;
+      },
+    },
   }
 );
 
-export const AlertModel =
-  mongoose.models.Alert || mongoose.model<IAlert>('Alert', AlertSchema, 'booking_alerts');
+export const AlertModel: Model<IAlert> =
+  mongoose.models.Alert || mongoose.model<IAlert>('Alert', AlertSchema);

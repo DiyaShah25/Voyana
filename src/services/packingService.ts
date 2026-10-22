@@ -4,6 +4,8 @@
  * weather-aware recommendations, and member item assignments.
  */
 
+import { apiRequest } from './apiClient';
+
 export type PackingCategory =
   | 'Clothing'
   | 'Electronics'
@@ -38,141 +40,150 @@ const PACKING_STORAGE_KEY = 'voyana_packing_checklist_v1';
 const INITIAL_PACKING_LIST: PackingListState = {
   destination: 'Paris',
   tripDurationDays: 5,
-  seasonOrWeather: 'Mild Autumn (14°C - 20°C, occasional rain)',
+  seasonOrWeather: 'Mild Autumn (14°C - 20°C, occasional rain showers)',
   items: [
     {
       id: 'pack-1',
-      name: 'Passport & Visa Documents',
+      name: 'Passport, EU Schengen Visa & Color Photocopied Backups',
       category: 'Documents & Money',
       isPacked: true,
       priority: 'essential',
       assignedTo: 'Diya Shah',
       quantity: 1,
-      notes: 'Digital backup in encrypted cloud',
+      notes: 'Original passports stored in hotel safety deposit vault',
     },
     {
       id: 'pack-2',
-      name: 'Travel Insurance Certificate',
+      name: 'Allianz Global Travel Insurance Policy Certificate & Card',
       category: 'Documents & Money',
       isPacked: true,
       priority: 'essential',
       assignedTo: 'Everyone',
       quantity: 1,
+      notes: 'Policy #ALZ-89210-EU coverage up to €100,000 emergency medical',
     },
     {
       id: 'pack-3',
-      name: 'Credit / Forex Cards + €200 Cash',
+      name: 'Chase Sapphire Preferred / Forex Cards + €250 Emergency Cash',
       category: 'Documents & Money',
       isPacked: false,
       priority: 'essential',
       assignedTo: 'Tirth Gandhi',
       quantity: 1,
+      notes: 'Zero foreign transaction fee cards + small denominations for bakeries',
     },
     {
       id: 'pack-4',
-      name: 'Universal Power Plug (Type C / E)',
+      name: 'Skross World Adapter MUV Micro (Universal Type C / E / F)',
       category: 'Electronics',
       isPacked: true,
       priority: 'essential',
-      assignedTo: 'Nigam Sanghvi',
+      assignedTo: 'Jagrat Kumar',
       quantity: 2,
-      notes: 'EU 2-pin compatible',
+      notes: 'Compatible with EU 2-pin grounded sockets',
     },
     {
       id: 'pack-5',
-      name: 'High-Capacity Power Bank (20,000 mAh)',
+      name: 'Anker Prime 20,000mAh Power Bank (200W Output, USB-C PD 3.0)',
       category: 'Electronics',
       isPacked: true,
       priority: 'essential',
       assignedTo: 'Diya Shah',
       quantity: 1,
-      notes: 'Carry-on only (airline compliant)',
+      notes: 'FAA/EASA compliant 72Wh battery for airline cabin carry-on only',
     },
     {
       id: 'pack-6',
-      name: 'Noise Cancelling Headphones',
+      name: 'Sony WH-1000XM5 Noise-Cancelling Headphones with Airline Audio Pin',
       category: 'Electronics',
       isPacked: false,
       priority: 'recommended',
-      assignedTo: 'Tirth Gandhi',
+      assignedTo: 'Alex Morgan',
       quantity: 1,
+      notes: 'In-flight entertainment and long train journey quiet focus',
     },
     {
       id: 'pack-7',
-      name: 'Breathable Cotton T-Shirts',
+      name: 'Icebreaker Merino 200 Oasis Breathable Thermal Baselayers',
       category: 'Clothing',
       isPacked: true,
       priority: 'essential',
       assignedTo: 'Everyone',
-      quantity: 5,
+      quantity: 3,
       weatherTag: 'Mild Autumn',
+      notes: '100% Merino wool naturally odor-resistant for multi-day wear',
     },
     {
       id: 'pack-8',
-      name: 'Light Trench Coat / Windbreaker',
+      name: 'Arc’teryx Beta LT Gore-Tex Waterproof Breathable Windbreaker',
       category: 'Clothing',
       isPacked: false,
       priority: 'essential',
       assignedTo: 'Everyone',
       quantity: 1,
       weatherTag: 'Wind & Chill',
+      notes: 'Packable outer shell for breezy Seine riverside evenings',
     },
     {
       id: 'pack-9',
-      name: 'Comfortable Walking Sneakers (15K+ steps)',
+      name: 'Hoka Clifton 9 Gore-Tex All-Weather Walking Shoes (15K+ steps)',
       category: 'Clothing',
       isPacked: true,
       priority: 'essential',
       assignedTo: 'Everyone',
       quantity: 1,
+      notes: 'Essential for Paris cobblestones, Louvre corridors and Montmartre hills',
     },
     {
       id: 'pack-10',
-      name: 'Smart Casual Evening Attire',
+      name: 'Smart Casual Evening Attire (Tailored Blazer / Bistro Dresses)',
       category: 'Clothing',
       isPacked: false,
       priority: 'recommended',
       assignedTo: 'Everyone',
       quantity: 2,
-      notes: 'For French bistros & rooftops',
+      notes: 'Required dress code for Bateaux Parisiens and Michelin restaurants',
     },
     {
       id: 'pack-11',
-      name: 'Compact Travel Umbrella',
+      name: 'Fulton Stormlite Windproof Compact Travel Umbrella',
       category: 'Destination Essentials',
       isPacked: true,
       priority: 'essential',
       assignedTo: 'Shared',
       quantity: 2,
       weatherTag: 'Rain Shower Warning',
+      notes: 'Engineered for up to 55 km/h gusts along the Seine bridges',
     },
     {
       id: 'pack-12',
-      name: 'Prescription Meds & Travel First-Aid',
+      name: 'Personal Prescription Medication & Mini First-Aid Antihistamines',
       category: 'Toiletries & Health',
       isPacked: true,
       priority: 'essential',
       assignedTo: 'Diya Shah',
       quantity: 1,
+      notes: 'Includes blister relief pads, ibuprofen, and hydration electrolyte tablets',
     },
     {
       id: 'pack-13',
-      name: 'TSA-Compliant Toiletry Kit',
+      name: 'Matador FlatPak TSA-Compliant 100ml Waterproof Toiletry Bottles',
       category: 'Toiletries & Health',
       isPacked: false,
       priority: 'recommended',
       assignedTo: 'Everyone',
-      quantity: 1,
+      quantity: 3,
+      notes: 'Leakproof welded Cordura fabric bottles for carry-on liquids',
     },
     {
       id: 'pack-14',
-      name: 'Crossbody Anti-Theft Day Bag',
+      name: 'Pacsafe Metrosafe X Anti-Theft RFID Crossbody Day Bag',
       category: 'Accessories',
       isPacked: false,
       priority: 'recommended',
       assignedTo: 'Jagrat Kumar',
       quantity: 1,
-      notes: 'Recommended for Metro & Louvre areas',
+      notes: 'Slash-proof wire mesh with lockable zippers for crowded Metro lines',
     },
   ],
 };
@@ -185,6 +196,27 @@ export function getPackingList(): PackingListState {
     console.error('Error reading packing list from storage', e);
   }
   return INITIAL_PACKING_LIST;
+}
+
+export async function fetchPackingList(tripIdOrDestination: string = 'trip-paris-01'): Promise<PackingListState> {
+  try {
+    const res = await apiRequest<{ ok: boolean; list: any }>(`/api/packing/${tripIdOrDestination}`);
+    if (res.ok && res.data?.list) {
+      const packingState: PackingListState = {
+        destination: res.data.list.destination || 'Paris',
+        tripDurationDays: res.data.list.tripDurationDays || 5,
+        seasonOrWeather: res.data.list.seasonOrWeather || 'Mild Autumn',
+        items: (res.data.list.items && res.data.list.items.length > 0)
+          ? res.data.list.items
+          : INITIAL_PACKING_LIST.items,
+      };
+      savePackingList(packingState);
+      return packingState;
+    }
+  } catch (err) {
+    console.warn('[PackingService] Backend fetch fallback to local cache:', err);
+  }
+  return getPackingList();
 }
 
 export function savePackingList(state: PackingListState): void {
@@ -387,8 +419,8 @@ export function generateAiChecklist(destination: string, days: number = 5): Pack
       name: isCold
         ? 'Thermal Base Layers & Insulated Down Parka'
         : isTropical
-        ? 'UV-Proof Swimwear & Quick-Dry Linen Shirts'
-        : 'Layered Outfits & Trench Windbreaker',
+          ? 'UV-Proof Swimwear & Quick-Dry Linen Shirts'
+          : 'Layered Outfits & Trench Windbreaker',
       category: 'Clothing',
       isPacked: false,
       priority: 'essential',
