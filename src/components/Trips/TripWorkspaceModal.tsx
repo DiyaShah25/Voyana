@@ -381,10 +381,10 @@ export default function TripWorkspaceModal({
   const budgetSummary = calculateTripBudget(trip.budgetTarget, trip.activities || [], debtSummary.totalSpent);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-6xl bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden my-4 flex flex-col max-h-[95vh]">
+    <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 sm:p-6 md:p-8 bg-slate-900/65 backdrop-blur-md animate-fade-in overflow-y-auto">
+      <div className="relative w-full max-w-6xl bg-white border border-slate-200/90 rounded-3xl shadow-2xl shadow-slate-950/20 overflow-hidden my-auto flex flex-col max-h-[88vh]">
         {/* Workspace Top Header */}
-        <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/80 flex flex-wrap items-center justify-between gap-4">
+        <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/90 via-white to-slate-50/90 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 shadow-sm flex-shrink-0">
               <MapPin size={22} />
@@ -1239,8 +1239,8 @@ export default function TripWorkspaceModal({
 
       {/* ─── ADD ACTIVITY MODAL ───────────────────────────────────────────── */}
       {showAddActivity && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl">
+        <div className="fixed inset-0 z-[1250] flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="relative w-full max-w-md bg-white border border-slate-200/90 rounded-3xl p-6 shadow-2xl my-auto">
             <h3 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
               <Calendar size={18} className="text-emerald-700" />
               <span>Add Scheduled Activity</span>
@@ -1359,8 +1359,8 @@ export default function TripWorkspaceModal({
 
       {/* ─── ADD TASK MODAL ──────────────────────────────────────────────── */}
       {showAddTask && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl">
+        <div className="fixed inset-0 z-[1250] flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="relative w-full max-w-md bg-white border border-slate-200/90 rounded-3xl p-6 shadow-2xl my-auto">
             <h3 className="text-base font-bold text-slate-900 mb-4">Add Group Task</h3>
             <form onSubmit={handleCreateTask} className="space-y-3">
               <div>
@@ -1397,8 +1397,8 @@ export default function TripWorkspaceModal({
 
       {/* ─── ADD POLL MODAL ──────────────────────────────────────────────── */}
       {showAddPoll && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl">
+        <div className="fixed inset-0 z-[1250] flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="relative w-full max-w-md bg-white border border-slate-200/90 rounded-3xl p-6 shadow-2xl my-auto">
             <h3 className="text-base font-bold text-slate-900 mb-4">Create Decision Poll</h3>
             <form onSubmit={handleCreatePoll} className="space-y-3">
               <div>
@@ -1448,8 +1448,8 @@ export default function TripWorkspaceModal({
 
       {/* ─── ADD EXPENSE MODAL ───────────────────────────────────────────── */}
       {showAddExpense && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl">
+        <div className="fixed inset-0 z-[1250] flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="relative w-full max-w-md bg-white border border-slate-200/90 rounded-3xl p-6 shadow-2xl my-auto">
             <h3 className="text-base font-bold text-slate-900 mb-4">Log Trip Bill & Expense</h3>
             <form onSubmit={handleAddExpense} className="space-y-3">
               <div>
@@ -1499,8 +1499,8 @@ export default function TripWorkspaceModal({
 
       {/* ─── INVITE MEMBER MODAL ─────────────────────────────────────────── */}
       {showInviteModal && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl">
+        <div className="fixed inset-0 z-[1250] flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="relative w-full max-w-md bg-white border border-slate-200/90 rounded-3xl p-6 shadow-2xl my-auto">
             <h3 className="text-base font-bold text-slate-900 mb-4">Invite Collaborator to Trip</h3>
             <form onSubmit={handleInviteMember} className="space-y-3">
               <div>
@@ -1536,8 +1536,8 @@ export default function TripWorkspaceModal({
 
       {/* ADD TRIP MEMORY / PHOTO MODAL */}
       {showAddMemory && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl">
+        <div className="fixed inset-0 z-[1250] flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="relative w-full max-w-md bg-white border border-slate-200/90 rounded-3xl p-6 shadow-2xl my-auto">
             <h3 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
               <Camera size={18} className="text-emerald-700" />
               <span>Post Trip Photo Memory</span>
@@ -1661,11 +1661,11 @@ export default function TripWorkspaceModal({
       {activePhotoViewer && (
         <div
           onClick={() => setActivePhotoViewer(null)}
-          className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-[1350] flex items-center justify-center p-4 bg-slate-900/85 backdrop-blur-md animate-fade-in overflow-y-auto"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="relative max-w-4xl w-full bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+            className="relative max-w-4xl w-full bg-white border border-slate-200/90 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[88vh] my-auto"
           >
             <div className="relative aspect-16/10 w-full bg-slate-950 flex items-center justify-center overflow-hidden">
               <img
@@ -1772,8 +1772,8 @@ export default function TripWorkspaceModal({
 
       {/* AI ITINERARY GENERATOR MODAL */}
       {showAiItineraryModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-2xl bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-[1250] flex items-center justify-center p-4 sm:p-6 bg-slate-900/65 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="relative w-full max-w-2xl bg-white border border-slate-200/90 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh] my-auto">
             <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/80">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center">
