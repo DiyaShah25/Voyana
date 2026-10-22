@@ -260,13 +260,13 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
         {/* Header */}
         <div className="modal-header">
           <div className="flex items-center gap-3">
-            <div className="modal-icon-badge" style={{ background: 'rgba(99,91,255,0.2)', color: '#a5a0ff' }}>
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center flex-shrink-0">
               <Wallet size={20} />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h2 id="budget-modal-title" className="modal-title">Trip Budget Planner</h2>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                   Smart Allocation & Splits
                 </span>
               </div>
@@ -279,21 +279,9 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
                 setIsAiWizardOpen(true);
                 handleGeneratePlanPreview();
               }}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '6px 14px',
-                borderRadius: '10px',
-                background: 'linear-gradient(135deg, rgba(99,91,255,0.3), rgba(236,72,153,0.3))',
-                border: '1px solid rgba(99,91,255,0.4)',
-                color: '#e2e8f0',
-                fontSize: '12px',
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-sm shadow-emerald-700/20 transition-all hover:scale-105 active:scale-95"
             >
-              <Sparkles size={14} className="text-pink-400" />
+              <Sparkles size={14} />
               <span>AI Auto-Plan Budget</span>
             </button>
             <button className="modal-close-btn" onClick={onClose} aria-label="Close modal">
@@ -335,20 +323,8 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
 
         {/* Notice Banner */}
         {settledSuccessNotice && (
-          <div
-            style={{
-              background: 'rgba(16,185,129,0.15)',
-              borderBottom: '1px solid rgba(16,185,129,0.3)',
-              color: '#6ee7b7',
-              padding: '8px 24px',
-              fontSize: '12px',
-              fontWeight: 600,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-            }}
-          >
-            <CheckCircle2 size={15} />
+          <div className="bg-emerald-50 border-b border-emerald-200 text-emerald-800 px-6 py-2 text-xs font-semibold flex items-center gap-2">
+            <CheckCircle2 size={15} className="text-emerald-600" />
             <span>{settledSuccessNotice}</span>
           </div>
         )}
@@ -385,7 +361,7 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
 
             <div className="budget-stat-card">
               <span className="stat-card-label">Total Spent</span>
-              <div className="stat-card-value text-indigo-300">
+              <div className="stat-card-value text-slate-900">
                 {currencySymbol}{totalSpent.toLocaleString()}
                 <span className="stat-card-sub">({percentSpent}%)</span>
               </div>
@@ -393,14 +369,14 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
 
             <div className="budget-stat-card">
               <span className="stat-card-label">Remaining Buffer</span>
-              <div className={`stat-card-value ${remaining >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+              <div className={`stat-card-value ${remaining >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
                 {currencySymbol}{remaining.toLocaleString()}
               </div>
             </div>
 
             <div className="budget-stat-card">
               <span className="stat-card-label">Avg Daily Spend</span>
-              <div className="stat-card-value text-amber-300">
+              <div className="stat-card-value text-slate-900">
                 {currencySymbol}{Math.round(totalSpent / 5).toLocaleString()}
                 <span className="stat-card-sub">/day</span>
               </div>
@@ -410,14 +386,14 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
           {/* Overall Progress Meter */}
           <div className="overall-budget-progress-wrap">
             <div className="progress-info-row">
-              <span className="text-xs text-slate-400">Total Group Spending Pace</span>
-              <span className={`text-xs font-semibold ${percentSpent > 90 ? 'text-rose-400' : 'text-slate-300'}`}>
+              <span className="text-xs text-slate-500">Total Group Spending Pace</span>
+              <span className={`text-xs font-semibold ${percentSpent > 90 ? 'text-rose-600' : 'text-slate-700'}`}>
                 {percentSpent}% of total cap utilized ({remaining >= 0 ? `${currencySymbol}${remaining.toLocaleString()} safe` : `${currencySymbol}${Math.abs(remaining).toLocaleString()} over budget`})
               </span>
             </div>
             <div className="overall-progress-track">
               <div
-                className={`overall-progress-fill ${percentSpent > 90 ? 'bg-rose-500' : percentSpent > 75 ? 'bg-amber-400' : 'bg-indigo-500'}`}
+                className={`overall-progress-fill ${percentSpent > 90 ? 'bg-rose-500' : percentSpent > 75 ? 'bg-amber-400' : 'bg-emerald-600'}`}
                 style={{ width: `${percentSpent}%` }}
               />
             </div>
@@ -428,8 +404,8 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
             <div className="tab-content-fade">
               <div className="section-title-row">
                 <div>
-                  <h3 className="text-base font-bold text-slate-100">Category Allocations & Variance</h3>
-                  <p className="text-xs text-slate-400">Categorized caps vs actual recorded expenses</p>
+                  <h3 className="text-base font-bold text-slate-900">Category Allocations & Variance</h3>
+                  <p className="text-xs text-slate-500">Categorized caps vs actual recorded expenses</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -553,19 +529,7 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleExportCsv}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                      padding: '7px 12px',
-                      borderRadius: '10px',
-                      background: 'rgba(255,255,255,0.05)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      color: '#cbd5e1',
-                      fontSize: '12px',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold transition-all hover:scale-105 active:scale-95 shadow-xs"
                     title="Export expense log to CSV file"
                   >
                     <Download size={13} />
@@ -582,8 +546,8 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
 
               {filteredExpenses.length === 0 ? (
                 <div className="empty-state-box">
-                  <Receipt size={36} className="text-slate-500 mb-2" />
-                  <p className="text-slate-300 font-medium">No expenses match criteria</p>
+                  <Receipt size={36} className="text-slate-400 mb-2" />
+                  <p className="text-slate-800 font-semibold">No expenses match criteria</p>
                   <p className="text-slate-500 text-sm">Clear filters or record a new group payment</p>
                 </div>
               ) : (
@@ -603,15 +567,15 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
                     <tbody>
                       {filteredExpenses.map((exp) => (
                         <tr key={exp.id}>
-                          <td className="text-slate-400 text-sm whitespace-nowrap">
+                          <td className="text-slate-500 text-sm whitespace-nowrap">
                             <Calendar size={13} className="inline mr-1 opacity-70" />
                             {exp.date}
                           </td>
                           <td>
-                            <div className="font-semibold text-slate-200">{exp.title}</div>
-                            <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5">
+                            <div className="font-semibold text-slate-900">{exp.title}</div>
+                            <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5">
                               {exp.paymentMethod && (
-                                <span className="text-indigo-400 font-medium">
+                                <span className="text-emerald-700 font-semibold">
                                   💳 {exp.paymentMethod}
                                 </span>
                               )}
@@ -622,16 +586,16 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
                             <span className="expense-category-pill">{exp.category}</span>
                           </td>
                           <td>
-                            <span className="font-medium text-indigo-300">{exp.paidBy}</span>
+                            <span className="font-semibold text-emerald-700">{exp.paidBy}</span>
                           </td>
-                          <td className="text-slate-400 text-sm">
+                          <td className="text-slate-500 text-sm">
                             {exp.splitAmong.length === budget.members.length ? (
-                              <span className="text-slate-300">Split (All {budget.members.length})</span>
+                              <span className="text-slate-700 font-medium">Split (All {budget.members.length})</span>
                             ) : (
-                              <span className="text-amber-300">{exp.splitAmong.join(', ')}</span>
+                              <span className="text-amber-700 font-medium">{exp.splitAmong.join(', ')}</span>
                             )}
                           </td>
-                          <td className="text-right font-bold text-slate-100">
+                          <td className="text-right font-bold text-slate-900">
                             {currencySymbol}{exp.amount.toLocaleString()}
                           </td>
                           <td className="text-center">
@@ -661,9 +625,9 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
                 <div className="split-card">
                   <h4 className="split-card-title flex items-center justify-between">
                     <span className="flex items-center gap-2">
-                      <Users size={16} className="text-indigo-400" /> Member Shares & Balance Matrix
+                      <Users size={16} className="text-emerald-700" /> Member Shares & Balance Matrix
                     </span>
-                    <span className="text-[11px] text-slate-400 font-normal">
+                    <span className="text-[11px] text-slate-500 font-normal">
                       {budget.members.length} Members
                     </span>
                   </h4>
@@ -671,12 +635,12 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
                     {balances.map((b) => (
                       <div key={b.member} className="member-balance-row">
                         <div>
-                          <div className="font-semibold text-slate-200">{b.member}</div>
-                          <div className="text-xs text-slate-400">
-                            Fronted: <strong className="text-slate-200">{currencySymbol}{b.totalPaid.toLocaleString()}</strong> • Fair Share: <strong className="text-slate-200">{currencySymbol}{b.totalShare.toLocaleString()}</strong>
+                          <div className="font-semibold text-slate-900">{b.member}</div>
+                          <div className="text-xs text-slate-500">
+                            Fronted: <strong className="text-slate-800">{currencySymbol}{b.totalPaid.toLocaleString()}</strong> • Fair Share: <strong className="text-slate-800">{currencySymbol}{b.totalShare.toLocaleString()}</strong>
                           </div>
                         </div>
-                        <div className={`font-bold ${b.netBalance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        <div className={`font-bold ${b.netBalance >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
                           {b.netBalance >= 0 ? `+${currencySymbol}${b.netBalance.toLocaleString()}` : `-${currencySymbol}${Math.abs(b.netBalance).toLocaleString()}`}
                           <div className="text-[10px] font-semibold uppercase tracking-wider opacity-90 text-right">
                             {b.netBalance >= 0 ? 'gets refunded' : 'owes group'}
@@ -691,50 +655,38 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
                 <div className="split-card">
                   <h4 className="split-card-title flex items-center justify-between">
                     <span className="flex items-center gap-2">
-                      <CreditCard size={16} className="text-teal-400" /> Simplified Debt Settlements
+                      <CreditCard size={16} className="text-emerald-700" /> Simplified Debt Settlements
                     </span>
-                    <span className="text-[10px] bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded-full font-bold">
+                    <span className="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full font-bold">
                       Greedy Min-Transfer
                     </span>
                   </h4>
                   <div className="mt-3">
                     {settlements.length === 0 ? (
                       <div className="settled-clean-box">
-                        <CheckCircle2 size={28} className="text-emerald-400 mb-1" />
-                        <span className="text-slate-200 font-bold text-sm">Everyone is Settled Up!</span>
-                        <span className="text-slate-400 text-xs">No pending debts or reimbursement transfers required.</span>
+                        <CheckCircle2 size={28} className="text-emerald-600 mb-1" />
+                        <span className="text-slate-900 font-bold text-sm">Everyone is Settled Up!</span>
+                        <span className="text-slate-500 text-xs">No pending debts or reimbursement transfers required.</span>
                       </div>
                     ) : (
                       <div className="space-y-2.5">
-                        <p className="text-xs text-slate-400 mb-2">
+                        <p className="text-xs text-slate-500 mb-2">
                           Optimized peer transfers to balance all group accounts with fewest payments:
                         </p>
                         {settlements.map((s, idx) => (
                           <div key={idx} className="settlement-transfer-card flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <span className="font-bold text-rose-300">{s.from}</span>
+                              <span className="font-bold text-rose-600">{s.from}</span>
                               <ArrowRight size={14} className="text-slate-400" />
-                              <span className="font-bold text-emerald-300">{s.to}</span>
+                              <span className="font-bold text-emerald-700">{s.to}</span>
                             </div>
                             <div className="flex items-center gap-3">
-                              <span className="font-bold text-slate-100 text-sm">
+                              <span className="font-bold text-slate-900 text-sm">
                                 {currencySymbol}{s.amount.toLocaleString()}
                               </span>
                               <button
                                 onClick={() => handleSettleUp(s.from, s.to, s.amount)}
-                                style={{
-                                  padding: '4px 10px',
-                                  borderRadius: '8px',
-                                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                                  color: '#fff',
-                                  fontSize: '11px',
-                                  fontWeight: 700,
-                                  border: 'none',
-                                  cursor: 'pointer',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '4px',
-                                }}
+                                className="px-3 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-xs flex items-center gap-1 transition-colors"
                                 title="Record this transfer as settled"
                               >
                                 <Check size={12} /> Settle
@@ -755,9 +707,9 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
             <div className="tab-content-fade">
               {isGeneratingReport ? (
                 <div className="ai-loading-box">
-                  <Sparkles size={28} className="animate-spin text-indigo-400 mb-2" />
-                  <p className="text-slate-200 font-semibold">Voyana AI is evaluating your group budget…</p>
-                  <p className="text-slate-400 text-xs">Analyzing category variance, currency exchange buffers, and burn rate</p>
+                  <Sparkles size={28} className="animate-spin text-emerald-700 mb-2" />
+                  <p className="text-slate-900 font-semibold">Voyana AI is evaluating your group budget…</p>
+                  <p className="text-slate-500 text-xs">Analyzing category variance, currency exchange buffers, and burn rate</p>
                 </div>
               ) : aiReport ? (
                 <div className="ai-report-wrap space-y-4">
@@ -769,10 +721,10 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-lg text-slate-100">Budget Health: {aiReport.status.toUpperCase()}</span>
+                          <span className="font-bold text-lg text-slate-900">Budget Health: {aiReport.status.toUpperCase()}</span>
                           <span className={`status-pill ${aiReport.status}`}>{aiReport.status}</span>
                         </div>
-                        <p className="text-slate-300 text-sm">
+                        <p className="text-slate-600 text-sm">
                           Projected final spend: <strong>{currencySymbol}{aiReport.projectedSpend.toLocaleString()}</strong> ({aiReport.projectedSpend <= budget.totalBudget ? 'Within safe budget' : 'Risk of overspend'})
                         </p>
                       </div>
@@ -787,13 +739,13 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="ai-insights-card">
-                      <h4 className="flex items-center gap-2 text-indigo-300 font-semibold mb-2">
-                        <TrendingUp size={16} /> Key Insights & Highlights
+                      <h4 className="flex items-center gap-2 text-emerald-800 font-semibold mb-2">
+                        <TrendingUp size={16} className="text-emerald-700" /> Key Insights & Highlights
                       </h4>
-                      <ul className="space-y-2 text-sm text-slate-300">
+                      <ul className="space-y-2 text-sm text-slate-700">
                         {aiReport.highlights.map((h, i) => (
                           <li key={i} className="flex items-start gap-2">
-                            <span className="text-indigo-400 mt-1">•</span>
+                            <span className="text-emerald-700 mt-1">•</span>
                             <span>{h}</span>
                           </li>
                         ))}
@@ -801,13 +753,13 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
                     </div>
 
                     <div className="ai-insights-card">
-                      <h4 className="flex items-center gap-2 text-emerald-300 font-semibold mb-2">
-                        <Sparkles size={16} /> Actionable Recommendations
+                      <h4 className="flex items-center gap-2 text-emerald-800 font-semibold mb-2">
+                        <Sparkles size={16} className="text-emerald-700" /> Actionable Recommendations
                       </h4>
-                      <ul className="space-y-2 text-sm text-slate-300">
+                      <ul className="space-y-2 text-sm text-slate-700">
                         {aiReport.recommendations.map((r, i) => (
                           <li key={i} className="flex items-start gap-2">
-                            <CheckCircle2 size={15} className="text-emerald-400 shrink-0 mt-0.5" />
+                            <CheckCircle2 size={15} className="text-emerald-600 shrink-0 mt-0.5" />
                             <span>{r}</span>
                           </li>
                         ))}
@@ -987,15 +939,15 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
             <div className="sub-modal-card" style={{ maxWidth: '560px' }}>
               <div className="sub-modal-header">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-pink-500/20 text-pink-400 grid place-items-center">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 grid place-items-center">
                     <Sparkles size={16} />
                   </div>
                   <div>
-                    <h3 className="font-bold text-slate-100 text-sm">AI Budget Plan Generator</h3>
-                    <p className="text-[11px] text-slate-400">Intelligent category allocation for {destination}</p>
+                    <h3 className="font-bold text-slate-900 text-sm">AI Budget Plan Generator</h3>
+                    <p className="text-[11px] text-slate-500">Intelligent category allocation for {destination}</p>
                   </div>
                 </div>
-                <button onClick={() => setIsAiWizardOpen(false)} className="text-slate-400 hover:text-slate-200">
+                <button onClick={() => setIsAiWizardOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
                   <X size={18} />
                 </button>
               </div>
@@ -1059,29 +1011,20 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
                 <button
                   type="button"
                   onClick={handleGeneratePlanPreview}
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    borderRadius: '10px',
-                    background: 'rgba(99,91,255,0.2)',
-                    border: '1px solid rgba(99,91,255,0.4)',
-                    color: '#c4b5fd',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                  }}
+                  className="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 shadow-xs"
                 >
-                  ⚡ Recalculate Allocations
+                  <Sparkles size={13} className="text-emerald-700" />
+                  <span>Recalculate Allocations</span>
                 </button>
 
                 {/* Preview */}
                 {wizardPreview && (
-                  <div className="space-y-3 pt-2 border-t border-white/10">
+                  <div className="space-y-3 pt-2 border-t border-slate-100">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-slate-300 font-bold">Suggested Total:</span>
-                      <span className="text-base font-extrabold text-indigo-300">
+                      <span className="text-xs text-slate-600 font-bold">Suggested Total:</span>
+                      <span className="text-base font-extrabold text-emerald-800">
                         {currencySymbol}{wizardPreview.budget.totalBudget.toLocaleString()}
-                        <small className="text-xs text-slate-400 font-normal ml-1">
+                        <small className="text-xs text-slate-500 font-normal ml-1">
                           (~{currencySymbol}{wizardPreview.dailyPerPerson}/person/day)
                         </small>
                       </span>
@@ -1089,22 +1032,22 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
 
                     <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                       {wizardPreview.allocations.map((a) => (
-                        <div key={a.category} className="flex items-center justify-between text-xs py-1 px-2 rounded bg-white/5">
-                          <span className="text-slate-300 flex items-center gap-2">
+                        <div key={a.category} className="flex items-center justify-between text-xs py-1.5 px-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                          <span className="text-slate-800 flex items-center gap-2 font-medium">
                             <span className="w-2 h-2 rounded-full" style={{ backgroundColor: a.color }} />
                             {a.category}
                           </span>
-                          <span className="font-bold text-slate-100">
+                          <span className="font-bold text-slate-900">
                             {currencySymbol}{a.allocated.toLocaleString()}
                           </span>
                         </div>
                       ))}
                     </div>
 
-                    <div className="p-2.5 rounded-xl bg-indigo-950/40 border border-indigo-500/20 text-[11px] text-slate-300 space-y-1">
+                    <div className="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200 text-[11px] text-emerald-900 space-y-1">
                       {wizardPreview.insights.map((ins, idx) => (
                         <div key={idx} className="flex items-start gap-1.5">
-                          <span className="text-indigo-400">•</span>
+                          <span className="text-emerald-700">•</span>
                           <span>{ins}</span>
                         </div>
                       ))}

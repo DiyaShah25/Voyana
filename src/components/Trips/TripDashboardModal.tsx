@@ -168,36 +168,36 @@ export default function TripDashboardModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-xl animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-5xl bg-slate-900/95 border border-white/10 rounded-3xl shadow-2xl overflow-hidden my-6 flex flex-col max-h-[92vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+      <div className="relative w-full max-w-5xl bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden my-6 flex flex-col max-h-[92vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-slate-900/90">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/80">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 shadow-sm">
               <Compass size={20} />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-white">Trip Planning & Workspace</h2>
-                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                <h2 className="text-lg font-bold text-slate-900">Trip Planning & Workspace</h2>
+                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
                   Workspace Hub
                 </span>
               </div>
-              <p className="text-xs text-slate-400">Collaborative itineraries, shared calendar, group chat & voting</p>
+              <p className="text-xs text-slate-500">Collaborative itineraries, shared calendar, group chat & voting</p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsCreating(true)}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white text-xs font-semibold shadow-lg shadow-indigo-500/25 transition-all"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-md shadow-emerald-700/20 transition-all hover:scale-105 active:scale-95"
             >
               <Plus size={14} />
               <span>New Trip</span>
             </button>
             <button
               onClick={onClose}
-              className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition-colors"
+              className="p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-colors"
             >
               <X size={20} />
             </button>
@@ -205,15 +205,15 @@ export default function TripDashboardModal({
         </div>
 
         {/* Navigation Toolbar */}
-        <div className="p-6 border-b border-white/10 bg-slate-950/40 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="p-6 border-b border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-3">
           {/* Tabs */}
           <div className="flex gap-2 w-full sm:w-auto">
             <button
               onClick={() => setActiveTab('my_trips')}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
                 activeTab === 'my_trips'
-                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
-                  : 'bg-white/[0.05] text-slate-300 hover:bg-white/[0.1] border border-white/5'
+                  ? 'bg-emerald-700 text-white shadow-sm'
+                  : 'bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200'
               }`}
             >
               <span>✈️ Active Trips ({userTrips.length})</span>
@@ -222,24 +222,24 @@ export default function TripDashboardModal({
               onClick={() => setActiveTab('templates')}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
                 activeTab === 'templates'
-                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
-                  : 'bg-white/[0.05] text-slate-300 hover:bg-white/[0.1] border border-white/5'
+                  ? 'bg-emerald-700 text-white shadow-sm'
+                  : 'bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200'
               }`}
             >
-              <Sparkles size={14} className="text-amber-400" />
+              <Sparkles size={14} className="text-amber-500" />
               <span>Curated Templates ({templates.length})</span>
             </button>
           </div>
 
           {/* Search Box */}
           <div className="relative w-full sm:w-72">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search destination or trip name..."
-              className="w-full bg-slate-900 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-400"
+              className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 shadow-sm"
             />
           </div>
         </div>
@@ -250,22 +250,22 @@ export default function TripDashboardModal({
           {activeTab === 'my_trips' && (
             <div>
               {filteredUserTrips.length === 0 ? (
-                <div className="text-center py-16 bg-white/[0.02] border border-white/5 rounded-3xl p-8">
-                  <Compass size={40} className="mx-auto text-slate-600 mb-3" />
-                  <h3 className="text-base font-bold text-white">No active trip workspaces</h3>
-                  <p className="text-xs text-slate-400 mt-1 mb-6 max-w-sm mx-auto">
+                <div className="text-center py-16 bg-slate-50/70 border border-dashed border-slate-200 rounded-3xl p-8">
+                  <Compass size={40} className="mx-auto text-slate-400 mb-3" />
+                  <h3 className="text-base font-bold text-slate-900">No active trip workspaces</h3>
+                  <p className="text-xs text-slate-500 mt-1 mb-6 max-w-sm mx-auto">
                     Create your own custom group trip or clone one of our curated itineraries with 1-click.
                   </p>
                   <div className="flex items-center justify-center gap-3">
                     <button
                       onClick={() => setIsCreating(true)}
-                      className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-lg shadow-indigo-500/25"
+                      className="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-md shadow-emerald-700/20 transition-all hover:scale-105 active:scale-95"
                     >
                       + Create Custom Trip
                     </button>
                     <button
                       onClick={() => setActiveTab('templates')}
-                      className="px-5 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 text-xs font-semibold border border-white/10"
+                      className="px-5 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200 transition-colors"
                     >
                       Explore Templates
                     </button>
@@ -277,31 +277,31 @@ export default function TripDashboardModal({
                     <div
                       key={trip.id}
                       onClick={() => onOpenWorkspace(trip)}
-                      className="group bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 hover:border-indigo-400/40 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/10 flex flex-col justify-between relative"
+                      className="group bg-white hover:bg-slate-50/80 border border-slate-200 hover:border-emerald-500/50 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 shadow-sm hover:shadow-lg flex flex-col justify-between relative"
                     >
                       {/* Cover Photo */}
-                      <div className="relative h-44 w-full overflow-hidden">
+                      <div className="relative h-44 w-full overflow-hidden bg-slate-100">
                         <img
                           src={trip.coverImage}
                           alt={trip.title}
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/30 to-transparent" />
 
                         {/* Top Chips */}
                         <div className="absolute top-3 left-3 flex items-center gap-2">
-                          <span className="bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/20 text-[11px] font-semibold text-white flex items-center gap-1">
-                            <MapPin size={11} className="text-emerald-400" />
+                          <span className="bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full border border-slate-200 text-[11px] font-semibold text-slate-800 flex items-center gap-1 shadow-sm">
+                            <MapPin size={11} className="text-emerald-600" />
                             <span>{trip.destination}</span>
                           </span>
-                          <span className="bg-indigo-950/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-indigo-400/30 text-[11px] font-semibold text-indigo-300">
+                          <span className="bg-emerald-800/90 backdrop-blur-md px-2.5 py-1 rounded-full text-[11px] font-semibold text-white shadow-sm">
                             {calculateDaysToGo(trip.startDate)}
                           </span>
                         </div>
 
                         <button
                           onClick={(e) => handleDelete(trip.id, e)}
-                          className="absolute top-3 right-3 p-1.5 rounded-lg bg-black/60 hover:bg-rose-600/80 text-slate-400 hover:text-white transition-colors"
+                          className="absolute top-3 right-3 p-1.5 rounded-lg bg-white/90 hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition-colors shadow-sm"
                           title="Delete trip"
                         >
                           <Trash2 size={14} />
@@ -309,10 +309,10 @@ export default function TripDashboardModal({
 
                         {/* Title over scrim */}
                         <div className="absolute bottom-3 left-3 right-3">
-                          <h3 className="text-base font-bold text-white group-hover:text-indigo-300 transition-colors">
+                          <h3 className="text-base font-bold text-white group-hover:text-emerald-200 transition-colors drop-shadow-sm">
                             {trip.title}
                           </h3>
-                          <p className="text-xs text-slate-300 flex items-center gap-1.5 mt-0.5">
+                          <p className="text-xs text-slate-200 flex items-center gap-1.5 mt-0.5 drop-shadow-sm">
                             <Calendar size={12} className="text-amber-400" />
                             <span>{trip.startDate} – {trip.endDate}</span>
                           </p>
@@ -321,34 +321,34 @@ export default function TripDashboardModal({
 
                       {/* Card Body */}
                       <div className="p-4 space-y-3">
-                        <p className="text-xs text-slate-400 line-clamp-2">
+                        <p className="text-xs text-slate-600 line-clamp-2">
                           {trip.description || 'Collaborative itinerary planning with group members.'}
                         </p>
 
-                        <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
                           {/* Members Avatars */}
                           <div className="flex items-center -space-x-2">
                             {trip.members && trip.members.slice(0, 4).map((m, idx) => (
                               <div
                                 key={m.id || idx}
-                                className="w-7 h-7 rounded-full bg-indigo-600 border-2 border-slate-900 flex items-center justify-center text-[10px] font-bold text-white"
+                                className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-800 border-2 border-white flex items-center justify-center text-[10px] font-bold shadow-sm"
                                 title={`${m.name} (${m.role})`}
                               >
                                 {m.name.substring(0, 2).toUpperCase()}
                               </div>
                             ))}
                             {trip.members && trip.members.length > 4 && (
-                              <div className="w-7 h-7 rounded-full bg-slate-800 border-2 border-slate-900 flex items-center justify-center text-[10px] text-slate-300">
+                              <div className="w-7 h-7 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[10px] text-slate-600 font-semibold shadow-sm">
                                 +{trip.members.length - 4}
                               </div>
                             )}
                           </div>
 
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-semibold text-slate-300">
+                            <span className="text-xs font-semibold text-slate-700">
                               ${trip.budgetTarget} Budget
                             </span>
-                            <span className="p-1 rounded-lg bg-indigo-600/20 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                            <span className="p-1 rounded-lg bg-emerald-50 text-emerald-700 group-hover:bg-emerald-700 group-hover:text-white transition-colors">
                               <ArrowRight size={14} />
                             </span>
                           </div>
@@ -367,32 +367,32 @@ export default function TripDashboardModal({
               {filteredTemplates.map((tpl) => (
                 <div
                   key={tpl.id}
-                  className="bg-white/[0.03] border border-white/10 hover:border-indigo-400/40 rounded-2xl overflow-hidden flex flex-col justify-between transition-all group"
+                  className="bg-white border border-slate-200 hover:border-emerald-500/50 rounded-2xl overflow-hidden flex flex-col justify-between transition-all group shadow-sm hover:shadow-lg"
                 >
-                  <div className="relative h-44 w-full overflow-hidden">
+                  <div className="relative h-44 w-full overflow-hidden bg-slate-100">
                     <img
                       src={tpl.coverImage}
                       alt={tpl.title}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
-                    <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/20 text-[11px] font-semibold text-amber-300 flex items-center gap-1">
-                      <Sparkles size={11} className="fill-amber-400" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/30 to-transparent" />
+                    <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full border border-slate-200 text-[11px] font-semibold text-amber-700 flex items-center gap-1 shadow-sm">
+                      <Sparkles size={11} className="fill-amber-500 text-amber-500" />
                       <span>Curated Template</span>
                     </div>
                   </div>
 
                   <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
                     <div>
-                      <h4 className="text-sm font-bold text-white mb-1">{tpl.title}</h4>
-                      <p className="text-xs text-slate-400 line-clamp-3">{tpl.description}</p>
+                      <h4 className="text-sm font-bold text-slate-900 mb-1">{tpl.title}</h4>
+                      <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">{tpl.description}</p>
                     </div>
 
-                    <div className="pt-3 border-t border-white/5 flex items-center justify-between">
-                      <span className="text-xs font-bold text-white">${tpl.budgetTarget} Est.</span>
+                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-900">${tpl.budgetTarget} Est.</span>
                       <button
                         onClick={() => handleClone(tpl.id)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white text-xs font-semibold shadow-md transition-all"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-md shadow-emerald-700/20 transition-all hover:scale-105 active:scale-95"
                       >
                         <Copy size={12} />
                         <span>Use Template</span>
@@ -408,26 +408,26 @@ export default function TripDashboardModal({
 
       {/* ─── CREATE CUSTOM TRIP MODAL ─────────────────────────────────────── */}
       {isCreating && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-2xl animate-fade-in overflow-y-auto">
-          <div className="relative w-full max-w-xl bg-slate-900 border border-white/15 rounded-3xl shadow-2xl p-6 overflow-hidden my-6 max-h-[92vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-4 border-b border-white/10">
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="relative w-full max-w-xl bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 overflow-hidden my-6 max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 shadow-sm">
                   <Compass size={20} />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-bold text-white">Create Trip Workspace</h3>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                    <h3 className="text-base font-bold text-slate-900">Create Trip Workspace</h3>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
                       New Expedition
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400">Set destination, travel style, budget, and invite friends</p>
+                  <p className="text-xs text-slate-500">Set destination, travel style, budget, and invite friends</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsCreating(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10"
+                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition-colors"
               >
                 <X size={18} />
               </button>
@@ -435,44 +435,44 @@ export default function TripDashboardModal({
 
             <form onSubmit={handleCreateTripSubmit} className="space-y-4 py-4">
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Trip Title *</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Trip Title *</label>
                 <input
                   type="text"
                   required
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   placeholder="e.g. Cherry Blossoms & Neon Nights in Tokyo"
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-400"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 shadow-sm"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">Primary Destination *</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Primary Destination *</label>
                   <input
                     type="text"
                     required
                     value={newDestination}
                     onChange={(e) => setNewDestination(e.target.value)}
                     placeholder="e.g. Tokyo"
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-400"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 shadow-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">Country</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Country</label>
                   <input
                     type="text"
                     value={newCountry}
                     onChange={(e) => setNewCountry(e.target.value)}
                     placeholder="e.g. Japan"
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-400"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 shadow-sm"
                   />
                 </div>
               </div>
 
               {/* Travel Style Selector */}
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">Travel Style & Vibe</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Travel Style & Vibe</label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
                     'Friends Getaway',
@@ -488,8 +488,8 @@ export default function TripDashboardModal({
                       onClick={() => setNewTravelStyle(style)}
                       className={`p-2 rounded-xl border text-[11px] font-semibold transition-all text-center ${
                         newTravelStyle === style
-                          ? 'bg-indigo-600 text-white border-indigo-500 shadow-md'
-                          : 'bg-white/[0.03] text-slate-300 border-white/10 hover:bg-white/[0.06]'
+                          ? 'bg-emerald-700 text-white border-emerald-700 shadow-sm'
+                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                       }`}
                     >
                       {style}
@@ -501,23 +501,23 @@ export default function TripDashboardModal({
               {/* Dates & Duration */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">Start Date *</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Start Date *</label>
                   <input
                     type="date"
                     required
                     value={newStartDate}
                     onChange={(e) => setNewStartDate(e.target.value)}
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-400"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 shadow-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">End Date *</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">End Date *</label>
                   <input
                     type="date"
                     required
                     value={newEndDate}
                     onChange={(e) => setNewEndDate(e.target.value)}
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-400"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 shadow-sm"
                   />
                 </div>
               </div>
@@ -525,21 +525,21 @@ export default function TripDashboardModal({
               {/* Budget & Currency */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">Budget Allocation Target</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Budget Allocation Target</label>
                   <input
                     type="number"
                     min={0}
                     value={newBudget}
                     onChange={(e) => setNewBudget(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-400"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 shadow-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">Currency</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Currency</label>
                   <select
                     value={newCurrency}
                     onChange={(e) => setNewCurrency(e.target.value)}
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 shadow-sm"
                   >
                     <option value="USD">USD ($)</option>
                     <option value="EUR">EUR (€)</option>
@@ -553,20 +553,20 @@ export default function TripDashboardModal({
 
               {/* Collaborators Invitation */}
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Invite Collaborator Emails</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Invite Collaborator Emails</label>
                 <input
                   type="text"
                   value={newInvitedEmails}
                   onChange={(e) => setNewInvitedEmails(e.target.value)}
                   placeholder="diya@voyana.com, bhavika@voyana.com, jagrat@voyana.com"
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-400"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 shadow-sm"
                 />
-                <span className="text-[10px] text-slate-500 mt-0.5 block">Separate multiple emails with commas. They will receive Editor access.</span>
+                <span className="text-[10px] text-slate-400 mt-1 block">Separate multiple emails with commas. They will receive Editor access.</span>
               </div>
 
               {/* Cover Photo Presets */}
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Trip Cover Image</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Trip Cover Image</label>
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
                   {[
                     { label: 'Paris', url: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&auto=format&fit=crop&q=80' },
@@ -582,8 +582,8 @@ export default function TripDashboardModal({
                       onClick={() => setNewCoverImage(p.url)}
                       className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg border transition-all whitespace-nowrap ${
                         newCoverImage === p.url
-                          ? 'bg-indigo-600 text-white border-indigo-400 shadow-sm'
-                          : 'bg-white/5 text-slate-300 border-white/5 hover:bg-white/10'
+                          ? 'bg-emerald-700 text-white border-emerald-700 shadow-sm'
+                          : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
                       }`}
                     >
                       {p.label}
@@ -593,28 +593,28 @@ export default function TripDashboardModal({
               </div>
 
               {/* Auto-schedule checkbox */}
-              <label className="flex items-center gap-2 text-xs text-indigo-300 bg-indigo-950/40 p-3 rounded-xl border border-indigo-500/20 cursor-pointer">
+              <label className="flex items-center gap-2 text-xs text-emerald-800 bg-emerald-50 p-3 rounded-xl border border-emerald-200 cursor-pointer shadow-sm">
                 <input
                   type="checkbox"
                   checked={newAutoSchedule}
                   onChange={(e) => setNewAutoSchedule(e.target.checked)}
-                  className="rounded text-indigo-600 focus:ring-indigo-500 bg-slate-950"
+                  className="rounded text-emerald-700 focus:ring-emerald-600 bg-white"
                 />
-                <span>Auto-generate initial recommended day-by-day sightseeing activities</span>
+                <span className="font-medium">Auto-generate initial recommended day-by-day sightseeing activities</span>
               </label>
 
-              <div className="pt-3 flex items-center justify-end gap-3 border-t border-white/10">
+              <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsCreating(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white text-xs font-semibold shadow-lg shadow-indigo-500/25 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                  className="px-6 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-md shadow-emerald-700/20 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
                 >
                   {isSubmitting ? 'Creating Workspace...' : 'Launch Trip Workspace Hub'}
                 </button>

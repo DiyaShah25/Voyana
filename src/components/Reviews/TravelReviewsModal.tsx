@@ -158,22 +158,22 @@ export default function TravelReviewsModal({
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/90 backdrop-blur-2xl animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-5xl bg-slate-900 border border-white/15 rounded-3xl shadow-2xl overflow-hidden my-4 flex flex-col max-h-[94vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+      <div className="relative w-full max-w-5xl bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden my-4 flex flex-col max-h-[94vh]">
         {/* Header Bar */}
-        <div className="px-6 py-4 border-b border-white/10 bg-slate-950/70 flex flex-wrap items-center justify-between gap-4">
+        <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/80 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white shadow-lg shadow-amber-500/20">
-              <Star size={22} className="fill-white text-white" />
+            <div className="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shadow-sm">
+              <Star size={22} className="fill-amber-500 text-amber-500" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-white">Travel Reviews & Community Ratings</h2>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                <h2 className="text-lg font-bold text-slate-900">Travel Reviews & Community Ratings</h2>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
                   Community Verified
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 Verified traveler scores, detailed pros/cons & genuine community insights
               </p>
             </div>
@@ -182,7 +182,7 @@ export default function TravelReviewsModal({
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowWriteModal(true)}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-indigo-600 hover:from-amber-400 hover:to-indigo-500 text-white text-xs font-semibold shadow-lg shadow-amber-500/20 transition-all hover:scale-105 active:scale-95"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-md shadow-emerald-700/20 transition-all hover:scale-105 active:scale-95"
             >
               <Plus size={14} />
               <span>Write a Review</span>
@@ -190,7 +190,7 @@ export default function TravelReviewsModal({
 
             <button
               onClick={onClose}
-              className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-white/10"
+              className="p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-colors"
             >
               <X size={20} />
             </button>
@@ -201,12 +201,12 @@ export default function TravelReviewsModal({
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Top Score Matrix & Category Radar */}
           {stats && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gradient-to-r from-slate-950/80 via-slate-900 to-slate-950/80 border border-amber-500/20 rounded-3xl p-6 shadow-xl">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50/70 border border-slate-200 rounded-3xl p-6 shadow-sm">
               {/* Overall Score */}
-              <div className="flex flex-col justify-center items-center text-center p-4 border-b md:border-b-0 md:border-r border-white/10">
-                <span className="text-4xl font-black text-amber-400 flex items-center gap-1">
+              <div className="flex flex-col justify-center items-center text-center p-4 border-b md:border-b-0 md:border-r border-slate-200">
+                <span className="text-4xl font-black text-amber-500 flex items-center gap-1">
                   {stats.averageRating}
-                  <span className="text-lg text-slate-500 font-normal">/5.0</span>
+                  <span className="text-lg text-slate-400 font-normal">/5.0</span>
                 </span>
 
                 <div className="flex items-center gap-1 my-2">
@@ -214,22 +214,22 @@ export default function TravelReviewsModal({
                     <Star
                       key={s}
                       size={18}
-                      className={`${s <= Math.round(stats.averageRating) ? 'fill-amber-400 text-amber-400' : 'text-slate-600'}`}
+                      className={`${s <= Math.round(stats.averageRating) ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`}
                     />
                   ))}
                 </div>
 
-                <p className="text-xs font-semibold text-white">
+                <p className="text-xs font-semibold text-slate-900">
                   Based on {stats.totalReviews} verified traveler reviews
                 </p>
-                <p className="text-[11px] text-emerald-400 font-semibold mt-1">
+                <p className="text-[11px] text-emerald-700 font-semibold mt-1">
                   ✨ {stats.recommendationPercentage}% of visitors recommend this destination
                 </p>
               </div>
 
               {/* Star Rating Distribution Bars */}
               <div className="space-y-1.5 justify-center flex flex-col p-2">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                   Rating Distribution
                 </span>
                 {[5, 4, 3, 2, 1].map((star) => {
@@ -237,22 +237,22 @@ export default function TravelReviewsModal({
                   const pct = stats.totalReviews > 0 ? Math.round((count / stats.totalReviews) * 100) : 0;
                   return (
                     <div key={star} className="flex items-center gap-2 text-xs">
-                      <span className="w-6 text-slate-400 font-mono text-[11px]">{star} ★</span>
-                      <div className="flex-1 h-2 bg-slate-950 rounded-full overflow-hidden border border-white/5">
+                      <span className="w-6 text-slate-500 font-mono text-[11px]">{star} ★</span>
+                      <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-gradient-to-r from-amber-500 to-indigo-500 rounded-full transition-all"
+                          className="h-full bg-amber-400 rounded-full transition-all"
                           style={{ width: `${pct}%` }}
                         />
                       </div>
-                      <span className="w-8 text-right text-[11px] text-slate-400">{pct}%</span>
+                      <span className="w-8 text-right text-[11px] text-slate-500">{pct}%</span>
                     </div>
                   );
                 })}
               </div>
 
               {/* Category Sub-Scores */}
-              <div className="space-y-2 justify-center flex flex-col p-2 border-t md:border-t-0 md:border-l border-white/10">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+              <div className="space-y-2 justify-center flex flex-col p-2 border-t md:border-t-0 md:border-l border-slate-200">
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                   Experience Sub-Scores
                 </span>
 
@@ -264,8 +264,8 @@ export default function TravelReviewsModal({
                   { label: 'Safety & Security', score: stats.categoryAverages.safety },
                 ].map((cat) => (
                   <div key={cat.label} className="flex items-center justify-between text-xs">
-                    <span className="text-slate-300">{cat.label}</span>
-                    <span className="font-bold text-amber-300 font-mono">{cat.score.toFixed(1)} / 5</span>
+                    <span className="text-slate-600">{cat.label}</span>
+                    <span className="font-bold text-emerald-800 font-mono">{cat.score.toFixed(1)} / 5</span>
                   </div>
                 ))}
               </div>
@@ -283,8 +283,8 @@ export default function TravelReviewsModal({
                     onClick={() => setSelectedTargetId(d.id)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                       selectedTargetId === d.id
-                        ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
-                        : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'
+                        ? 'bg-emerald-700 text-white font-bold shadow-sm'
+                        : 'bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
                     }`}
                   >
                     {d.label}
@@ -300,23 +300,23 @@ export default function TravelReviewsModal({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search reviews by keyword..."
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-400"
+                  className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 shadow-sm"
                 />
               </div>
             </div>
 
             {/* Sub-Filters: Traveler Type & Sorting */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-white/5">
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-200">
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-                <span className="text-[11px] text-slate-400 font-medium mr-1">Traveler:</span>
+                <span className="text-[11px] text-slate-500 font-medium mr-1">Traveler:</span>
                 {['all', 'Solo', 'Couples', 'Family', 'Friends', 'Business'].map((t) => (
                   <button
                     key={t}
                     onClick={() => setSelectedTravelerType(t)}
                     className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
                       selectedTravelerType === t
-                        ? 'bg-indigo-600 text-white shadow-sm'
-                        : 'bg-white/5 text-slate-400 hover:text-white'
+                        ? 'bg-emerald-700 text-white shadow-sm'
+                        : 'bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
                     }`}
                   >
                     {t === 'all' ? 'All Types' : t}
@@ -325,11 +325,11 @@ export default function TravelReviewsModal({
               </div>
 
               <div className="flex items-center gap-2 text-xs">
-                <span className="text-slate-400">Sort by:</span>
+                <span className="text-slate-500">Sort by:</span>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as any)}
-                  className="bg-slate-950 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none"
+                  className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-800 focus:outline-none focus:border-emerald-600 shadow-sm"
                 >
                   <option value="helpful">Most Helpful</option>
                   <option value="newest">Newest First</option>
@@ -342,11 +342,11 @@ export default function TravelReviewsModal({
           {/* Review Cards Stream */}
           <div className="space-y-4">
             {filteredReviews.length === 0 ? (
-              <div className="text-center py-12 bg-white/[0.02] border border-dashed border-white/10 rounded-3xl">
-                <p className="text-xs text-slate-400 italic">No travel reviews found matching current filter.</p>
+              <div className="text-center py-12 bg-slate-50/70 border border-dashed border-slate-200 rounded-3xl">
+                <p className="text-xs text-slate-500 italic">No travel reviews found matching current filter.</p>
                 <button
                   onClick={() => setShowWriteModal(true)}
-                  className="mt-3 text-xs text-amber-400 hover:text-amber-300 font-semibold"
+                  className="mt-3 text-xs text-emerald-700 hover:text-emerald-800 font-semibold"
                 >
                   + Be the first to review {currentDestinationName}
                 </button>
@@ -358,26 +358,26 @@ export default function TravelReviewsModal({
                 return (
                   <div
                     key={rev.id}
-                    className="bg-white/[0.03] border border-white/10 rounded-2xl p-5 hover:border-amber-400/30 transition-all space-y-3"
+                    className="bg-white border border-slate-200 rounded-2xl p-5 hover:border-emerald-500/50 hover:shadow-md transition-all space-y-3"
                   >
                     {/* Review Author & Header */}
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white text-xs font-bold shadow-md">
+                        <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center justify-center text-xs font-bold shadow-sm">
                           {rev.userName.substring(0, 2).toUpperCase()}
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h4 className="text-xs font-bold text-white">{rev.userName}</h4>
+                            <h4 className="text-xs font-bold text-slate-900">{rev.userName}</h4>
                             {rev.verifiedBooking && (
-                              <span className="text-[10px] font-semibold text-emerald-300 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded-md flex items-center gap-1">
+                              <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md flex items-center gap-1">
                                 <ShieldCheck size={11} />
                                 <span>Verified Traveler</span>
                               </span>
                             )}
                           </div>
-                          <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
-                            <MapPin size={10} className="text-rose-400" />
+                          <p className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
+                            <MapPin size={10} className="text-rose-500" />
                             <span>{rev.targetTitle}</span>
                             <span>·</span>
                             <span>Traveler Type: <strong>{rev.travelerType}</strong></span>
@@ -394,11 +394,11 @@ export default function TravelReviewsModal({
                             <Star
                               key={s}
                               size={14}
-                              className={s <= Math.round(rev.rating) ? 'fill-amber-400 text-amber-400' : 'text-slate-600'}
+                              className={s <= Math.round(rev.rating) ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}
                             />
                           ))}
                         </div>
-                        <span className="text-xs font-bold text-amber-400 bg-amber-950/50 border border-amber-500/30 px-2 py-0.5 rounded-md">
+                        <span className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md">
                           {rev.rating.toFixed(1)}
                         </span>
                       </div>
@@ -406,22 +406,22 @@ export default function TravelReviewsModal({
 
                     {/* Review Title & Body */}
                     <div>
-                      <h5 className="text-sm font-bold text-white mb-1">{rev.title}</h5>
-                      <p className="text-xs text-slate-300 leading-relaxed">{rev.comment}</p>
+                      <h5 className="text-sm font-bold text-slate-900 mb-1">{rev.title}</h5>
+                      <p className="text-xs text-slate-600 leading-relaxed">{rev.comment}</p>
                     </div>
 
                     {/* Pros & Cons Pills */}
                     {(rev.pros.length > 0 || rev.cons.length > 0) && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                         {rev.pros.length > 0 && (
-                          <div className="bg-emerald-950/20 border border-emerald-500/20 rounded-xl p-2.5 text-xs">
-                            <span className="text-[10px] uppercase font-bold text-emerald-400 block mb-1">
+                          <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-2.5 text-xs">
+                            <span className="text-[10px] uppercase font-bold text-emerald-800 block mb-1">
                               👍 Highlights & Pros
                             </span>
                             <ul className="space-y-1">
                               {rev.pros.map((p, idx) => (
-                                <li key={idx} className="text-slate-300 flex items-start gap-1.5">
-                                  <span className="text-emerald-400">•</span>
+                                <li key={idx} className="text-slate-700 flex items-start gap-1.5">
+                                  <span className="text-emerald-600">•</span>
                                   <span>{p}</span>
                                 </li>
                               ))}
@@ -430,14 +430,14 @@ export default function TravelReviewsModal({
                         )}
 
                         {rev.cons.length > 0 && (
-                          <div className="bg-rose-950/20 border border-rose-500/20 rounded-xl p-2.5 text-xs">
-                            <span className="text-[10px] uppercase font-bold text-rose-400 block mb-1">
+                          <div className="bg-rose-50/70 border border-rose-200 rounded-xl p-2.5 text-xs">
+                            <span className="text-[10px] uppercase font-bold text-rose-700 block mb-1">
                               ⚠️ Things to Note / Cons
                             </span>
                             <ul className="space-y-1">
                               {rev.cons.map((c, idx) => (
-                                <li key={idx} className="text-slate-300 flex items-start gap-1.5">
-                                  <span className="text-rose-400">•</span>
+                                <li key={idx} className="text-slate-700 flex items-start gap-1.5">
+                                  <span className="text-rose-500">•</span>
                                   <span>{c}</span>
                                 </li>
                               ))}
@@ -456,15 +456,15 @@ export default function TravelReviewsModal({
                             src={ph}
                             alt="Traveler photo"
                             onClick={() => setActivePhoto(ph)}
-                            className="w-16 h-16 rounded-xl object-cover border border-white/10 cursor-pointer hover:scale-105 transition-transform"
+                            className="w-16 h-16 rounded-xl object-cover border border-slate-200 cursor-pointer hover:scale-105 transition-transform shadow-sm"
                           />
                         ))}
                       </div>
                     )}
 
                     {/* Card Footer Actions */}
-                    <div className="pt-2 border-t border-white/5 flex items-center justify-between text-xs">
-                      <span className="text-slate-500 text-[11px]">
+                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                      <span className="text-slate-400 text-[11px]">
                         Published {new Date(rev.createdAt).toLocaleDateString()}
                       </span>
 
@@ -472,8 +472,8 @@ export default function TravelReviewsModal({
                         onClick={() => handleVote(rev.id)}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all ${
                           isHelpfulVoted
-                            ? 'bg-indigo-600 text-white shadow-md'
-                            : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'
+                            ? 'bg-emerald-700 text-white shadow-sm'
+                            : 'bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
                         }`}
                       >
                         <ThumbsUp size={13} className={isHelpfulVoted ? 'fill-white' : ''} />
@@ -490,22 +490,22 @@ export default function TravelReviewsModal({
 
       {/* ─── WRITE REVIEW MODAL WIZARD ────────────────────────────────────── */}
       {showWriteModal && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-2xl animate-fade-in overflow-y-auto">
-          <div className="relative w-full max-w-lg bg-slate-900 border border-white/15 rounded-3xl p-6 shadow-2xl space-y-4 my-6 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-2 border-b border-white/10">
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="relative w-full max-w-lg bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl space-y-4 my-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <div className="flex items-center gap-2">
-                <Star size={18} className="text-amber-400 fill-amber-400" />
-                <h3 className="text-base font-bold text-white">Write a Travel Review</h3>
+                <Star size={18} className="text-amber-500 fill-amber-500" />
+                <h3 className="text-base font-bold text-slate-900">Write a Travel Review</h3>
               </div>
-              <button onClick={() => setShowWriteModal(false)} className="p-1 text-slate-400 hover:text-white">
+              <button onClick={() => setShowWriteModal(false)} className="p-1 text-slate-400 hover:text-slate-700">
                 <X size={18} />
               </button>
             </div>
 
             <form onSubmit={handleCreateReview} className="space-y-4">
               {/* Star Rating Picker */}
-              <div className="text-center bg-slate-950/60 p-4 rounded-2xl border border-white/5">
-                <span className="text-xs text-slate-400 block mb-2 font-medium">
+              <div className="text-center bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <span className="text-xs text-slate-600 block mb-2 font-medium">
                   Overall Rating for {currentDestinationName}
                 </span>
                 <div className="flex items-center justify-center gap-2">
@@ -523,43 +523,43 @@ export default function TravelReviewsModal({
                         className={`${
                           (newHoverRating || newRating) >= star
                             ? 'fill-amber-400 text-amber-400'
-                            : 'text-slate-600'
+                            : 'text-slate-300'
                         }`}
                       />
                     </button>
                   ))}
-                  <span className="text-lg font-black text-amber-400 ml-2">{newRating}.0</span>
+                  <span className="text-lg font-black text-amber-500 ml-2">{newRating}.0</span>
                 </div>
               </div>
 
               {/* Review Title & Details */}
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Review Headline *</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Review Headline *</label>
                 <input
                   type="text"
                   required
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   placeholder="e.g. Breathtaking scenery and incredible local culture!"
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 shadow-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Detailed Travel Experience *</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Detailed Travel Experience *</label>
                 <textarea
                   rows={3}
                   required
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   placeholder="Share details about attractions, local food, transportation, best times to visit..."
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none resize-none"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 resize-none shadow-sm"
                 />
               </div>
 
               {/* Category Sliders */}
-              <div className="space-y-2 bg-white/[0.02] p-3 rounded-xl border border-white/5">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+              <div className="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">
                   Category Ratings (1 to 5)
                 </span>
                 {[
@@ -570,7 +570,7 @@ export default function TravelReviewsModal({
                   { key: 'safety', label: 'Safety & Comfort' },
                 ].map((cat) => (
                   <div key={cat.key} className="flex items-center justify-between text-xs">
-                    <span className="text-slate-300">{cat.label}</span>
+                    <span className="text-slate-600">{cat.label}</span>
                     <input
                       type="range"
                       min="1"
@@ -583,9 +583,9 @@ export default function TravelReviewsModal({
                           [cat.key]: Number(e.target.value),
                         })
                       }
-                      className="w-32 accent-amber-500"
+                      className="w-32 accent-emerald-600"
                     />
-                    <span className="font-mono text-amber-400 font-bold w-6 text-right">
+                    <span className="font-mono text-emerald-700 font-bold w-6 text-right">
                       {newCategoryScores[cat.key as keyof ReviewCategoryRatings]}
                     </span>
                   </div>
@@ -595,11 +595,11 @@ export default function TravelReviewsModal({
               {/* Traveler Type & Photo */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Traveler Type</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Traveler Type</label>
                   <select
                     value={newTravelerType}
                     onChange={(e) => setNewTravelerType(e.target.value as any)}
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 shadow-sm"
                   >
                     <option value="Solo">Solo</option>
                     <option value="Couples">Couples</option>
@@ -610,13 +610,13 @@ export default function TravelReviewsModal({
                 </div>
 
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Photo URL (Optional)</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Photo URL (Optional)</label>
                   <input
                     type="url"
                     value={newPhotoUrl}
                     onChange={(e) => setNewPhotoUrl(e.target.value)}
                     placeholder="https://images.unsplash..."
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 shadow-sm"
                   />
                 </div>
               </div>
@@ -624,39 +624,39 @@ export default function TravelReviewsModal({
               {/* Pros & Cons */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-emerald-400 mb-1">Pros (comma separated)</label>
+                  <label className="block text-xs font-semibold text-emerald-800 mb-1">Pros (comma separated)</label>
                   <input
                     type="text"
                     value={newProsInput}
                     onChange={(e) => setNewProsInput(e.target.value)}
                     placeholder="Scenery, food"
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 shadow-sm"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs text-rose-400 mb-1">Cons (comma separated)</label>
+                  <label className="block text-xs font-semibold text-rose-700 mb-1">Cons (comma separated)</label>
                   <input
                     type="text"
                     value={newConsInput}
                     onChange={(e) => setNewConsInput(e.target.value)}
                     placeholder="Crowded, pricey"
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 shadow-sm"
                   />
                 </div>
               </div>
 
-              <div className="pt-3 flex items-center justify-end gap-3 border-t border-white/10">
+              <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowWriteModal(false)}
-                  className="px-4 py-2 text-xs text-slate-400 hover:text-white"
+                  className="px-4 py-2 text-xs font-medium text-slate-500 hover:text-slate-800 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold shadow-lg"
+                  className="px-5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-md shadow-emerald-700/20 transition-all hover:scale-105 active:scale-95"
                 >
                   Publish Travel Review
                 </button>
@@ -670,13 +670,13 @@ export default function TravelReviewsModal({
       {activePhoto && (
         <div
           onClick={() => setActivePhoto(null)}
-          className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in"
+          className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-fade-in"
         >
           <div className="relative max-w-3xl w-full">
             <img src={activePhoto} alt="Full resolution" className="w-full rounded-2xl shadow-2xl object-contain max-h-[85vh] mx-auto" />
             <button
               onClick={() => setActivePhoto(null)}
-              className="absolute top-4 right-4 p-2 rounded-full bg-black/70 text-white"
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/90 text-slate-800 hover:bg-white shadow-lg"
             >
               <X size={20} />
             </button>
