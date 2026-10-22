@@ -381,26 +381,26 @@ export default function TripWorkspaceModal({
   const budgetSummary = calculateTripBudget(trip.budgetTarget, trip.activities || [], debtSummary.totalSpent);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/90 backdrop-blur-2xl animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-6xl bg-slate-900/95 border border-white/15 rounded-3xl shadow-2xl overflow-hidden my-4 flex flex-col max-h-[95vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+      <div className="relative w-full max-w-6xl bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden my-4 flex flex-col max-h-[95vh]">
         {/* Workspace Top Header */}
-        <div className="px-6 py-4 border-b border-white/10 bg-slate-900/90 flex flex-wrap items-center justify-between gap-4">
+        <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/80 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 flex-shrink-0">
+            <div className="w-11 h-11 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 shadow-sm flex-shrink-0">
               <MapPin size={22} />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-white">{trip.title}</h2>
-                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <h2 className="text-lg font-bold text-slate-900">{trip.title}</h2>
+                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
                   {trip.destination}
                 </span>
               </div>
-              <p className="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
-                <Calendar size={12} className="text-amber-400" />
+              <p className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
+                <Calendar size={12} className="text-amber-500" />
                 <span>{trip.startDate} to {trip.endDate}</span>
                 <span>·</span>
-                <Users size={12} className="text-indigo-400" />
+                <Users size={12} className="text-emerald-700" />
                 <span>{trip.members?.length || 1} Collaborators</span>
               </p>
             </div>
@@ -412,7 +412,7 @@ export default function TripWorkspaceModal({
               {trip.members?.slice(0, 5).map((m) => (
                 <div
                   key={m.id}
-                  className="w-8 h-8 rounded-full bg-indigo-600 border-2 border-slate-900 flex items-center justify-center text-[10px] font-bold text-white"
+                  className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 border-2 border-white flex items-center justify-center text-[10px] font-bold shadow-sm"
                   title={`${m.name} (${m.role})`}
                 >
                   {m.name.substring(0, 2).toUpperCase()}
@@ -422,7 +422,7 @@ export default function TripWorkspaceModal({
 
             <button
               onClick={() => setShowShareModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 border border-indigo-500/30 text-xs font-semibold transition-all hover:scale-105 active:scale-95"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-semibold transition-all hover:scale-105 active:scale-95 shadow-sm"
             >
               <Plus size={13} />
               <span>Invite / Share</span>
@@ -430,16 +430,16 @@ export default function TripWorkspaceModal({
 
             <button
               onClick={() => setShowExportModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 border border-white/10 text-xs font-semibold transition-all hover:scale-105 active:scale-95"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-semibold transition-all hover:scale-105 active:scale-95 shadow-sm"
               title="Print itinerary & export travel pass voucher"
             >
-              <Printer size={13} className="text-indigo-400" />
+              <Printer size={13} className="text-slate-600" />
               <span>Export Pass</span>
             </button>
 
             <button
               onClick={() => setShowShareModal(true)}
-              className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition-colors"
+              className="p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-colors"
               title="Share trip & manage permissions"
             >
               <Share2 size={16} />
@@ -447,7 +447,7 @@ export default function TripWorkspaceModal({
 
             <button
               onClick={onClose}
-              className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-white/10"
+              className="p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-colors"
             >
               <X size={20} />
             </button>
@@ -455,7 +455,7 @@ export default function TripWorkspaceModal({
         </div>
 
         {/* Feature Tabs Navigation */}
-        <div className="px-6 py-3 border-b border-white/10 bg-slate-950/50 flex flex-wrap items-center gap-2 overflow-x-auto">
+        <div className="px-6 py-3 border-b border-slate-200 bg-slate-50/50 flex flex-wrap items-center gap-2 overflow-x-auto">
           {[
             { id: 'itinerary', label: 'Itinerary & Calendar', icon: Calendar },
             { id: 'chat', label: `Group Chat (${chatMessages.length})`, icon: MessageSquare },
@@ -472,8 +472,8 @@ export default function TripWorkspaceModal({
                 onClick={() => setActiveTab(tab.id as WorkspaceTab)}
                 className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                   activeTab === tab.id
-                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
-                    : 'bg-white/[0.04] text-slate-300 hover:bg-white/[0.08] border border-white/5'
+                    ? 'bg-emerald-700 text-white shadow-sm'
+                    : 'bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200'
                 }`}
               >
                 <Icon size={14} />
@@ -489,34 +489,34 @@ export default function TripWorkspaceModal({
           {activeTab === 'itinerary' && (
             <div className="space-y-6">
               {/* Dynamic Budget Sync & Meter */}
-              <div className="bg-gradient-to-r from-slate-900/90 via-indigo-950/40 to-slate-900/90 border border-indigo-500/20 rounded-2xl p-5 shadow-xl">
+              <div className="bg-slate-50/70 border border-slate-200 rounded-2xl p-5 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
                   <div className="flex items-center gap-2.5">
-                    <div className="p-2 rounded-xl bg-indigo-600/30 text-indigo-400 border border-indigo-500/30">
+                    <div className="p-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200">
                       <DollarSign size={18} />
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                      <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                         <span>Trip Budget & Activity Cost Tracker</span>
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                           budgetSummary.isOverBudget
-                            ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
-                            : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                            ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                            : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                         }`}>
                           {budgetSummary.isOverBudget ? 'Budget Exceeded' : 'On Track'}
                         </span>
                       </h4>
-                      <p className="text-xs text-slate-400">
-                        Target: <strong className="text-white">${budgetSummary.budgetTarget.toLocaleString()}</strong> ·
-                        Activities Planned: <strong className="text-indigo-300">${budgetSummary.totalActivitiesCost.toLocaleString()}</strong> ·
-                        Split Bills Logged: <strong className="text-purple-300">${debtSummary.totalSpent.toLocaleString()}</strong>
+                      <p className="text-xs text-slate-500">
+                        Target: <strong className="text-slate-900">${budgetSummary.budgetTarget.toLocaleString()}</strong> ·
+                        Activities Planned: <strong className="text-emerald-700">${budgetSummary.totalActivitiesCost.toLocaleString()}</strong> ·
+                        Split Bills Logged: <strong className="text-purple-700">${debtSummary.totalSpent.toLocaleString()}</strong>
                       </p>
                     </div>
                   </div>
 
                   <div className="text-right">
-                    <span className="text-xs text-slate-400 block">Remaining Balance</span>
-                    <span className={`text-lg font-black ${budgetSummary.remainingBudget >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    <span className="text-xs text-slate-500 block">Remaining Balance</span>
+                    <span className={`text-lg font-black ${budgetSummary.remainingBudget >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
                       ${budgetSummary.remainingBudget.toLocaleString()}
                     </span>
                   </div>
@@ -524,18 +524,18 @@ export default function TripWorkspaceModal({
 
                 {/* Progress Meter */}
                 <div className="space-y-1.5">
-                  <div className="flex items-center justify-between text-[11px] text-slate-400">
+                  <div className="flex items-center justify-between text-[11px] text-slate-500">
                     <span>Budget Consumption</span>
-                    <span className="font-bold text-white">{budgetSummary.percentUsed}% used</span>
+                    <span className="font-bold text-slate-900">{budgetSummary.percentUsed}% used</span>
                   </div>
-                  <div className="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-white/10 p-0.5">
+                  <div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden p-0.5">
                     <div
                       className={`h-full rounded-full transition-all duration-500 ${
                         budgetSummary.percentUsed > 100
-                          ? 'bg-gradient-to-r from-rose-500 to-red-600'
+                          ? 'bg-rose-500'
                           : budgetSummary.percentUsed > 75
-                          ? 'bg-gradient-to-r from-amber-500 to-indigo-500'
-                          : 'bg-gradient-to-r from-indigo-500 to-emerald-400'
+                          ? 'bg-amber-500'
+                          : 'bg-emerald-600'
                       }`}
                       style={{ width: `${Math.min(budgetSummary.percentUsed, 100)}%` }}
                     />
@@ -550,8 +550,8 @@ export default function TripWorkspaceModal({
                     onClick={() => setSelectedDayFilter(0)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                       selectedDayFilter === 0
-                        ? 'bg-indigo-600 text-white shadow-md'
-                        : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'
+                        ? 'bg-emerald-700 text-white shadow-sm'
+                        : 'bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
                     }`}
                   >
                     All Days ({(trip.activities || []).length})
@@ -564,8 +564,8 @@ export default function TripWorkspaceModal({
                         onClick={() => setSelectedDayFilter(d)}
                         className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
                           selectedDayFilter === d
-                            ? 'bg-indigo-600 text-white shadow-md'
-                            : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'
+                            ? 'bg-emerald-700 text-white shadow-sm'
+                            : 'bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
                         }`}
                       >
                         Day {d} {count > 0 && <span className="opacity-75">({count})</span>}
@@ -586,10 +586,10 @@ export default function TripWorkspaceModal({
                       setAiItineraryResult(res);
                       setShowAiItineraryModal(true);
                     }}
-                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-pink-500/20 to-indigo-500/20 hover:from-pink-500/30 hover:to-indigo-500/30 text-pink-300 border border-pink-500/30 text-xs font-bold shadow-md transition-all hover:scale-105 active:scale-95"
+                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold shadow-sm transition-all hover:scale-105 active:scale-95"
                     title="Generate custom day schedules using Voyana AI"
                   >
-                    <Sparkles size={14} className="text-pink-400" />
+                    <Sparkles size={14} className="text-emerald-700" />
                     <span>AI Generate Itinerary</span>
                   </button>
 
@@ -598,7 +598,7 @@ export default function TripWorkspaceModal({
                       if (selectedDayFilter > 0) setActDay(selectedDayFilter);
                       setShowAddActivity(true);
                     }}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-md transition-all hover:scale-105 active:scale-95"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-md shadow-emerald-700/20 transition-all hover:scale-105 active:scale-95"
                   >
                     <Plus size={14} />
                     <span>Add Activity</span>
@@ -615,13 +615,13 @@ export default function TripWorkspaceModal({
                     if (selectedDayFilter !== 0 && dayActivities.length === 0 && dayNum > 5) return null;
 
                     return (
-                      <div key={dayNum} className="bg-white/[0.02] border border-white/5 rounded-2xl p-5 hover:border-white/10 transition-all">
-                        <div className="flex items-center justify-between mb-4 pb-2 border-b border-white/5">
+                      <div key={dayNum} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all">
+                        <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
                           <div className="flex items-center gap-2">
-                            <span className="w-7 h-7 rounded-lg bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 flex items-center justify-center text-xs font-bold">
+                            <span className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center text-xs font-bold shadow-sm">
                               D{dayNum}
                             </span>
-                            <h4 className="text-sm font-bold text-white">Day {dayNum} Schedule</h4>
+                            <h4 className="text-sm font-bold text-slate-900">Day {dayNum} Schedule</h4>
                             <span className="text-xs text-slate-500">· {dayActivities.length} activities planned</span>
                           </div>
 
@@ -630,7 +630,7 @@ export default function TripWorkspaceModal({
                               setActDay(dayNum);
                               setShowAddActivity(true);
                             }}
-                            className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1"
+                            className="text-xs text-emerald-700 hover:text-emerald-800 font-semibold flex items-center gap-1"
                           >
                             <Plus size={12} />
                             <span>Add to Day {dayNum}</span>
@@ -638,14 +638,14 @@ export default function TripWorkspaceModal({
                         </div>
 
                         {dayActivities.length === 0 ? (
-                          <div className="text-center py-6 border border-dashed border-white/5 rounded-xl">
+                          <div className="text-center py-6 border border-dashed border-slate-200 rounded-xl bg-slate-50/50">
                             <p className="text-xs text-slate-500 italic mb-2">No activities scheduled for Day {dayNum}.</p>
                             <button
                               onClick={() => {
                                 setActDay(dayNum);
                                 setShowAddActivity(true);
                               }}
-                              className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold"
+                              className="text-xs text-emerald-700 hover:text-emerald-800 font-semibold"
                             >
                               + Plan first activity
                             </button>
@@ -655,12 +655,12 @@ export default function TripWorkspaceModal({
                             {dayActivities.map((act) => {
                               const isCompleted = act.isCompleted || false;
                               const catColors: Record<string, string> = {
-                                Sightseeing: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30',
-                                Dining: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
-                                Transport: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30',
-                                Adventure: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
-                                Culture: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
-                                Relax: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+                                Sightseeing: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+                                Dining: 'bg-amber-50 text-amber-800 border-amber-200',
+                                Transport: 'bg-sky-50 text-sky-800 border-sky-200',
+                                Adventure: 'bg-teal-50 text-teal-800 border-teal-200',
+                                Culture: 'bg-purple-50 text-purple-800 border-purple-200',
+                                Relax: 'bg-rose-50 text-rose-800 border-rose-200',
                               };
                               const badgeStyle = catColors[act.category || 'Sightseeing'] || catColors.Sightseeing;
 
@@ -669,8 +669,8 @@ export default function TripWorkspaceModal({
                                   key={act.id}
                                   className={`border rounded-xl p-3.5 flex flex-col justify-between gap-3 transition-all ${
                                     isCompleted
-                                      ? 'bg-white/[0.01] border-white/5 opacity-60'
-                                      : 'bg-white/[0.04] border-white/10 hover:border-indigo-400/40'
+                                      ? 'bg-slate-50/60 border-slate-200 opacity-60'
+                                      : 'bg-white border-slate-200 hover:border-emerald-500/50 shadow-sm hover:shadow-md'
                                   }`}
                                 >
                                   <div>
@@ -678,11 +678,11 @@ export default function TripWorkspaceModal({
                                       <div className="flex items-center gap-2">
                                         <button
                                           onClick={() => handleToggleActivity(act.id)}
-                                          className="text-slate-400 hover:text-indigo-400 transition-colors"
+                                          className="text-slate-400 hover:text-emerald-700 transition-colors"
                                           title={isCompleted ? 'Mark as pending' : 'Mark as done'}
                                         >
                                           {isCompleted ? (
-                                            <CheckCircle2 size={18} className="text-emerald-400" />
+                                            <CheckCircle2 size={18} className="text-emerald-600" />
                                           ) : (
                                             <Circle size={18} />
                                           )}
@@ -693,54 +693,54 @@ export default function TripWorkspaceModal({
                                       </div>
 
                                       <div className="flex items-center gap-1.5">
-                                        <span className="text-[11px] font-mono text-indigo-300 font-semibold bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-500/20 flex items-center gap-1">
-                                          <Clock size={10} />
+                                        <span className="text-[11px] font-mono text-slate-700 font-semibold bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200 flex items-center gap-1">
+                                          <Clock size={10} className="text-slate-500" />
                                           <span>{act.timeSlot || 'Anytime'}</span>
                                         </span>
                                         {act.cost ? (
-                                          <span className="text-xs font-bold text-emerald-300 bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                                          <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                                             ${act.cost}
                                           </span>
                                         ) : null}
                                       </div>
                                     </div>
 
-                                    <h5 className={`text-xs font-bold text-white ${isCompleted ? 'line-through text-slate-400' : ''}`}>
+                                    <h5 className={`text-xs font-bold text-slate-900 ${isCompleted ? 'line-through text-slate-400' : ''}`}>
                                       {act.title}
                                     </h5>
 
                                     {act.locationName && (
-                                      <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-1">
-                                        <MapPin size={11} className="text-rose-400 flex-shrink-0" />
+                                      <p className="text-[11px] text-slate-500 flex items-center gap-1 mt-1">
+                                        <MapPin size={11} className="text-rose-500 flex-shrink-0" />
                                         <span className="truncate">{act.locationName}</span>
                                       </p>
                                     )}
 
                                     {act.description && (
-                                      <p className="text-[11px] text-slate-400 mt-1 line-clamp-2">
+                                      <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
                                         {act.description}
                                       </p>
                                     )}
                                   </div>
 
                                   {/* Activity Card Actions */}
-                                  <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px]">
+                                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
                                     {act.cost && act.cost > 0 ? (
                                       <button
                                         onClick={() => handleConvertActivityToExpense(act)}
-                                        className="flex items-center gap-1 text-indigo-300 hover:text-indigo-200 transition-colors font-medium"
+                                        className="flex items-center gap-1 text-emerald-700 hover:text-emerald-800 transition-colors font-medium"
                                         title="Split this activity cost with group members"
                                       >
                                         <DollarSign size={11} />
                                         <span>Split as Bill</span>
                                       </button>
                                     ) : (
-                                      <span className="text-slate-500 text-[10px]">Free activity</span>
+                                      <span className="text-slate-400 text-[10px]">Free activity</span>
                                     )}
 
                                     <button
                                       onClick={() => handleDeleteActivity(act.id, act.title)}
-                                      className="text-slate-500 hover:text-rose-400 p-1 transition-colors ml-auto"
+                                      className="text-slate-400 hover:text-rose-600 p-1 transition-colors ml-auto"
                                       title="Delete activity"
                                     >
                                       <Trash2 size={13} />
@@ -760,16 +760,16 @@ export default function TripWorkspaceModal({
 
           {/* 2. GROUP CHAT TAB */}
           {activeTab === 'chat' && (
-            <div className="flex flex-col h-[520px] bg-slate-950/60 border border-white/10 rounded-2xl overflow-hidden">
+            <div className="flex flex-col h-[520px] bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
               {/* Messages stream */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/50">
                 {chatMessages.map((msg) => {
                   const isMe = msg.senderName === currentUser.name;
                   if (msg.messageType === 'activity_log') {
                     return (
                       <div key={msg.id} className="text-center py-1">
-                        <span className="inline-block text-[11px] text-slate-400 bg-white/[0.04] border border-white/5 px-3 py-1 rounded-full">
-                          ⚡ <strong className="text-indigo-300">{msg.senderName}</strong> {msg.message}
+                        <span className="inline-block text-[11px] text-slate-600 bg-white border border-slate-200 px-3 py-1 rounded-full shadow-xs">
+                          ⚡ <strong className="text-emerald-700">{msg.senderName}</strong> {msg.message}
                         </span>
                       </div>
                     );
@@ -780,19 +780,19 @@ export default function TripWorkspaceModal({
                       key={msg.id}
                       className={`flex items-start gap-2.5 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}
                     >
-                      <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-emerald-700 flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0 shadow-sm">
                         {msg.senderName.substring(0, 2).toUpperCase()}
                       </div>
                       <div className={`max-w-md rounded-2xl p-3.5 text-xs ${
                         isMe
-                          ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-tr-none'
-                          : 'bg-white/[0.06] border border-white/10 text-slate-200 rounded-tl-none'
+                          ? 'bg-emerald-700 text-white rounded-tr-none shadow-sm'
+                          : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none shadow-xs'
                       }`}>
-                        <div className="flex items-center justify-between gap-3 mb-1 text-[10px] opacity-75">
+                        <div className="flex items-center justify-between gap-3 mb-1 text-[10px] opacity-80">
                           <span className="font-semibold">{msg.senderName}</span>
                           <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
-                        <p>{msg.message}</p>
+                        <p className="leading-relaxed">{msg.message}</p>
                       </div>
                     </div>
                   );
@@ -800,17 +800,17 @@ export default function TripWorkspaceModal({
               </div>
 
               {/* Chat Composer */}
-              <form onSubmit={handleSendMessage} className="p-3 border-t border-white/10 bg-slate-900 flex items-center gap-2">
+              <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-200 bg-white flex items-center gap-2">
                 <input
                   type="text"
                   value={newChatMessage}
                   onChange={(e) => setNewChatMessage(e.target.value)}
                   placeholder={`Message your trip group as ${currentUser.name}...`}
-                  className="flex-1 bg-slate-950 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-400"
+                  className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 shadow-sm"
                 />
                 <button
                   type="submit"
-                  className="p-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-md flex items-center justify-center"
+                  className="p-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm shadow-emerald-700/20 flex items-center justify-center transition-all hover:scale-105 active:scale-95"
                 >
                   <Send size={15} />
                 </button>
@@ -823,12 +823,12 @@ export default function TripWorkspaceModal({
             <div className="space-y-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-base font-bold text-white">Trip Task Board</h3>
-                  <p className="text-xs text-slate-400">Assign preparation tasks and track completion</p>
+                  <h3 className="text-base font-bold text-slate-900">Trip Task Board</h3>
+                  <p className="text-xs text-slate-500">Assign preparation tasks and track completion</p>
                 </div>
                 <button
                   onClick={() => setShowAddTask(true)}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-sm shadow-emerald-700/20 transition-all hover:scale-105 active:scale-95"
                 >
                   <Plus size={14} />
                   <span>Add Task</span>
@@ -840,14 +840,14 @@ export default function TripWorkspaceModal({
                 {(['todo', 'in_progress', 'completed'] as TaskStatus[]).map((colStatus) => {
                   const colTasks = tasks.filter((t) => t.status === colStatus);
                   const titles: Record<TaskStatus, { label: string; color: string }> = {
-                    todo: { label: 'To-Do', color: 'border-slate-500/30 text-slate-300' },
-                    in_progress: { label: 'In Progress', color: 'border-amber-500/30 text-amber-300' },
-                    completed: { label: 'Completed', color: 'border-emerald-500/30 text-emerald-300' },
+                    todo: { label: 'To-Do', color: 'border-slate-300 bg-slate-100 text-slate-700' },
+                    in_progress: { label: 'In Progress', color: 'border-amber-200 bg-amber-50 text-amber-800' },
+                    completed: { label: 'Completed', color: 'border-emerald-200 bg-emerald-50 text-emerald-800' },
                   };
 
                   return (
-                    <div key={colStatus} className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 flex flex-col min-h-[300px]">
-                      <div className="flex items-center justify-between pb-3 border-b border-white/5 mb-3">
+                    <div key={colStatus} className="bg-slate-50/70 border border-slate-200 rounded-2xl p-4 flex flex-col min-h-[300px]">
+                      <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-3">
                         <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${titles[colStatus].color}`}>
                           {titles[colStatus].label} ({colTasks.length})
                         </span>
@@ -858,7 +858,7 @@ export default function TripWorkspaceModal({
                           <div
                             key={t.id}
                             onClick={() => handleToggleTask(t)}
-                            className="bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 rounded-xl p-3 cursor-pointer transition-all space-y-2 group"
+                            className="bg-white hover:bg-slate-50/80 border border-slate-200 hover:border-emerald-500/50 rounded-xl p-3 cursor-pointer transition-all space-y-2 group shadow-sm"
                             title="Click to cycle status"
                           >
                             <div className="flex items-start gap-2">
@@ -866,14 +866,14 @@ export default function TripWorkspaceModal({
                                 type="checkbox"
                                 checked={t.status === 'completed'}
                                 readOnly
-                                className="mt-0.5 rounded border-white/20 text-indigo-600"
+                                className="mt-0.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                               />
-                              <h5 className={`text-xs font-medium text-white flex-1 ${t.status === 'completed' ? 'line-through text-slate-400' : ''}`}>
+                              <h5 className={`text-xs font-medium text-slate-900 flex-1 ${t.status === 'completed' ? 'line-through text-slate-400' : ''}`}>
                                 {t.title}
                               </h5>
                             </div>
-                            <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-white/5">
-                              <span className="font-semibold text-indigo-300">👤 {t.assignedTo || 'Unassigned'}</span>
+                            <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-100">
+                              <span className="font-semibold text-emerald-700">👤 {t.assignedTo || 'Unassigned'}</span>
                               {t.dueDate && <span>Due {t.dueDate}</span>}
                             </div>
                           </div>
@@ -891,12 +891,12 @@ export default function TripWorkspaceModal({
             <div className="space-y-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-base font-bold text-white">Group Decision Polls</h3>
-                  <p className="text-xs text-slate-400">Vote on restaurants, activities, and group decisions</p>
+                  <h3 className="text-base font-bold text-slate-900">Group Decision Polls</h3>
+                  <p className="text-xs text-slate-500">Vote on restaurants, activities, and group decisions</p>
                 </div>
                 <button
                   onClick={() => setShowAddPoll(true)}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-sm shadow-emerald-700/20 transition-all hover:scale-105 active:scale-95"
                 >
                   <Plus size={14} />
                   <span>Create Poll</span>
@@ -905,10 +905,10 @@ export default function TripWorkspaceModal({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {polls.map((poll) => (
-                  <div key={poll.id} className="bg-white/[0.03] border border-white/10 rounded-2xl p-5 space-y-4">
+                  <div key={poll.id} className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4 shadow-sm">
                     <div className="flex items-start justify-between gap-2">
-                      <h4 className="text-sm font-bold text-white">{poll.question}</h4>
-                      <span className="text-[10px] text-slate-400 bg-white/5 px-2 py-0.5 rounded">
+                      <h4 className="text-sm font-bold text-slate-900">{poll.question}</h4>
+                      <span className="text-[10px] text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded font-medium">
                         {poll.totalVotes} votes
                       </span>
                     </div>
@@ -924,22 +924,22 @@ export default function TripWorkspaceModal({
                             onClick={() => handleVote(poll.id, optIdx)}
                             className={`p-3 rounded-xl border cursor-pointer transition-all relative overflow-hidden ${
                               hasVotedThis
-                                ? 'bg-indigo-600/20 border-indigo-500/50'
-                                : 'bg-white/[0.03] hover:bg-white/[0.07] border-white/10'
+                                ? 'bg-emerald-50 border-emerald-500/50 shadow-sm'
+                                : 'bg-white hover:bg-slate-50 border-slate-200'
                             }`}
                           >
                             {/* Vote bar fill */}
                             <div
-                              className="absolute top-0 bottom-0 left-0 bg-indigo-600/30 transition-all duration-500"
+                              className="absolute top-0 bottom-0 left-0 bg-emerald-500/20 transition-all duration-500"
                               style={{ width: `${pct}%` }}
                             />
 
                             <div className="relative flex items-center justify-between z-10 text-xs">
-                              <span className="font-medium text-white flex items-center gap-1.5">
-                                {hasVotedThis && <Check size={13} className="text-emerald-400" />}
+                              <span className="font-medium text-slate-900 flex items-center gap-1.5">
+                                {hasVotedThis && <Check size={13} className="text-emerald-600 font-bold" />}
                                 {opt.text}
                               </span>
-                              <span className="text-slate-300 font-bold">{pct}% ({opt.votes})</span>
+                              <span className="text-slate-600 font-bold">{pct}% ({opt.votes})</span>
                             </div>
                           </div>
                         );
@@ -956,13 +956,13 @@ export default function TripWorkspaceModal({
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-base font-bold text-white">Group Expense Splitter</h3>
-                  <p className="text-xs text-slate-400">Total Group Spend: ${debtSummary.totalSpent} USD</p>
+                  <h3 className="text-base font-bold text-slate-900">Group Expense Splitter</h3>
+                  <p className="text-xs text-slate-500">Total Group Spend: ${debtSummary.totalSpent} USD</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => downloadTripTransactionsCSV(expenses, debtSummary.settlements, trip?.title || 'Trip')}
-                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-indigo-300 border border-white/10 text-xs font-semibold transition-all hover:scale-105 active:scale-95"
+                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold transition-all hover:scale-105 active:scale-95 shadow-xs"
                     title="Export all expenses & debt settlement to CSV (VPM-76)"
                   >
                     <Download size={14} />
@@ -970,7 +970,7 @@ export default function TripWorkspaceModal({
                   </button>
                   <button
                     onClick={() => setShowAddExpense(true)}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-sm shadow-emerald-700/20 transition-all hover:scale-105 active:scale-95"
                   >
                     <Plus size={14} />
                     <span>Log Expense</span>
@@ -979,24 +979,24 @@ export default function TripWorkspaceModal({
               </div>
 
               {/* Debt Settlement Banner ("Who Owes Who") */}
-              <div className="bg-gradient-to-r from-indigo-950/60 to-purple-950/60 border border-indigo-500/30 rounded-2xl p-5">
-                <h4 className="text-xs font-bold text-indigo-300 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                  <Sparkles size={14} />
+              <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-5 shadow-xs">
+                <h4 className="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                  <Sparkles size={14} className="text-emerald-700" />
                   <span>Smart Settlement Summary (Who Owes Whom)</span>
                 </h4>
 
                 {debtSummary.settlements.length === 0 ? (
-                  <p className="text-xs text-slate-400">All trip balances are completely settled!</p>
+                  <p className="text-xs text-slate-500">All trip balances are completely settled!</p>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                     {debtSummary.settlements.map((s, idx) => (
-                      <div key={idx} className="bg-black/40 border border-white/10 rounded-xl p-3 text-xs flex items-center justify-between">
+                      <div key={idx} className="bg-white border border-emerald-200/80 rounded-xl p-3 text-xs flex items-center justify-between shadow-xs">
                         <div>
-                          <span className="text-rose-300 font-semibold">{s.from}</span>
-                          <span className="text-slate-500 mx-1">owes</span>
-                          <span className="text-emerald-300 font-semibold">{s.to}</span>
+                          <span className="text-rose-600 font-semibold">{s.from}</span>
+                          <span className="text-slate-400 mx-1">owes</span>
+                          <span className="text-emerald-700 font-semibold">{s.to}</span>
                         </div>
-                        <span className="font-bold text-white">${s.amount}</span>
+                        <span className="font-bold text-slate-900">${s.amount}</span>
                       </div>
                     ))}
                   </div>
@@ -1005,18 +1005,18 @@ export default function TripWorkspaceModal({
 
               {/* Expenses List */}
               <div className="space-y-3">
-                <h4 className="text-xs font-bold text-slate-400">Itemized Bill History</h4>
+                <h4 className="text-xs font-bold text-slate-500">Itemized Bill History</h4>
                 {expenses.map((exp) => (
-                  <div key={exp.id} className="bg-white/[0.03] border border-white/10 rounded-xl p-3.5 flex items-center justify-between">
+                  <div key={exp.id} className="bg-white border border-slate-200 rounded-xl p-3.5 flex items-center justify-between shadow-xs">
                     <div>
-                      <h5 className="text-xs font-bold text-white">{exp.title}</h5>
-                      <p className="text-[11px] text-slate-400">
-                        Paid by <span className="text-indigo-300 font-semibold">{exp.paidBy}</span> · Split equally ({exp.splitAmong.length} pax)
+                      <h5 className="text-xs font-bold text-slate-900">{exp.title}</h5>
+                      <p className="text-[11px] text-slate-500">
+                        Paid by <span className="text-emerald-700 font-semibold">{exp.paidBy}</span> · Split equally ({exp.splitAmong.length} pax)
                       </p>
                     </div>
                     <div className="text-right">
-                      <span className="text-sm font-bold text-white">${exp.amount}</span>
-                      <span className="text-[10px] text-slate-400 block">${(exp.amount / exp.splitAmong.length).toFixed(1)} / pax</span>
+                      <span className="text-sm font-bold text-slate-900">${exp.amount}</span>
+                      <span className="text-[10px] text-slate-500 block">${(exp.amount / exp.splitAmong.length).toFixed(1)} / pax</span>
                     </div>
                   </div>
                 ))}
@@ -1029,28 +1029,28 @@ export default function TripWorkspaceModal({
             <div className="space-y-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-base font-bold text-white">Travel Documents Vault</h3>
-                  <p className="text-xs text-slate-400">Shared boarding passes, vouchers & passport copies</p>
+                  <h3 className="text-base font-bold text-slate-900">Travel Documents Vault</h3>
+                  <p className="text-xs text-slate-500">Shared boarding passes, vouchers & passport copies</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {documents.map((doc) => (
-                  <div key={doc.id} className="bg-white/[0.03] border border-white/10 rounded-2xl p-4 flex items-center justify-between">
+                  <div key={doc.id} className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-sm">
                     <div className="flex items-center gap-3">
-                      <div className="p-2.5 rounded-xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/30">
+                      <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200">
                         <FileText size={20} />
                       </div>
                       <div>
-                        <h5 className="text-xs font-bold text-white">{doc.documentName}</h5>
-                        <p className="text-[11px] text-slate-400">
+                        <h5 className="text-xs font-bold text-slate-900">{doc.documentName}</h5>
+                        <p className="text-[11px] text-slate-500">
                           Uploaded by {doc.uploaderName} · {doc.fileSizeKb} KB
                         </p>
                       </div>
                     </div>
                     <button
                       onClick={() => alert(`Downloading verified document: ${doc.documentName}`)}
-                      className="px-3 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-xs font-semibold text-indigo-300 border border-white/10"
+                      className="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-xs font-semibold text-slate-700 border border-slate-200 shadow-xs transition-colors"
                     >
                       Download
                     </button>
@@ -1066,18 +1066,18 @@ export default function TripWorkspaceModal({
               {/* Header & Upload Button */}
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-base font-bold text-white flex items-center gap-2">
-                    <Camera size={20} className="text-indigo-400" />
+                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <Camera size={20} className="text-emerald-700" />
                     <span>Trip Memories & Shared Photo Journal</span>
                   </h3>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-500">
                     Crowdsourced travel photo albums, polaroids & shared journal entries
                   </p>
                 </div>
 
                 <button
                   onClick={() => setShowAddMemory(true)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-pink-600 to-indigo-600 hover:from-pink-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/20 transition-all hover:scale-105 active:scale-95"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-sm shadow-emerald-700/20 transition-all hover:scale-105 active:scale-95"
                 >
                   <Camera size={14} />
                   <span>Post Photo Memory</span>
@@ -1090,8 +1090,8 @@ export default function TripWorkspaceModal({
                   onClick={() => setSelectedTagFilter('all')}
                   className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all ${
                     selectedTagFilter === 'all'
-                      ? 'bg-indigo-600 text-white shadow-md'
-                      : 'bg-white/5 text-slate-400 hover:text-white'
+                      ? 'bg-emerald-700 text-white shadow-sm'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
                   }`}
                 >
                   All Memories ({memories.length})
@@ -1102,8 +1102,8 @@ export default function TripWorkspaceModal({
                     onClick={() => setSelectedTagFilter(tag)}
                     className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
                       selectedTagFilter === tag
-                        ? 'bg-indigo-600 text-white shadow-md'
-                        : 'bg-white/5 text-slate-400 hover:text-white'
+                        ? 'bg-emerald-700 text-white shadow-sm'
+                        : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
                     }`}
                   >
                     #{tag}
@@ -1113,17 +1113,17 @@ export default function TripWorkspaceModal({
 
               {/* Photos Grid */}
               {memories.length === 0 ? (
-                <div className="text-center py-16 bg-white/[0.02] border border-dashed border-white/10 rounded-3xl">
-                  <div className="w-14 h-14 rounded-2xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center mx-auto mb-3">
+                <div className="text-center py-16 bg-slate-50/70 border border-dashed border-slate-200 rounded-3xl">
+                  <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center mx-auto mb-3">
                     <Camera size={28} />
                   </div>
-                  <h4 className="text-sm font-bold text-white mb-1">No Travel Memories Yet</h4>
-                  <p className="text-xs text-slate-400 max-w-sm mx-auto mb-4">
+                  <h4 className="text-sm font-bold text-slate-900 mb-1">No Travel Memories Yet</h4>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto mb-4">
                     Capture and share unforgettable trip highlights, selfies, food shots and sunset polaroids with your group!
                   </p>
                   <button
                     onClick={() => setShowAddMemory(true)}
-                    className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold"
+                    className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-sm shadow-emerald-700/20"
                   >
                     Upload First Photo
                   </button>
@@ -1137,12 +1137,12 @@ export default function TripWorkspaceModal({
                       return (
                         <div
                           key={mem.id}
-                          className="group bg-white/[0.03] border border-white/10 rounded-2xl overflow-hidden hover:border-indigo-500/40 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all flex flex-col justify-between"
+                          className="group bg-white border border-slate-200 rounded-2xl overflow-hidden hover:border-emerald-500/50 hover:shadow-xl hover:shadow-emerald-950/5 transition-all flex flex-col justify-between shadow-sm"
                         >
                           {/* Image Container with Hover zoom */}
                           <div
                             onClick={() => setActivePhotoViewer(mem)}
-                            className="relative aspect-4/3 w-full bg-slate-950 overflow-hidden cursor-pointer"
+                            className="relative aspect-4/3 w-full bg-slate-900 overflow-hidden cursor-pointer"
                           >
                             <img
                               src={mem.imageUrl}
@@ -1154,8 +1154,8 @@ export default function TripWorkspaceModal({
 
                             {/* Location Pill */}
                             {mem.locationName && (
-                              <div className="absolute top-3 left-3 bg-slate-950/80 backdrop-blur-md border border-white/10 text-slate-200 px-2.5 py-1 rounded-lg text-[11px] font-medium flex items-center gap-1">
-                                <MapPin size={11} className="text-rose-400" />
+                              <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md border border-slate-200 text-slate-800 px-2.5 py-1 rounded-lg text-[11px] font-medium flex items-center gap-1 shadow-sm">
+                                <MapPin size={11} className="text-rose-500" />
                                 <span className="truncate max-w-[160px]">{mem.locationName}</span>
                               </div>
                             )}
@@ -1181,7 +1181,7 @@ export default function TripWorkspaceModal({
                           {/* Body & Caption */}
                           <div className="p-3.5 space-y-3 flex-1 flex flex-col justify-between">
                             {mem.caption && (
-                              <p className="text-xs text-slate-300 italic leading-relaxed">
+                              <p className="text-xs text-slate-600 italic leading-relaxed">
                                 "{mem.caption}"
                               </p>
                             )}
@@ -1193,7 +1193,7 @@ export default function TripWorkspaceModal({
                                   <span
                                     key={t}
                                     onClick={() => setSelectedTagFilter(t)}
-                                    className="cursor-pointer text-[10px] font-semibold text-indigo-300 bg-indigo-950/60 border border-indigo-500/20 px-2 py-0.5 rounded-md hover:border-indigo-400 transition-colors"
+                                    className="cursor-pointer text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md hover:border-emerald-400 transition-colors"
                                   >
                                     #{t}
                                   </span>
@@ -1202,25 +1202,25 @@ export default function TripWorkspaceModal({
                             )}
 
                             {/* Action Row: Likes & Delete */}
-                            <div className="pt-2 border-t border-white/5 flex items-center justify-between">
+                            <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
                               <button
                                 onClick={() => handleLikeMemory(mem.id)}
                                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
                                   isLikedByMe
-                                    ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30 scale-105'
-                                    : 'bg-white/5 text-slate-400 hover:text-pink-300 hover:bg-white/10'
+                                    ? 'bg-pink-50 text-pink-600 border border-pink-200 scale-105'
+                                    : 'bg-slate-50 text-slate-600 hover:text-pink-600 hover:bg-pink-50 border border-slate-200'
                                 }`}
                               >
                                 <Heart
                                   size={13}
-                                  className={isLikedByMe ? 'fill-pink-500 text-pink-500' : ''}
+                                  className={isLikedByMe ? 'fill-pink-600 text-pink-600' : ''}
                                 />
                                 <span>{mem.likes.length}</span>
                               </button>
 
                               <button
                                 onClick={() => handleDeleteMemory(mem.id)}
-                                className="text-slate-500 hover:text-rose-400 p-1 rounded-md transition-colors"
+                                className="text-slate-400 hover:text-rose-600 p-1 rounded-md transition-colors"
                                 title="Delete memory"
                               >
                                 <Trash2 size={13} />
@@ -1239,32 +1239,32 @@ export default function TripWorkspaceModal({
 
       {/* ─── ADD ACTIVITY MODAL ───────────────────────────────────────────── */}
       {showAddActivity && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-2xl animate-fade-in">
-          <div className="relative w-full max-w-md bg-slate-900 border border-white/15 rounded-3xl p-6 shadow-2xl">
-            <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-              <Calendar size={18} className="text-indigo-400" />
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl">
+            <h3 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <Calendar size={18} className="text-emerald-700" />
               <span>Add Scheduled Activity</span>
             </h3>
             <form onSubmit={handleAddActivity} className="space-y-3">
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Activity Title *</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Activity Title *</label>
                 <input
                   type="text"
                   required
                   value={actTitle}
                   onChange={(e) => setActTitle(e.target.value)}
                   placeholder="e.g. Louvre Guided Tour & Mona Lisa"
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-400"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 shadow-sm"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Day Schedule</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Day Schedule</label>
                   <select
                     value={actDay}
                     onChange={(e) => setActDay(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 shadow-sm"
                   >
                     {[1, 2, 3, 4, 5, 6, 7].map((d) => (
                       <option key={d} value={d}>Day {d}</option>
@@ -1272,24 +1272,24 @@ export default function TripWorkspaceModal({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Time Slot</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Time Slot</label>
                   <input
                     type="text"
                     value={actTime}
                     onChange={(e) => setActTime(e.target.value)}
                     placeholder="e.g. 10:00 AM"
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 shadow-sm"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Category</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Category</label>
                   <select
                     value={actCategory}
                     onChange={(e) => setActCategory(e.target.value)}
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 shadow-sm"
                   >
                     <option value="Sightseeing">Sightseeing</option>
                     <option value="Dining">Dining / Food</option>
@@ -1300,55 +1300,55 @@ export default function TripWorkspaceModal({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Estimated Cost ($)</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Estimated Cost ($)</label>
                   <input
                     type="number"
                     min="0"
                     step="1"
                     value={actCost}
                     onChange={(e) => setActCost(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 shadow-sm"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Location Name & Address</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Location Name & Address</label>
                 <input
                   type="text"
                   value={actLocation}
                   onChange={(e) => setActLocation(e.target.value)}
                   placeholder="e.g. Musée du Louvre, Rue de Rivoli, Paris"
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 shadow-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Notes / Instructions</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Notes / Instructions</label>
                 <textarea
                   rows={2}
                   value={actDescription}
                   onChange={(e) => setActDescription(e.target.value)}
                   placeholder="e.g. Meet at the glass pyramid entrance. Bring student ID."
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none resize-none"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 resize-none shadow-sm"
                 />
               </div>
 
               {actCost > 0 && (
-                <label className="flex items-center gap-2 text-xs text-indigo-300 bg-indigo-950/40 p-2.5 rounded-xl border border-indigo-500/20 cursor-pointer">
+                <label className="flex items-center gap-2 text-xs text-emerald-800 bg-emerald-50/70 p-2.5 rounded-xl border border-emerald-200 cursor-pointer shadow-xs">
                   <input
                     type="checkbox"
                     checked={actAlsoAddExpense}
                     onChange={(e) => setActAlsoAddExpense(e.target.checked)}
-                    className="rounded text-indigo-600 focus:ring-indigo-500 bg-slate-950"
+                    className="rounded text-emerald-600 focus:ring-emerald-500"
                   />
                   <span>Automatically log as shared bill in Expense Splitter</span>
                 </label>
               )}
 
-              <div className="pt-3 flex items-center justify-end gap-3 border-t border-white/10">
-                <button type="button" onClick={() => setShowAddActivity(false)} className="px-4 py-2 text-xs text-slate-400 hover:text-white">Cancel</button>
-                <button type="submit" className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-md">
+              <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
+                <button type="button" onClick={() => setShowAddActivity(false)} className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900">Cancel</button>
+                <button type="submit" className="px-5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-sm shadow-emerald-700/20 transition-all hover:scale-105 active:scale-95">
                   Save Activity
                 </button>
               </div>
@@ -1359,36 +1359,36 @@ export default function TripWorkspaceModal({
 
       {/* ─── ADD TASK MODAL ──────────────────────────────────────────────── */}
       {showAddTask && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-2xl animate-fade-in">
-          <div className="relative w-full max-w-md bg-slate-900 border border-white/15 rounded-3xl p-6 shadow-2xl">
-            <h3 className="text-base font-bold text-white mb-4">Add Group Task</h3>
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl">
+            <h3 className="text-base font-bold text-slate-900 mb-4">Add Group Task</h3>
             <form onSubmit={handleCreateTask} className="space-y-3">
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Task Title *</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Task Title *</label>
                 <input
                   type="text"
                   required
                   value={taskTitle}
                   onChange={(e) => setTaskTitle(e.target.value)}
                   placeholder="e.g. Confirm hotel late check-in"
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-400"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 shadow-sm"
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Assignee</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Assignee</label>
                 <select
                   value={taskAssignee}
                   onChange={(e) => setTaskAssignee(e.target.value)}
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 shadow-sm"
                 >
                   {membersList.map((m) => (
                     <option key={m} value={m}>{m}</option>
                   ))}
                 </select>
               </div>
-              <div className="pt-3 flex items-center justify-end gap-3 border-t border-white/10">
-                <button type="button" onClick={() => setShowAddTask(false)} className="px-4 py-2 text-xs text-slate-400 hover:text-white">Cancel</button>
-                <button type="submit" className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold">Create Task</button>
+              <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
+                <button type="button" onClick={() => setShowAddTask(false)} className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900">Cancel</button>
+                <button type="submit" className="px-5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-sm shadow-emerald-700/20 transition-all hover:scale-105 active:scale-95">Create Task</button>
               </div>
             </form>
           </div>
@@ -1397,23 +1397,23 @@ export default function TripWorkspaceModal({
 
       {/* ─── ADD POLL MODAL ──────────────────────────────────────────────── */}
       {showAddPoll && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-2xl animate-fade-in">
-          <div className="relative w-full max-w-md bg-slate-900 border border-white/15 rounded-3xl p-6 shadow-2xl">
-            <h3 className="text-base font-bold text-white mb-4">Create Decision Poll</h3>
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl">
+            <h3 className="text-base font-bold text-slate-900 mb-4">Create Decision Poll</h3>
             <form onSubmit={handleCreatePoll} className="space-y-3">
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Poll Question *</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Poll Question *</label>
                 <input
                   type="text"
                   required
                   value={pollQuestion}
                   onChange={(e) => setPollQuestion(e.target.value)}
                   placeholder="e.g. Which museum should we visit on Day 2?"
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 shadow-sm"
                 />
               </div>
               <div className="space-y-2">
-                <label className="block text-xs text-slate-400">Options</label>
+                <label className="block text-xs font-semibold text-slate-700">Options</label>
                 {pollOptions.map((opt, idx) => (
                   <input
                     key={idx}
@@ -1426,20 +1426,20 @@ export default function TripWorkspaceModal({
                       setPollOptions(next);
                     }}
                     placeholder={`Option ${idx + 1}`}
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 shadow-sm"
                   />
                 ))}
               </div>
               <button
                 type="button"
                 onClick={() => setPollOptions([...pollOptions, ''])}
-                className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold"
+                className="text-xs text-emerald-700 hover:text-emerald-800 font-semibold"
               >
                 + Add Option
               </button>
-              <div className="pt-3 flex items-center justify-end gap-3 border-t border-white/10">
-                <button type="button" onClick={() => setShowAddPoll(false)} className="px-4 py-2 text-xs text-slate-400 hover:text-white">Cancel</button>
-                <button type="submit" className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold">Publish Poll</button>
+              <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
+                <button type="button" onClick={() => setShowAddPoll(false)} className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900">Cancel</button>
+                <button type="submit" className="px-5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-sm shadow-emerald-700/20 transition-all hover:scale-105 active:scale-95">Publish Poll</button>
               </div>
             </form>
           </div>
@@ -1448,39 +1448,39 @@ export default function TripWorkspaceModal({
 
       {/* ─── ADD EXPENSE MODAL ───────────────────────────────────────────── */}
       {showAddExpense && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-2xl animate-fade-in">
-          <div className="relative w-full max-w-md bg-slate-900 border border-white/15 rounded-3xl p-6 shadow-2xl">
-            <h3 className="text-base font-bold text-white mb-4">Log Trip Bill & Expense</h3>
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl">
+            <h3 className="text-base font-bold text-slate-900 mb-4">Log Trip Bill & Expense</h3>
             <form onSubmit={handleAddExpense} className="space-y-3">
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Expense Description *</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Expense Description *</label>
                 <input
                   type="text"
                   required
                   value={expTitle}
                   onChange={(e) => setExpTitle(e.target.value)}
                   placeholder="e.g. Group Dinner at Le Marais"
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 shadow-sm"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Amount ($ USD) *</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Amount ($ USD) *</label>
                   <input
                     type="number"
                     min={1}
                     required
                     value={expAmount}
                     onChange={(e) => setExpAmount(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 shadow-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Paid By</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Paid By</label>
                   <select
                     value={expPaidBy}
                     onChange={(e) => setExpPaidBy(e.target.value)}
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 shadow-sm"
                   >
                     {membersList.map((m) => (
                       <option key={m} value={m}>{m}</option>
@@ -1488,9 +1488,9 @@ export default function TripWorkspaceModal({
                   </select>
                 </div>
               </div>
-              <div className="pt-3 flex items-center justify-end gap-3 border-t border-white/10">
-                <button type="button" onClick={() => setShowAddExpense(false)} className="px-4 py-2 text-xs text-slate-400 hover:text-white">Cancel</button>
-                <button type="submit" className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold">Log & Split</button>
+              <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
+                <button type="button" onClick={() => setShowAddExpense(false)} className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900">Cancel</button>
+                <button type="submit" className="px-5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-sm shadow-emerald-700/20 transition-all hover:scale-105 active:scale-95">Log & Split</button>
               </div>
             </form>
           </div>
@@ -1499,35 +1499,35 @@ export default function TripWorkspaceModal({
 
       {/* ─── INVITE MEMBER MODAL ─────────────────────────────────────────── */}
       {showInviteModal && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-2xl animate-fade-in">
-          <div className="relative w-full max-w-md bg-slate-900 border border-white/15 rounded-3xl p-6 shadow-2xl">
-            <h3 className="text-base font-bold text-white mb-4">Invite Collaborator to Trip</h3>
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl">
+            <h3 className="text-base font-bold text-slate-900 mb-4">Invite Collaborator to Trip</h3>
             <form onSubmit={handleInviteMember} className="space-y-3">
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Collaborator Email *</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Collaborator Email *</label>
                 <input
                   type="email"
                   required
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
                   placeholder="collaborator@example.com"
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-400"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 shadow-sm"
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Role Permission</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Role Permission</label>
                 <select
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value as any)}
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 shadow-sm"
                 >
                   <option value="editor">Editor (Can add/edit itinerary, polls & tasks)</option>
                   <option value="viewer">Viewer (Read-only access)</option>
                 </select>
               </div>
-              <div className="pt-3 flex items-center justify-end gap-3 border-t border-white/10">
-                <button type="button" onClick={() => setShowInviteModal(false)} className="px-4 py-2 text-xs text-slate-400 hover:text-white">Cancel</button>
-                <button type="submit" className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold">Send Invite</button>
+              <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
+                <button type="button" onClick={() => setShowInviteModal(false)} className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900">Cancel</button>
+                <button type="submit" className="px-5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-sm shadow-emerald-700/20 transition-all hover:scale-105 active:scale-95">Send Invite</button>
               </div>
             </form>
           </div>
@@ -1536,35 +1536,35 @@ export default function TripWorkspaceModal({
 
       {/* ADD TRIP MEMORY / PHOTO MODAL */}
       {showAddMemory && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-2xl animate-fade-in">
-          <div className="relative w-full max-w-md bg-slate-900 border border-white/15 rounded-3xl p-6 shadow-2xl">
-            <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-              <Camera size={18} className="text-indigo-400" />
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl">
+            <h3 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <Camera size={18} className="text-emerald-700" />
               <span>Post Trip Photo Memory</span>
             </h3>
 
             <form onSubmit={handleUploadMemory} className="space-y-3.5">
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Memory Title *</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Memory Title *</label>
                 <input
                   type="text"
                   required
                   value={memTitle}
                   onChange={(e) => setMemTitle(e.target.value)}
                   placeholder="e.g. Sunset over the Seine river"
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-400"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 shadow-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Photo Image URL *</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Photo Image URL *</label>
                 <input
                   type="url"
                   required
                   value={memImageUrl}
                   onChange={(e) => setMemImageUrl(e.target.value)}
                   placeholder="https://images.unsplash.com/..."
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-400 font-mono text-[11px]"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 font-mono text-[11px] shadow-sm"
                 />
 
                 {/* Quick Presets */}
@@ -1583,7 +1583,7 @@ export default function TripWorkspaceModal({
                         setMemImageUrl(p.url);
                         if (!memTitle) setMemTitle(`${p.label} Highlight`);
                       }}
-                      className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-white/5 hover:bg-white/10 text-indigo-300 border border-white/5 whitespace-nowrap"
+                      className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 whitespace-nowrap transition-colors"
                     >
                       {p.label}
                     </button>
@@ -1593,30 +1593,30 @@ export default function TripWorkspaceModal({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Location Name</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Location Name</label>
                   <input
                     type="text"
                     value={memLocation}
                     onChange={(e) => setMemLocation(e.target.value)}
                     placeholder="e.g. Pont Neuf, Paris"
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 shadow-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Tags (comma-separated)</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Tags (comma-separated)</label>
                   <input
                     type="text"
                     value={memTagInput}
                     onChange={(e) => setMemTagInput(e.target.value)}
                     placeholder="Sunset, Sightseeing"
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 shadow-sm"
                   />
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs text-slate-400">Caption / Story Note</label>
+                  <label className="block text-xs font-semibold text-slate-700">Caption / Story Note</label>
                   <button
                     type="button"
                     onClick={() => {
@@ -1630,10 +1630,10 @@ export default function TripWorkspaceModal({
                         setMemTagInput(story.tags.join(', '));
                       }
                     }}
-                    className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-pink-500/15 border border-pink-500/30 text-pink-300 text-[10px] font-bold hover:bg-pink-500/25 transition-all"
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-bold hover:bg-emerald-100 transition-all shadow-xs"
                     title="Generate AI Travel Journal reflection (VPM-63)"
                   >
-                    <Sparkles size={11} />
+                    <Sparkles size={11} className="text-emerald-700" />
                     <span>AI Generate Story</span>
                   </button>
                 </div>
@@ -1642,13 +1642,13 @@ export default function TripWorkspaceModal({
                   value={memCaption}
                   onChange={(e) => setMemCaption(e.target.value)}
                   placeholder="Share a story or memory about this moment..."
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none resize-none"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 resize-none shadow-sm"
                 />
               </div>
 
-              <div className="pt-3 flex items-center justify-end gap-3 border-t border-white/10">
-                <button type="button" onClick={() => setShowAddMemory(false)} className="px-4 py-2 text-xs text-slate-400 hover:text-white">Cancel</button>
-                <button type="submit" className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-md">
+              <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
+                <button type="button" onClick={() => setShowAddMemory(false)} className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900">Cancel</button>
+                <button type="submit" className="px-5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-sm shadow-emerald-700/20 transition-all hover:scale-105 active:scale-95">
                   Publish Memory
                 </button>
               </div>
@@ -1661,13 +1661,13 @@ export default function TripWorkspaceModal({
       {activePhotoViewer && (
         <div
           onClick={() => setActivePhotoViewer(null)}
-          className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-black/95 backdrop-blur-3xl animate-fade-in"
+          className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-fade-in"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="relative max-w-4xl w-full bg-slate-900 border border-white/15 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+            className="relative max-w-4xl w-full bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
           >
-            <div className="relative aspect-16/10 w-full bg-black flex items-center justify-center overflow-hidden">
+            <div className="relative aspect-16/10 w-full bg-slate-950 flex items-center justify-center overflow-hidden">
               <img
                 src={activePhotoViewer.imageUrl}
                 alt={activePhotoViewer.title}
@@ -1675,18 +1675,18 @@ export default function TripWorkspaceModal({
               />
               <button
                 onClick={() => setActivePhotoViewer(null)}
-                className="absolute top-4 right-4 p-2.5 rounded-full bg-black/70 hover:bg-black text-white transition-all shadow-lg"
+                className="absolute top-4 right-4 p-2.5 rounded-full bg-black/60 hover:bg-black/80 text-white transition-all shadow-lg"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <div className="p-6 bg-slate-900 space-y-3">
+            <div className="p-6 bg-white space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h3 className="text-lg font-bold text-white">{activePhotoViewer.title}</h3>
-                  <p className="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
-                    <MapPin size={12} className="text-rose-400" />
+                  <h3 className="text-lg font-bold text-slate-900">{activePhotoViewer.title}</h3>
+                  <p className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
+                    <MapPin size={12} className="text-rose-500" />
                     <span>{activePhotoViewer.locationName || trip.destination}</span>
                     <span>·</span>
                     <span>Captured by {activePhotoViewer.uploadedBy} on {activePhotoViewer.date}</span>
@@ -1698,11 +1698,11 @@ export default function TripWorkspaceModal({
                     onClick={() => handleLikeMemory(activePhotoViewer.id)}
                     className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
                       activePhotoViewer.likes.includes(currentUser.name)
-                        ? 'bg-pink-600 text-white shadow-lg shadow-pink-600/30'
-                        : 'bg-white/10 text-slate-200 hover:bg-white/20'
+                        ? 'bg-pink-50 text-pink-600 border border-pink-200 shadow-xs'
+                        : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200'
                     }`}
                   >
-                    <Heart size={15} className={activePhotoViewer.likes.includes(currentUser.name) ? 'fill-white' : ''} />
+                    <Heart size={15} className={activePhotoViewer.likes.includes(currentUser.name) ? 'fill-pink-600 text-pink-600' : ''} />
                     <span>{activePhotoViewer.likes.length} Likes</span>
                   </button>
 
@@ -1711,7 +1711,7 @@ export default function TripWorkspaceModal({
                     target="_blank"
                     rel="noreferrer"
                     download
-                    className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-1.5"
+                    className="p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold flex items-center gap-1.5 shadow-xs"
                     title="Open full resolution"
                   >
                     <Download size={15} />
@@ -1720,7 +1720,7 @@ export default function TripWorkspaceModal({
               </div>
 
               {activePhotoViewer.caption && (
-                <p className="text-sm text-slate-300 italic bg-white/[0.03] border border-white/5 p-3.5 rounded-2xl">
+                <p className="text-sm text-slate-700 italic bg-slate-50 border border-slate-200 p-3.5 rounded-2xl">
                   "{activePhotoViewer.caption}"
                 </p>
               )}
@@ -1730,7 +1730,7 @@ export default function TripWorkspaceModal({
                   {activePhotoViewer.tags.map((t) => (
                     <span
                       key={t}
-                      className="text-xs font-semibold text-indigo-300 bg-indigo-950 border border-indigo-500/30 px-3 py-1 rounded-lg"
+                      className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-lg"
                     >
                       #{t}
                     </span>
@@ -1772,36 +1772,36 @@ export default function TripWorkspaceModal({
 
       {/* AI ITINERARY GENERATOR MODAL */}
       {showAiItineraryModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
-          <div className="relative w-full max-w-2xl bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="flex items-center justify-between p-5 border-b border-white/10 bg-slate-950/80">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-2xl bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/80">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-pink-500/20 text-pink-400 border border-pink-500/30 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center">
                   <Sparkles size={18} />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                     AI Itinerary Generator
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                       Smart Co-Pilot
                     </span>
                   </h3>
-                  <p className="text-xs text-slate-400">Curating schedules for {trip.destination}</p>
+                  <p className="text-xs text-slate-500">Curating schedules for {trip.destination}</p>
                 </div>
               </div>
               <button
                 onClick={() => setShowAiItineraryModal(false)}
-                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/10"
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-white">
               {/* Controls */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">Trip Days</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">Trip Days</label>
                   <select
                     value={aiDays}
                     onChange={(e) => {
@@ -1815,7 +1815,7 @@ export default function TripWorkspaceModal({
                       });
                       setAiItineraryResult(res);
                     }}
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 shadow-sm"
                   >
                     {[1, 2, 3, 4, 5, 6, 7].map((num) => (
                       <option key={num} value={num}>{num} {num === 1 ? 'Day' : 'Days'}</option>
@@ -1824,7 +1824,7 @@ export default function TripWorkspaceModal({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">Travel Pace</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">Travel Pace</label>
                   <select
                     value={aiPace}
                     onChange={(e) => {
@@ -1838,7 +1838,7 @@ export default function TripWorkspaceModal({
                       });
                       setAiItineraryResult(res);
                     }}
-                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 shadow-sm"
                   >
                     <option value="relaxed">Relaxed (2 activities/day)</option>
                     <option value="balanced">Balanced (3 activities/day)</option>
@@ -1848,7 +1848,7 @@ export default function TripWorkspaceModal({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Travel Interests</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Travel Interests</label>
                 <div className="flex flex-wrap gap-1.5">
                   {['Culture', 'Sightseeing', 'Gastronomy', 'Shopping', 'Adventure', 'Nightlife'].map((interest) => {
                     const isSelected = aiInterests.includes(interest);
@@ -1871,8 +1871,8 @@ export default function TripWorkspaceModal({
                         }}
                         className={`text-xs px-3 py-1 rounded-lg font-medium transition-all ${
                           isSelected
-                            ? 'bg-indigo-600 text-white shadow-sm'
-                            : 'bg-white/5 text-slate-400 hover:text-slate-200 border border-white/5'
+                            ? 'bg-emerald-700 text-white shadow-sm'
+                            : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200'
                         }`}
                       >
                         {interest}
@@ -1884,22 +1884,22 @@ export default function TripWorkspaceModal({
 
               {/* Itinerary Preview */}
               {aiItineraryResult && (
-                <div className="space-y-3 pt-2 border-t border-white/10">
+                <div className="space-y-3 pt-2 border-t border-slate-100">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold text-indigo-300 uppercase tracking-wider">
+                    <h4 className="text-xs font-bold text-emerald-800 uppercase tracking-wider">
                       Generated Schedule Preview ({aiItineraryResult.allActivities.length} Activities)
                     </h4>
-                    <span className="text-xs text-slate-400">
-                      Est. Activities Cost: <strong className="text-emerald-400">${aiItineraryResult.estimatedTotalCost}</strong>
+                    <span className="text-xs text-slate-500">
+                      Est. Activities Cost: <strong className="text-emerald-700">${aiItineraryResult.estimatedTotalCost}</strong>
                     </span>
                   </div>
 
                   <div className="space-y-3">
                     {aiItineraryResult.days.map((d) => (
-                      <div key={d.dayNumber} className="bg-slate-950/60 border border-white/5 rounded-xl p-3.5 space-y-2">
-                        <div className="flex items-center justify-between text-xs font-bold text-slate-200">
-                          <span className="flex items-center gap-1.5 text-pink-300">
-                            <span className="w-5 h-5 rounded-md bg-pink-500/20 text-[10px] grid place-items-center font-bold">
+                      <div key={d.dayNumber} className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2 shadow-xs">
+                        <div className="flex items-center justify-between text-xs font-bold text-slate-800">
+                          <span className="flex items-center gap-1.5 text-emerald-800">
+                            <span className="w-5 h-5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] grid place-items-center font-bold">
                               D{d.dayNumber}
                             </span>
                             Day {d.dayNumber}: {d.theme}
@@ -1908,15 +1908,15 @@ export default function TripWorkspaceModal({
 
                         <div className="space-y-1.5 pl-6">
                           {d.activities.map((a, i) => (
-                            <div key={i} className="flex items-start justify-between text-xs py-1 border-b border-white/5 last:border-0">
+                            <div key={i} className="flex items-start justify-between text-xs py-1 border-b border-slate-200/60 last:border-0">
                               <div>
-                                <div className="font-semibold text-slate-200 flex items-center gap-1.5">
-                                  <span className="text-[10px] text-indigo-400 font-mono">{a.timeSlot}</span>
+                                <div className="font-semibold text-slate-800 flex items-center gap-1.5">
+                                  <span className="text-[10px] text-emerald-700 font-mono font-semibold">{a.timeSlot}</span>
                                   <span>{a.title}</span>
                                 </div>
-                                <div className="text-[11px] text-slate-400">{a.locationName} · <span className="text-slate-500">{a.description}</span></div>
+                                <div className="text-[11px] text-slate-500">{a.locationName} · <span className="text-slate-400">{a.description}</span></div>
                               </div>
-                              <span className="font-bold text-slate-300 shrink-0 ml-2">
+                              <span className="font-bold text-slate-700 shrink-0 ml-2">
                                 {a.cost && a.cost > 0 ? `$${a.cost}` : 'Free'}
                               </span>
                             </div>
@@ -1930,10 +1930,10 @@ export default function TripWorkspaceModal({
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 border-t border-white/10 bg-slate-950/80 flex items-center justify-between">
+            <div className="p-4 border-t border-slate-100 bg-slate-50/80 flex items-center justify-between">
               <button
                 onClick={() => setShowAiItineraryModal(false)}
-                className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white"
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900"
               >
                 Cancel
               </button>
@@ -1961,7 +1961,7 @@ export default function TripWorkspaceModal({
                   }
                 }}
                 disabled={isApplyingItinerary || !aiItineraryResult}
-                className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-indigo-600 hover:from-pink-600 hover:to-indigo-700 text-white text-xs font-bold shadow-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-sm shadow-emerald-700/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
               >
                 <Sparkles size={14} />
                 <span>{isApplyingItinerary ? 'Applying to Workspace…' : 'Apply Itinerary to Trip'}</span>

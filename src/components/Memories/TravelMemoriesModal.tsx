@@ -242,11 +242,11 @@ export default function TravelMemoriesModal({
   const MemoryCard = ({ mem }: { mem: TripMemory }) => {
     const isLikedByMe = mem.likes.includes(currentUser.name);
     return (
-      <div className="group bg-white/[0.03] border border-white/10 rounded-2xl overflow-hidden hover:border-indigo-500/40 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300 flex flex-col">
+      <div className="group bg-white border border-slate-200 rounded-2xl overflow-hidden hover:border-emerald-500/50 hover:shadow-lg transition-all duration-300 flex flex-col shadow-sm">
         {/* Image */}
         <div
           onClick={() => setLightboxMemory(mem)}
-          className="relative aspect-4/3 w-full bg-slate-950 overflow-hidden cursor-pointer"
+          className="relative aspect-4/3 w-full bg-slate-100 overflow-hidden cursor-pointer"
         >
           <img
             src={mem.imageUrl}
@@ -254,12 +254,12 @@ export default function TravelMemoriesModal({
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-black/30 opacity-60 group-hover:opacity-80 transition-opacity" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/20 opacity-60 group-hover:opacity-80 transition-opacity" />
 
           {/* Location Pill */}
           {mem.locationName && (
-            <div className="absolute top-3 left-3 bg-slate-950/80 backdrop-blur-md border border-white/10 text-slate-200 px-2.5 py-1 rounded-lg text-[11px] font-medium flex items-center gap-1 max-w-[200px]">
-              <MapPin size={11} className="text-rose-400 flex-shrink-0" />
+            <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md border border-slate-200 text-slate-800 px-2.5 py-1 rounded-lg text-[11px] font-semibold flex items-center gap-1 max-w-[200px] shadow-sm">
+              <MapPin size={11} className="text-rose-500 flex-shrink-0" />
               <span className="truncate">{mem.locationName}</span>
             </div>
           )}
@@ -272,7 +272,7 @@ export default function TravelMemoriesModal({
           {/* Title at bottom */}
           <div className="absolute bottom-3 left-3 right-3">
             <h4 className="text-sm font-bold text-white drop-shadow-md truncate">{mem.title}</h4>
-            <p className="text-[10px] text-slate-300 flex items-center gap-2 mt-0.5">
+            <p className="text-[10px] text-slate-200 flex items-center gap-2 mt-0.5">
               <span>by {mem.uploadedBy}</span>
               <span>·</span>
               <span>{mem.date}</span>
@@ -283,7 +283,7 @@ export default function TravelMemoriesModal({
         {/* Body */}
         <div className="p-3.5 space-y-2.5 flex-1 flex flex-col justify-between">
           {mem.caption && (
-            <p className="text-xs text-slate-300 italic leading-relaxed line-clamp-2">
+            <p className="text-xs text-slate-600 italic leading-relaxed line-clamp-2">
               "{mem.caption}"
             </p>
           )}
@@ -295,7 +295,7 @@ export default function TravelMemoriesModal({
                 <span
                   key={t}
                   onClick={() => setSelectedTag(t)}
-                  className="cursor-pointer text-[10px] font-semibold text-indigo-300 bg-indigo-950/60 border border-indigo-500/20 px-2 py-0.5 rounded-md hover:border-indigo-400 transition-colors"
+                  className="cursor-pointer text-[10px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md hover:bg-emerald-100 transition-colors"
                 >
                   #{t}
                 </span>
@@ -304,21 +304,21 @@ export default function TravelMemoriesModal({
           )}
 
           {/* Actions */}
-          <div className="pt-2 border-t border-white/5 flex items-center justify-between">
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
             <button
               onClick={() => handleLike(mem)}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
                 isLikedByMe
-                  ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30 scale-105'
-                  : 'bg-white/5 text-slate-400 hover:text-pink-300 hover:bg-white/10'
+                  ? 'bg-rose-50 text-rose-700 border border-rose-200 scale-105'
+                  : 'bg-slate-100 text-slate-600 hover:text-rose-600 hover:bg-slate-200/70'
               }`}
             >
-              <Heart size={13} className={isLikedByMe ? 'fill-pink-500 text-pink-500' : ''} />
+              <Heart size={13} className={isLikedByMe ? 'fill-rose-500 text-rose-500' : ''} />
               <span>{mem.likes.length}</span>
             </button>
             <button
               onClick={() => handleDelete(mem)}
-              className="text-slate-500 hover:text-rose-400 p-1 rounded-md transition-colors"
+              className="text-slate-400 hover:text-rose-600 p-1 rounded-md transition-colors"
               title="Delete memory"
             >
               <Trash2 size={13} />
@@ -331,97 +331,57 @@ export default function TravelMemoriesModal({
 
   // ── RENDER ────────────────────────────────────────────────────────────
   return (
-    <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="memories-modal-title">
-      <div className="modal-container" style={{ maxWidth: '1080px', maxHeight: '93vh' }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="memories-modal-title">
+      <div className="relative w-full max-w-5xl bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden my-4 flex flex-col max-h-[94vh]">
         {/* ── HEADER ────────────────────────────────────────────────── */}
-        <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div
-              className="modal-icon-badge"
-              style={{ background: 'linear-gradient(135deg, rgba(236,72,153,0.25), rgba(99,91,255,0.25))', color: '#f472b6' }}
-            >
+        <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/80 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 shadow-sm">
               <Camera size={22} />
             </div>
             <div>
-              <h2 id="memories-modal-title" className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                Travel Memories & Photo Journal
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 id="memories-modal-title" className="text-lg font-bold text-slate-900">
+                  Travel Memories & Photo Journal
+                </h2>
                 <span
-                  style={{
-                    fontSize: '10px',
-                    fontWeight: 700,
-                    padding: '3px 9px',
-                    borderRadius: '999px',
-                    background: 'rgba(16, 185, 129, 0.15)',
-                    color: '#34d399',
-                    border: '1px solid rgba(16, 185, 129, 0.3)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                  }}
+                  className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 inline-flex items-center gap-1.5"
                   title="Directly connected to MongoDB Atlas 'memories' collection"
                 >
-                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px #10b981' }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                   MongoDB Atlas ({allMemories.length})
                 </span>
-              </h2>
-              <p className="modal-subtitle">
+              </div>
+              <p className="text-xs text-slate-500">
                 Capture, relive & share your unforgettable travel moments — backed by shared cloud database
               </p>
             </div>
           </div>
-          <button className="modal-close-btn" onClick={onClose} aria-label="Close memories modal">
-            <X size={18} />
+          <button className="p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-colors" onClick={onClose} aria-label="Close memories modal">
+            <X size={20} />
           </button>
         </div>
 
         {/* ── STATS BAR ─────────────────────────────────────────────── */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            padding: '14px 24px',
-            borderBottom: '1px solid rgba(255,255,255,0.06)',
-            background: 'rgba(15,23,42,0.6)',
-          }}
-        >
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 px-6 py-3.5 border-b border-slate-200 bg-slate-50/70">
           {[
-            { label: 'Total Memories', value: allMemories.length, icon: Camera, color: '#f472b6' },
-            { label: 'Total Likes', value: totalLikes, icon: Heart, color: '#fb7185' },
-            { label: 'Trips Covered', value: new Set(allMemories.map((m) => m.tripId)).size, icon: MapPin, color: '#a78bfa' },
-            { label: 'Unique Tags', value: allTags.length, icon: Tag, color: '#38bdf8' },
+            { label: 'Total Memories', value: allMemories.length, icon: Camera, color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
+            { label: 'Total Likes', value: totalLikes, icon: Heart, color: 'text-rose-600 bg-rose-50 border-rose-200' },
+            { label: 'Trips Covered', value: new Set(allMemories.map((m) => m.tripId)).size, icon: MapPin, color: 'text-amber-700 bg-amber-50 border-amber-200' },
+            { label: 'Unique Tags', value: allTags.length, icon: Tag, color: 'text-indigo-700 bg-indigo-50 border-indigo-200' },
           ].map((stat) => {
             const Icon = stat.icon;
             return (
               <div
                 key={stat.label}
-                style={{
-                  background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(255,255,255,0.06)',
-                  borderRadius: '14px',
-                  padding: '12px 14px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                }}
+                className="bg-white border border-slate-200 rounded-2xl p-3 flex items-center gap-3 shadow-sm"
               >
-                <div
-                  style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '10px',
-                    background: `${stat.color}18`,
-                    display: 'grid',
-                    placeItems: 'center',
-                    color: stat.color,
-                    flexShrink: 0,
-                  }}
-                >
+                <div className={`w-9 h-9 rounded-xl border flex items-center justify-center flex-shrink-0 ${stat.color}`}>
                   <Icon size={16} />
                 </div>
                 <div>
-                  <div style={{ fontSize: '18px', fontWeight: 800, color: '#fff' }}>{stat.value}</div>
-                  <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 600 }}>{stat.label}</div>
+                  <div className="text-base font-extrabold text-slate-900 leading-tight">{stat.value}</div>
+                  <div className="text-[10px] text-slate-500 font-medium">{stat.label}</div>
                 </div>
               </div>
             );
@@ -429,64 +389,25 @@ export default function TravelMemoriesModal({
         </div>
 
         {/* ── TOOLBAR: Search / Filters / View Toggle / Upload ──────── */}
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            gap: '10px',
-            padding: '12px 24px',
-            borderBottom: '1px solid rgba(255,255,255,0.06)',
-            background: 'rgba(15,23,42,0.4)',
-          }}
-        >
+        <div className="flex flex-wrap items-center gap-3 px-6 py-3 border-b border-slate-200 bg-white">
           {/* Search */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              flex: '1 1 200px',
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: '12px',
-              padding: '7px 12px',
-            }}
-          >
-            <Search size={14} style={{ color: '#94a3b8', flexShrink: 0 }} />
+          <div className="relative flex-1 min-w-[200px]">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search memories, locations, people..."
-              style={{
-                background: 'transparent',
-                border: 'none',
-                outline: 'none',
-                color: '#e2e8f0',
-                fontSize: '12px',
-                width: '100%',
-              }}
+              className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 shadow-sm"
             />
           </div>
 
           {/* Trip Filter */}
-          <div style={{ position: 'relative' }}>
+          <div className="relative">
             <select
               value={selectedTripId}
               onChange={(e) => setSelectedTripId(e.target.value)}
-              style={{
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '10px',
-                padding: '7px 28px 7px 10px',
-                color: '#e2e8f0',
-                fontSize: '11px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                appearance: 'none',
-                outline: 'none',
-              }}
+              className="bg-white border border-slate-200 rounded-xl px-3 pr-8 py-1.5 text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-600 shadow-sm cursor-pointer appearance-none"
             >
               <option value="all">All Trips</option>
               {userTrips.map((trip) => (
@@ -495,44 +416,25 @@ export default function TravelMemoriesModal({
                 </option>
               ))}
             </select>
-            <ChevronDown size={12} style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+            <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           </div>
 
           {/* Sort Selector */}
-          <div style={{ position: 'relative' }}>
+          <div className="relative">
             <select
               value={sortMode}
               onChange={(e) => setSortMode(e.target.value as any)}
-              style={{
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '10px',
-                padding: '7px 28px 7px 10px',
-                color: '#e2e8f0',
-                fontSize: '11px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                appearance: 'none',
-                outline: 'none',
-              }}
+              className="bg-white border border-slate-200 rounded-xl px-3 pr-8 py-1.5 text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-600 shadow-sm cursor-pointer appearance-none"
             >
               <option value="newest">Newest First</option>
               <option value="likes">Most Liked</option>
               <option value="oldest">Oldest First</option>
             </select>
-            <ChevronDown size={12} style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+            <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           </div>
 
           {/* View Mode Toggle */}
-          <div
-            style={{
-              display: 'flex',
-              background: 'rgba(255,255,255,0.04)',
-              borderRadius: '10px',
-              border: '1px solid rgba(255,255,255,0.08)',
-              overflow: 'hidden',
-            }}
-          >
+          <div className="flex bg-slate-100 rounded-xl border border-slate-200 p-0.5 overflow-hidden">
             {[
               { id: 'gallery' as ViewMode, icon: Grid3X3, label: 'Gallery' },
               { id: 'timeline' as ViewMode, icon: Clock, label: 'Timeline' },
@@ -542,19 +444,11 @@ export default function TravelMemoriesModal({
                 <button
                   key={mode.id}
                   onClick={() => setViewMode(mode.id)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                    padding: '6px 12px',
-                    fontSize: '11px',
-                    fontWeight: 600,
-                    color: viewMode === mode.id ? '#fff' : '#94a3b8',
-                    background: viewMode === mode.id ? 'rgba(99,91,255,0.3)' : 'transparent',
-                    border: 'none',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                  }}
+                  className={`flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
+                    viewMode === mode.id
+                      ? 'bg-emerald-700 text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
                 >
                   <Icon size={13} />
                   <span>{mode.label}</span>
@@ -566,21 +460,7 @@ export default function TravelMemoriesModal({
           {/* Upload Button */}
           <button
             onClick={() => setShowUploadForm(true)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '7px 16px',
-              borderRadius: '12px',
-              background: 'linear-gradient(135deg, #ec4899, #6366f1)',
-              color: '#fff',
-              fontSize: '12px',
-              fontWeight: 700,
-              border: 'none',
-              cursor: 'pointer',
-              boxShadow: '0 4px 15px rgba(236,72,153,0.25)',
-              transition: 'all 0.2s',
-            }}
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-md shadow-emerald-700/20 transition-all hover:scale-105 active:scale-95"
           >
             <Plus size={14} />
             <span>Post Memory</span>
@@ -588,31 +468,15 @@ export default function TravelMemoriesModal({
         </div>
 
         {/* ── TAG CLOUD ─────────────────────────────────────────────── */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 24px',
-            overflowX: 'auto',
-            borderBottom: '1px solid rgba(255,255,255,0.04)',
-          }}
-        >
-          <Tag size={12} style={{ color: '#94a3b8', flexShrink: 0 }} />
+        <div className="flex items-center gap-2 px-6 py-2.5 overflow-x-auto border-b border-slate-100 bg-slate-50/50">
+          <Tag size={12} className="text-slate-400 flex-shrink-0" />
           <button
             onClick={() => setSelectedTag('all')}
-            style={{
-              padding: '4px 12px',
-              borderRadius: '999px',
-              fontSize: '11px',
-              fontWeight: 600,
-              whiteSpace: 'nowrap',
-              border: 'none',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              color: selectedTag === 'all' ? '#fff' : '#94a3b8',
-              background: selectedTag === 'all' ? 'rgba(99,91,255,0.3)' : 'rgba(255,255,255,0.04)',
-            }}
+            className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+              selectedTag === 'all'
+                ? 'bg-emerald-700 text-white shadow-sm'
+                : 'bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
           >
             All Tags
           </button>
@@ -620,18 +484,11 @@ export default function TravelMemoriesModal({
             <button
               key={tag}
               onClick={() => setSelectedTag(tag === selectedTag ? 'all' : tag)}
-              style={{
-                padding: '4px 12px',
-                borderRadius: '999px',
-                fontSize: '11px',
-                fontWeight: 600,
-                whiteSpace: 'nowrap',
-                border: 'none',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                color: selectedTag === tag ? '#fff' : '#c4b5fd',
-                background: selectedTag === tag ? 'rgba(99,91,255,0.35)' : 'rgba(99,91,255,0.08)',
-              }}
+              className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+                selectedTag === tag
+                  ? 'bg-emerald-700 text-white shadow-sm'
+                  : 'bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100'
+              }`}
             >
               #{tag}
             </button>
@@ -639,48 +496,25 @@ export default function TravelMemoriesModal({
         </div>
 
         {/* ── MAIN CONTENT AREA ─────────────────────────────────────── */}
-        <div className="modal-body-scroll" style={{ padding: '20px 24px' }}>
+        <div className="flex-1 overflow-y-auto p-6">
           {isLoading ? (
-            <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-              <div
-                style={{
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '14px',
-                  background: 'rgba(236,72,153,0.15)',
-                  display: 'grid',
-                  placeItems: 'center',
-                  margin: '0 auto 12px',
-                  color: '#f472b6',
-                  animation: 'pulse 1.5s ease-in-out infinite',
-                }}
-              >
+            <div className="text-center py-16">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto mb-3 text-emerald-700 animate-pulse">
                 <Camera size={24} />
               </div>
-              <p style={{ fontSize: '13px', color: '#94a3b8', fontWeight: 600 }}>Loading your travel memories...</p>
+              <p className="text-xs font-semibold text-slate-500">Loading your travel memories...</p>
             </div>
           ) : sortedMemories.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-              <div
-                style={{
-                  width: '56px',
-                  height: '56px',
-                  borderRadius: '16px',
-                  background: 'rgba(236,72,153,0.12)',
-                  display: 'grid',
-                  placeItems: 'center',
-                  margin: '0 auto 14px',
-                  color: '#f472b6',
-                }}
-              >
+            <div className="text-center py-16 bg-slate-50/70 border border-dashed border-slate-200 rounded-3xl">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto mb-3 text-emerald-700">
                 <ImageIcon size={28} />
               </div>
-              <h4 style={{ fontSize: '15px', fontWeight: 700, color: '#fff', marginBottom: '6px' }}>
+              <h4 className="text-sm font-bold text-slate-900 mb-1">
                 {searchQuery || selectedTag !== 'all' || selectedTripId !== 'all'
                   ? 'No memories match your filters'
                   : 'No Travel Memories Yet'}
               </h4>
-              <p style={{ fontSize: '12px', color: '#94a3b8', maxWidth: '360px', margin: '0 auto 16px', lineHeight: '1.6' }}>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto mb-4 leading-relaxed">
                 {searchQuery || selectedTag !== 'all' || selectedTripId !== 'all'
                   ? 'Try adjusting your search or filter criteria to find memories.'
                   : 'Capture your first travel highlight! Upload photos from your trips, tag them with locations and hashtags, and build a shared photo journal with your travel companions.'}
@@ -695,103 +529,41 @@ export default function TravelMemoriesModal({
                     setShowUploadForm(true);
                   }
                 }}
-                style={{
-                  padding: '10px 20px',
-                  borderRadius: '12px',
-                  background: 'linear-gradient(135deg, #ec4899, #6366f1)',
-                  color: '#fff',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  border: 'none',
-                  cursor: 'pointer',
-                }}
+                className="px-5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-md shadow-emerald-700/20 transition-all hover:scale-105 active:scale-95"
               >
                 {searchQuery || selectedTag !== 'all' || selectedTripId !== 'all' ? 'Clear Filters' : 'Upload First Photo'}
               </button>
             </div>
           ) : viewMode === 'gallery' ? (
             /* ── Gallery Grid View ──────────────────────────────────── */
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-                gap: '18px',
-              }}
-            >
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {sortedMemories.map((mem) => (
                 <MemoryCard key={mem.id} mem={mem} />
               ))}
             </div>
           ) : (
             /* ── Timeline View ──────────────────────────────────────── */
-            <div style={{ position: 'relative', paddingLeft: '32px' }}>
+            <div className="relative pl-8">
               {/* Timeline line */}
-              <div
-                style={{
-                  position: 'absolute',
-                  left: '11px',
-                  top: '0',
-                  bottom: '0',
-                  width: '2px',
-                  background: 'linear-gradient(180deg, rgba(99,91,255,0.4), rgba(236,72,153,0.4), rgba(99,91,255,0.1))',
-                  borderRadius: '2px',
-                }}
-              />
+              <div className="absolute left-2.5 top-0 bottom-0 w-0.5 bg-emerald-200 rounded" />
 
               {sortedDates.map((dateKey) => (
-                <div key={dateKey} style={{ marginBottom: '28px' }}>
+                <div key={dateKey} className="mb-7">
                   {/* Date Marker */}
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      marginBottom: '14px',
-                      position: 'relative',
-                    }}
-                  >
-                    <div
-                      style={{
-                        position: 'absolute',
-                        left: '-32px',
-                        width: '22px',
-                        height: '22px',
-                        borderRadius: '999px',
-                        background: 'linear-gradient(135deg, #6366f1, #ec4899)',
-                        display: 'grid',
-                        placeItems: 'center',
-                        zIndex: 2,
-                        boxShadow: '0 0 12px rgba(99,91,255,0.4)',
-                      }}
-                    >
-                      <Calendar size={10} style={{ color: '#fff' }} />
+                  <div className="flex items-center gap-3 mb-3.5 relative">
+                    <div className="absolute -left-8 w-5 h-5 rounded-full bg-emerald-700 border-2 border-white flex items-center justify-center z-10 shadow-sm text-white">
+                      <Calendar size={10} />
                     </div>
-                    <span
-                      style={{
-                        fontSize: '13px',
-                        fontWeight: 700,
-                        color: '#e2e8f0',
-                        background: 'rgba(99,91,255,0.1)',
-                        border: '1px solid rgba(99,91,255,0.2)',
-                        borderRadius: '10px',
-                        padding: '4px 14px',
-                      }}
-                    >
+                    <span className="text-xs font-bold text-slate-800 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1">
                       {formatDate(dateKey)}
                     </span>
-                    <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>
+                    <span className="text-[11px] text-slate-500 font-medium">
                       {groupedByDate[dateKey].length} {groupedByDate[dateKey].length === 1 ? 'memory' : 'memories'}
                     </span>
                   </div>
 
                   {/* Memories for this date */}
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-                      gap: '14px',
-                    }}
-                  >
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
                     {groupedByDate[dateKey].map((mem) => (
                       <MemoryCard key={mem.id} mem={mem} />
                     ))}
@@ -807,81 +579,36 @@ export default function TravelMemoriesModal({
       {lightboxMemory && (
         <div
           onClick={() => setLightboxMemory(null)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 70,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '16px',
-            background: 'rgba(0,0,0,0.95)',
-            backdropFilter: 'blur(30px)',
-            animation: 'fadeIn 0.2s ease-out',
-          }}
+          className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-fade-in"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{
-              position: 'relative',
-              maxWidth: '900px',
-              width: '100%',
-              background: '#0f172a',
-              border: '1px solid rgba(255,255,255,0.12)',
-              borderRadius: '24px',
-              overflow: 'hidden',
-              boxShadow: '0 25px 60px rgba(0,0,0,0.8)',
-              display: 'flex',
-              flexDirection: 'column',
-              maxHeight: '90vh',
-            }}
+            className="relative max-w-4xl w-full bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
           >
             {/* Lightbox Image */}
-            <div
-              style={{
-                position: 'relative',
-                width: '100%',
-                aspectRatio: '16/10',
-                background: '#000',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                overflow: 'hidden',
-              }}
-            >
+            <div className="relative w-full aspect-[16/10] bg-slate-950 flex items-center justify-center overflow-hidden">
               <img
                 src={lightboxMemory.imageUrl}
                 alt={lightboxMemory.title}
-                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                className="w-full h-full object-contain"
               />
               <button
                 onClick={() => setLightboxMemory(null)}
-                style={{
-                  position: 'absolute',
-                  top: '16px',
-                  right: '16px',
-                  padding: '10px',
-                  borderRadius: '999px',
-                  background: 'rgba(0,0,0,0.7)',
-                  border: 'none',
-                  color: '#fff',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
+                className="absolute top-4 right-4 p-2 rounded-full bg-white/90 text-slate-800 hover:bg-white shadow-lg transition-all"
               >
                 <X size={20} />
               </button>
             </div>
 
             {/* Lightbox Info */}
-            <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+            <div className="p-6 flex flex-col gap-3 bg-white">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#fff', margin: 0 }}>
+                  <h3 className="text-lg font-bold text-slate-900">
                     {lightboxMemory.title}
                   </h3>
-                  <p style={{ fontSize: '12px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                    <MapPin size={12} style={{ color: '#f43f5e' }} />
+                  <p className="text-xs text-slate-500 flex items-center gap-2 mt-1">
+                    <MapPin size={12} className="text-rose-500" />
                     <span>{lightboxMemory.locationName || 'Unknown Location'}</span>
                     <span>·</span>
                     <span>by {lightboxMemory.uploadedBy}</span>
@@ -890,34 +617,18 @@ export default function TravelMemoriesModal({
                   </p>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleLike(lightboxMemory)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      padding: '8px 16px',
-                      borderRadius: '12px',
-                      fontSize: '12px',
-                      fontWeight: 700,
-                      border: 'none',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      color: lightboxMemory.likes.includes(currentUser.name) ? '#fff' : '#e2e8f0',
-                      background: lightboxMemory.likes.includes(currentUser.name)
-                        ? 'linear-gradient(135deg, #ec4899, #f43f5e)'
-                        : 'rgba(255,255,255,0.08)',
-                      boxShadow: lightboxMemory.likes.includes(currentUser.name)
-                        ? '0 4px 15px rgba(236,72,153,0.3)'
-                        : 'none',
-                    }}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+                      lightboxMemory.likes.includes(currentUser.name)
+                        ? 'bg-rose-50 text-rose-700 border border-rose-200 shadow-sm'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
                   >
                     <Heart
                       size={15}
-                      style={{
-                        fill: lightboxMemory.likes.includes(currentUser.name) ? '#fff' : 'none',
-                      }}
+                      className={lightboxMemory.likes.includes(currentUser.name) ? 'fill-rose-500 text-rose-500' : ''}
                     />
                     <span>{lightboxMemory.likes.length} {lightboxMemory.likes.length === 1 ? 'Like' : 'Likes'}</span>
                   </button>
@@ -927,59 +638,26 @@ export default function TravelMemoriesModal({
                     target="_blank"
                     rel="noreferrer"
                     download
-                    style={{
-                      padding: '8px 12px',
-                      borderRadius: '12px',
-                      background: 'rgba(255,255,255,0.08)',
-                      border: 'none',
-                      color: '#fff',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      fontSize: '12px',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      textDecoration: 'none',
-                    }}
+                    className="p-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
                     title="Open full resolution"
                   >
-                    <Download size={15} />
+                    <Download size={16} />
                   </a>
                 </div>
               </div>
 
               {lightboxMemory.caption && (
-                <p
-                  style={{
-                    fontSize: '13px',
-                    color: '#cbd5e1',
-                    fontStyle: 'italic',
-                    background: 'rgba(255,255,255,0.03)',
-                    border: '1px solid rgba(255,255,255,0.05)',
-                    padding: '12px 16px',
-                    borderRadius: '16px',
-                    lineHeight: '1.6',
-                    margin: 0,
-                  }}
-                >
+                <p className="text-xs text-slate-600 italic bg-slate-50 border border-slate-200 p-3 rounded-2xl leading-relaxed">
                   "{lightboxMemory.caption}"
                 </p>
               )}
 
               {lightboxMemory.tags && lightboxMemory.tags.length > 0 && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                <div className="flex flex-wrap gap-2">
                   {lightboxMemory.tags.map((t) => (
                     <span
                       key={t}
-                      style={{
-                        fontSize: '11px',
-                        fontWeight: 700,
-                        color: '#a5b4fc',
-                        background: 'rgba(99,91,255,0.12)',
-                        border: '1px solid rgba(99,91,255,0.25)',
-                        padding: '4px 12px',
-                        borderRadius: '10px',
-                      }}
+                      className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-lg"
                     >
                       #{t}
                     </span>
@@ -989,8 +667,8 @@ export default function TravelMemoriesModal({
 
               {/* Liked by list */}
               {lightboxMemory.likes.length > 0 && (
-                <div style={{ fontSize: '11px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Heart size={11} style={{ color: '#f472b6' }} />
+                <div className="text-[11px] text-slate-500 flex items-center gap-1.5 pt-1 border-t border-slate-100">
+                  <Heart size={11} className="text-rose-500 fill-rose-500" />
                   <span>Liked by {lightboxMemory.likes.join(', ')}</span>
                 </div>
               )}
@@ -1001,51 +679,24 @@ export default function TravelMemoriesModal({
 
       {/* ─── UPLOAD MEMORY FORM MODAL ───────────────────────────────────── */}
       {showUploadForm && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 65,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '16px',
-            background: 'rgba(0,0,0,0.9)',
-            backdropFilter: 'blur(20px)',
-            animation: 'fadeIn 0.2s ease-out',
-          }}
-        >
-          <div
-            style={{
-              position: 'relative',
-              width: '100%',
-              maxWidth: '480px',
-              background: '#0f172a',
-              border: '1px solid rgba(255,255,255,0.12)',
-              borderRadius: '24px',
-              padding: '24px',
-              boxShadow: '0 25px 60px rgba(0,0,0,0.8)',
-            }}
-          >
-            <h3
-              style={{
-                fontSize: '16px',
-                fontWeight: 800,
-                color: '#fff',
-                marginBottom: '18px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-              }}
-            >
-              <Camera size={18} style={{ color: '#f472b6' }} />
-              <span>Post a Travel Memory</span>
-            </h3>
+        <div className="fixed inset-0 z-65 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="relative w-full max-w-lg bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl space-y-4 my-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
+                  <Camera size={18} />
+                </div>
+                <h3 className="text-base font-bold text-slate-900">Post a Travel Memory</h3>
+              </div>
+              <button onClick={() => setShowUploadForm(false)} className="p-1 text-slate-400 hover:text-slate-700">
+                <X size={18} />
+              </button>
+            </div>
 
-            <form onSubmit={handleUpload} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <form onSubmit={handleUpload} className="space-y-3.5">
               {/* Title */}
               <div>
-                <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '4px', fontWeight: 600 }}>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Memory Title *
                 </label>
                 <input
@@ -1054,49 +705,27 @@ export default function TravelMemoriesModal({
                   value={uploadTitle}
                   onChange={(e) => setUploadTitle(e.target.value)}
                   placeholder="e.g. Golden Hour at Eiffel Tower"
-                  style={{
-                    width: '100%',
-                    background: 'rgba(15,23,42,0.8)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '12px',
-                    padding: '10px 14px',
-                    fontSize: '13px',
-                    color: '#e2e8f0',
-                    outline: 'none',
-                  }}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 shadow-sm"
                 />
               </div>
 
               {/* Image Input (Device Upload + URL + Presets) */}
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-semibold text-slate-700">
                     Photo Image *
                   </label>
                   <label
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                      padding: '3px 10px',
-                      borderRadius: '8px',
-                      background: 'rgba(99, 102, 241, 0.15)',
-                      border: '1px solid rgba(165, 180, 252, 0.3)',
-                      color: '#c7d2fe',
-                      cursor: 'pointer',
-                      fontSize: '10px',
-                      fontWeight: 700,
-                      transition: 'all 0.2s',
-                    }}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 cursor-pointer text-[10px] font-bold hover:bg-emerald-100 transition-colors shadow-sm"
                     title="Select a photo directly from your device"
                   >
-                    <Upload size={11} className="text-indigo-400" />
+                    <Upload size={11} className="text-emerald-700" />
                     <span>Upload from Device</span>
                     <input
                       type="file"
                       accept="image/*"
                       onChange={handleFileChange}
-                      style={{ display: 'none' }}
+                      className="hidden"
                     />
                   </label>
                 </div>
@@ -1107,22 +736,12 @@ export default function TravelMemoriesModal({
                   value={uploadImageUrl}
                   onChange={(e) => setUploadImageUrl(e.target.value)}
                   placeholder="Paste image URL (https://...) or choose file from device above"
-                  style={{
-                    width: '100%',
-                    background: 'rgba(15,23,42,0.8)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '12px',
-                    padding: '10px 14px',
-                    fontSize: '12px',
-                    color: '#e2e8f0',
-                    outline: 'none',
-                    fontFamily: 'monospace',
-                  }}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 font-mono shadow-sm"
                 />
 
                 {/* Quick Presets */}
-                <div style={{ display: 'flex', gap: '6px', marginTop: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-                  <span style={{ fontSize: '10px', color: '#64748b', fontWeight: 600, marginRight: '2px', lineHeight: '24px' }}>Presets:</span>
+                <div className="flex gap-1.5 mt-2 flex-wrap items-center">
+                  <span className="text-[10px] text-slate-400 font-semibold mr-0.5">Presets:</span>
                   {[
                     { label: '🌅 Sunset', url: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1000&auto=format&fit=crop&q=80' },
                     { label: '🍽️ Food', url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1000&auto=format&fit=crop&q=80' },
@@ -1138,17 +757,7 @@ export default function TravelMemoriesModal({
                         setUploadImageUrl(p.url);
                         if (!uploadTitle) setUploadTitle(`${p.label.substring(2)} Highlight`);
                       }}
-                      style={{
-                        fontSize: '10px',
-                        fontWeight: 600,
-                        padding: '3px 10px',
-                        borderRadius: '8px',
-                        background: 'rgba(255,255,255,0.05)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        color: '#c4b5fd',
-                        cursor: 'pointer',
-                        whiteSpace: 'nowrap',
-                      }}
+                      className="text-[10px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200 transition-colors whitespace-nowrap"
                     >
                       {p.label}
                     </button>
@@ -1157,31 +766,20 @@ export default function TravelMemoriesModal({
 
                 {/* Live Preview Thumbnail */}
                 {uploadImageUrl && (
-                  <div
-                    style={{
-                      marginTop: '10px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      background: 'rgba(255,255,255,0.03)',
-                      padding: '8px 12px',
-                      borderRadius: '10px',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                    }}
-                  >
+                  <div className="mt-2.5 flex items-center gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
                     <img
                       src={uploadImageUrl}
                       alt="Preview"
-                      style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '8px', flexShrink: 0 }}
+                      className="w-12 h-12 object-cover rounded-lg flex-shrink-0 border border-slate-200"
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.opacity = '0.3';
                       }}
                     />
-                    <div style={{ minWidth: 0 }}>
-                      <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <CheckCircle2 size={12} /> Photo preview loaded
+                    <div className="min-w-0">
+                      <span className="text-xs font-bold text-emerald-700 flex items-center gap-1">
+                        <CheckCircle2 size={13} /> Photo preview loaded
                       </span>
-                      <div style={{ fontSize: '10px', color: '#94a3b8', truncate: true }}>
+                      <div className="text-[10px] text-slate-500 truncate">
                         Ready to store permanently in MongoDB Atlas
                       </div>
                     </div>
@@ -1190,9 +788,9 @@ export default function TravelMemoriesModal({
               </div>
 
               {/* Location & Tags */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '4px', fontWeight: 600 }}>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Location
                   </label>
                   <input
@@ -1200,20 +798,11 @@ export default function TravelMemoriesModal({
                     value={uploadLocation}
                     onChange={(e) => setUploadLocation(e.target.value)}
                     placeholder="e.g. Pont Neuf, Paris"
-                    style={{
-                      width: '100%',
-                      background: 'rgba(15,23,42,0.8)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: '12px',
-                      padding: '10px 14px',
-                      fontSize: '12px',
-                      color: '#e2e8f0',
-                      outline: 'none',
-                    }}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 shadow-sm"
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '4px', fontWeight: 600 }}>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Tags (comma-separated)
                   </label>
                   <input
@@ -1221,39 +810,20 @@ export default function TravelMemoriesModal({
                     value={uploadTags}
                     onChange={(e) => setUploadTags(e.target.value)}
                     placeholder="Sunset, Sightseeing"
-                    style={{
-                      width: '100%',
-                      background: 'rgba(15,23,42,0.8)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: '12px',
-                      padding: '10px 14px',
-                      fontSize: '12px',
-                      color: '#e2e8f0',
-                      outline: 'none',
-                    }}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 shadow-sm"
                   />
                 </div>
               </div>
 
               {/* Trip Selector */}
               <div>
-                <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '4px', fontWeight: 600 }}>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Add to Trip
                 </label>
                 <select
                   value={uploadTripTarget}
                   onChange={(e) => setUploadTripTarget(e.target.value)}
-                  style={{
-                    width: '100%',
-                    background: 'rgba(15,23,42,0.8)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '12px',
-                    padding: '10px 14px',
-                    fontSize: '12px',
-                    color: '#e2e8f0',
-                    outline: 'none',
-                    cursor: 'pointer',
-                  }}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 shadow-sm cursor-pointer"
                 >
                   {userTrips.length > 0 ? (
                     userTrips.map((trip) => (
@@ -1269,8 +839,8 @@ export default function TravelMemoriesModal({
 
               {/* Caption */}
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-semibold text-slate-700">
                     Caption / Story Note
                   </label>
                   <button
@@ -1286,20 +856,7 @@ export default function TravelMemoriesModal({
                         setUploadTags(story.tags.join(', '));
                       }
                     }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      background: 'rgba(236,72,153,0.15)',
-                      border: '1px solid rgba(236,72,153,0.3)',
-                      color: '#f472b6',
-                      borderRadius: '8px',
-                      padding: '2px 8px',
-                      fontSize: '10px',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                    }}
+                    className="flex items-center gap-1 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg px-2 py-0.5 text-[10px] font-bold hover:bg-emerald-100 transition-colors shadow-sm"
                     title="Generate AI Travel Journal reflection (VPM-63)"
                   >
                     <Sparkles size={11} />
@@ -1311,63 +868,23 @@ export default function TravelMemoriesModal({
                   value={uploadCaption}
                   onChange={(e) => setUploadCaption(e.target.value)}
                   placeholder="Share a story or memory about this moment..."
-                  style={{
-                    width: '100%',
-                    background: 'rgba(15,23,42,0.8)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '12px',
-                    padding: '10px 14px',
-                    fontSize: '12px',
-                    color: '#e2e8f0',
-                    outline: 'none',
-                    resize: 'none',
-                  }}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 resize-none shadow-sm"
                 />
               </div>
 
               {/* Actions */}
-              <div
-                style={{
-                  paddingTop: '12px',
-                  borderTop: '1px solid rgba(255,255,255,0.08)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'flex-end',
-                  gap: '10px',
-                }}
-              >
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setShowUploadForm(false)}
-                  style={{
-                    padding: '9px 18px',
-                    fontSize: '12px',
-                    color: '#94a3b8',
-                    background: 'transparent',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                  }}
+                  className="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  style={{
-                    padding: '9px 20px',
-                    borderRadius: '12px',
-                    background: isSubmitting ? 'rgba(99,91,255,0.4)' : 'linear-gradient(135deg, #ec4899, #6366f1)',
-                    color: '#fff',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    border: 'none',
-                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                    boxShadow: isSubmitting ? 'none' : '0 4px 15px rgba(236,72,153,0.25)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                  }}
+                  className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-md shadow-emerald-700/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
                 >
                   {isSubmitting && <Sparkles size={13} className="animate-spin" />}
                   <span>{isSubmitting ? 'Saving to Atlas DB...' : 'Publish Memory'}</span>
