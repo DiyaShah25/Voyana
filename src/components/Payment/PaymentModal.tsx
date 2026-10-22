@@ -109,9 +109,9 @@ function DynamicQRCode({
   const charSum = reference.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), amount);
 
   return (
-    <div className="relative p-3 bg-white rounded-2xl shadow-xl flex items-center justify-center">
+    <div className="relative p-3 bg-white rounded-2xl shadow-md border border-slate-200 flex items-center justify-center">
       {/* Scanning laser beam animation */}
-      <div className="absolute inset-x-3 top-3 h-0.5 bg-gradient-to-r from-transparent via-indigo-500 to-transparent animate-pulse pointer-events-none opacity-80" />
+      <div className="absolute inset-x-3 top-3 h-0.5 bg-gradient-to-r from-transparent via-emerald-500 to-transparent animate-pulse pointer-events-none opacity-80" />
 
       <div
         className="grid gap-[2px]"
@@ -141,9 +141,9 @@ function DynamicQRCode({
 
       {/* Center Badge Icon */}
       <div className="absolute inset-0 m-auto w-7 h-7 rounded-lg bg-white shadow-md border border-slate-200 flex items-center justify-center">
-        {method === 'upi_qr' && <Smartphone size={15} className="text-indigo-600" />}
+        {method === 'upi_qr' && <Smartphone size={15} className="text-emerald-700" />}
         {method === 'google_pay' && <span className="font-bold text-xs text-blue-600">G</span>}
-        {method === 'apple_pay' && <span className="font-bold text-xs text-black"></span>}
+        {method === 'apple_pay' && <span className="font-bold text-xs text-slate-900"></span>}
         {method === 'paypal' && <span className="font-bold text-xs text-blue-800">P</span>}
       </div>
     </div>
@@ -282,30 +282,30 @@ export const PaymentView: React.FC<PaymentProps> = ({
   return (
     <div className="space-y-4">
       {/* Order Summary Ribbon */}
-      <div className="bg-gradient-to-r from-indigo-950/70 via-slate-900/80 to-violet-950/70 border border-indigo-400/30 rounded-2xl p-4">
+      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 shadow-sm">
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/30">
+              <span className="text-xs font-mono px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-bold border border-emerald-200">
                 {bookingReference}
               </span>
-              <span className="text-xs text-slate-400 uppercase tracking-wider">{bookingType} RESERVATION</span>
+              <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">{bookingType} RESERVATION</span>
             </div>
-            <h3 className="text-sm font-bold text-white mt-1">{title}</h3>
-            <p className="text-xs text-slate-300">{subtitle}</p>
+            <h3 className="text-sm font-bold text-slate-900 mt-1">{title}</h3>
+            <p className="text-xs text-slate-500">{subtitle}</p>
           </div>
           <div className="text-right">
-            <p className="text-xs text-slate-400">Total Due</p>
-            <p className="text-xl font-black text-white">${amount.toLocaleString()}</p>
+            <p className="text-xs text-slate-500 font-medium">Total Due</p>
+            <p className="text-xl font-black text-slate-900">${amount.toLocaleString()}</p>
           </div>
         </div>
 
         {lineItems.length > 0 && (
-          <div className="mt-3 pt-3 border-t border-white/10 space-y-1 text-xs">
+          <div className="mt-3 pt-3 border-t border-slate-200/80 space-y-1 text-xs">
             {lineItems.map((item) => (
-              <div key={item.label} className="flex justify-between text-slate-400">
+              <div key={item.label} className="flex justify-between text-slate-500">
                 <span>{item.label}</span>
-                <span className="text-slate-200">${item.amount.toLocaleString()}</span>
+                <span className="text-slate-800 font-medium">${item.amount.toLocaleString()}</span>
               </div>
             ))}
           </div>
@@ -314,7 +314,7 @@ export const PaymentView: React.FC<PaymentProps> = ({
 
       {/* Payment Method Selector */}
       <div className="space-y-1.5">
-        <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
+        <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
           Choose Payment Method
         </label>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
@@ -323,15 +323,15 @@ export const PaymentView: React.FC<PaymentProps> = ({
               key={method.id}
               type="button"
               onClick={() => setSelectedMethod(method.id)}
-              className={`p-2 rounded-xl border text-left transition-all ${
+              className={`p-2.5 rounded-xl border text-left transition-all ${
                 selectedMethod === method.id
-                  ? 'bg-indigo-600/40 border-indigo-400/60 text-white shadow-lg shadow-indigo-500/20'
-                  : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:text-white'
+                  ? 'bg-emerald-50 border-emerald-500 text-emerald-900 shadow-sm ring-1 ring-emerald-500/30'
+                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900'
               }`}
             >
               <div className="text-base">{method.icon}</div>
-              <div className="mt-0.5 text-xs font-semibold leading-tight text-white">{method.name}</div>
-              <div className="text-[10px] text-slate-400 leading-tight mt-0.5 truncate">{method.description}</div>
+              <div className="mt-0.5 text-xs font-semibold leading-tight text-slate-900">{method.name}</div>
+              <div className="text-[10px] text-slate-500 leading-tight mt-0.5 truncate">{method.description}</div>
             </button>
           ))}
         </div>
@@ -339,7 +339,7 @@ export const PaymentView: React.FC<PaymentProps> = ({
 
       {/* ─── DYNAMIC QR CODE SCANNER VIEW (for UPI_QR, Google Pay, Apple Pay, PayPal) ─── */}
       {selectedMethod !== 'credit_card' ? (
-        <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-5">
+        <div className="bg-slate-50/80 border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-5">
           {/* Visual Scannable QR Code */}
           <div className="flex-shrink-0">
             <DynamicQRCode
@@ -348,9 +348,9 @@ export const PaymentView: React.FC<PaymentProps> = ({
               method={selectedMethod}
             />
             <div className="mt-1.5 text-center">
-              <span className="text-[10px] text-slate-400 font-mono flex items-center justify-center gap-1">
-                <RefreshCw size={10} className="animate-spin text-indigo-400" />
-                Expires in <span className="text-indigo-300 font-bold">{formatTimer(secondsLeft)}</span>
+              <span className="text-[10px] text-slate-500 font-mono flex items-center justify-center gap-1">
+                <RefreshCw size={10} className="animate-spin text-emerald-700" />
+                Expires in <span className="text-emerald-800 font-bold">{formatTimer(secondsLeft)}</span>
               </span>
             </div>
           </div>
@@ -359,44 +359,44 @@ export const PaymentView: React.FC<PaymentProps> = ({
           <div className="flex-1 space-y-3 text-left w-full">
             <div>
               <div className="flex items-center gap-1.5">
-                <QrCode size={16} className="text-indigo-400" />
-                <h4 className="text-sm font-bold text-white">
+                <QrCode size={16} className="text-emerald-700" />
+                <h4 className="text-sm font-bold text-slate-900">
                   Scan to Pay ${amount.toLocaleString()} {currency}
                 </h4>
               </div>
-              <p className="text-xs text-slate-300 mt-1">
+              <p className="text-xs text-slate-600 mt-1">
                 Scan this QR code using any camera, banking app, or {PAYMENT_METHODS.find((m) => m.id === selectedMethod)?.name}.
               </p>
             </div>
 
             {/* Virtual UPI / ID Card */}
-            <div className="bg-white/5 border border-white/10 rounded-xl p-2.5 flex items-center justify-between gap-2">
+            <div className="bg-white border border-slate-200 rounded-xl p-2.5 flex items-center justify-between gap-2 shadow-sm">
               <div className="min-w-0">
-                <p className="text-[10px] text-slate-400 uppercase tracking-widest">Merchant Virtual Payment ID</p>
-                <p className="text-xs font-mono text-indigo-300 font-semibold truncate">{upiId}</p>
+                <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Merchant Virtual Payment ID</p>
+                <p className="text-xs font-mono text-emerald-800 font-semibold truncate">{upiId}</p>
               </div>
               <button
                 type="button"
                 onClick={copyUPI}
-                className="px-2.5 py-1.5 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 text-xs font-medium flex items-center gap-1 transition flex-shrink-0"
+                className="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-medium flex items-center gap-1 transition flex-shrink-0"
               >
-                {copiedUPI ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                {copiedUPI ? <Check size={12} className="text-emerald-700" /> : <Copy size={12} />}
                 <span>{copiedUPI ? 'Copied' : 'Copy'}</span>
               </button>
             </div>
 
-            <p className="text-[11px] text-slate-400 leading-snug">
-              Once scanned on your device, click <b className="text-white">"Verify & Approve Payment"</b> below to finalize your booking.
+            <p className="text-[11px] text-slate-500 leading-snug">
+              Once scanned on your device, click <b className="text-slate-900">"Verify & Approve Payment"</b> below to finalize your booking.
             </p>
           </div>
         </div>
       ) : (
         /* ─── CARD PAYMENT INPUT FORM ─── */
-        <div className="space-y-3 bg-white/[0.02] border border-white/10 rounded-2xl p-4">
+        <div className="space-y-3 bg-slate-50/80 border border-slate-200 rounded-2xl p-4">
           <div className="space-y-1">
             <div className="flex justify-between items-center">
-              <label className="text-xs font-semibold text-slate-300">Card Number</label>
-              <span className="text-[11px] text-indigo-300 uppercase font-mono font-bold">{cardBrand}</span>
+              <label className="text-xs font-semibold text-slate-700">Card Number</label>
+              <span className="text-[11px] text-emerald-700 uppercase font-mono font-bold">{cardBrand}</span>
             </div>
             <div className="relative">
               <input
@@ -405,78 +405,78 @@ export const PaymentView: React.FC<PaymentProps> = ({
                 placeholder="4532 •••• •••• 8920"
                 value={card.cardNumber}
                 onChange={(e) => setCard((prev) => ({ ...prev, cardNumber: formatCardNumber(e.target.value) }))}
-                className={`w-full bg-white/5 border rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none transition font-mono ${
-                  errors.cardNumber ? 'border-rose-500/60' : 'border-white/10 focus:border-indigo-400/60'
+                className={`w-full bg-white border rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 outline-none transition font-mono ${
+                  errors.cardNumber ? 'border-rose-400' : 'border-slate-200 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600'
                 }`}
               />
               <CreditCard size={16} className="absolute left-3.5 top-3 text-slate-400" />
             </div>
-            {errors.cardNumber && <p className="text-xs text-rose-400">{errors.cardNumber}</p>}
+            {errors.cardNumber && <p className="text-xs text-rose-500 font-medium">{errors.cardNumber}</p>}
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-300">Cardholder Name</label>
+            <label className="text-xs font-semibold text-slate-700">Cardholder Name</label>
             <input
               type="text"
               placeholder="Alexander Wright"
               value={card.cardHolder}
               onChange={(e) => setCard((prev) => ({ ...prev, cardHolder: e.target.value }))}
-              className={`w-full bg-white/5 border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 outline-none transition ${
-                errors.cardHolder ? 'border-rose-500/60' : 'border-white/10 focus:border-indigo-400/60'
+              className={`w-full bg-white border rounded-xl px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 outline-none transition ${
+                errors.cardHolder ? 'border-rose-400' : 'border-slate-200 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600'
               }`}
             />
-            {errors.cardHolder && <p className="text-xs text-rose-400">{errors.cardHolder}</p>}
+            {errors.cardHolder && <p className="text-xs text-rose-500 font-medium">{errors.cardHolder}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-300">Expiration (MM/YY)</label>
+              <label className="text-xs font-semibold text-slate-700">Expiration (MM/YY)</label>
               <input
                 type="text"
                 maxLength={5}
                 placeholder="12/28"
                 value={card.expiryDate}
                 onChange={(e) => setCard((prev) => ({ ...prev, expiryDate: formatExpiryDate(e.target.value) }))}
-                className={`w-full bg-white/5 border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 outline-none transition font-mono ${
-                  errors.expiryDate ? 'border-rose-500/60' : 'border-white/10 focus:border-indigo-400/60'
+                className={`w-full bg-white border rounded-xl px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 outline-none transition font-mono ${
+                  errors.expiryDate ? 'border-rose-400' : 'border-slate-200 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600'
                 }`}
               />
-              {errors.expiryDate && <p className="text-xs text-rose-400">{errors.expiryDate}</p>}
+              {errors.expiryDate && <p className="text-xs text-rose-500 font-medium">{errors.expiryDate}</p>}
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-300">CVV / CVC</label>
+              <label className="text-xs font-semibold text-slate-700">CVV / CVC</label>
               <input
                 type="password"
                 maxLength={4}
                 placeholder="•••"
                 value={card.cvv}
                 onChange={(e) => setCard((prev) => ({ ...prev, cvv: e.target.value.replace(/\D/g, '') }))}
-                className={`w-full bg-white/5 border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 outline-none transition font-mono ${
-                  errors.cvv ? 'border-rose-500/60' : 'border-white/10 focus:border-indigo-400/60'
+                className={`w-full bg-white border rounded-xl px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 outline-none transition font-mono ${
+                  errors.cvv ? 'border-rose-400' : 'border-slate-200 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600'
                 }`}
               />
-              {errors.cvv && <p className="text-xs text-rose-400">{errors.cvv}</p>}
+              {errors.cvv && <p className="text-xs text-rose-500 font-medium">{errors.cvv}</p>}
             </div>
           </div>
         </div>
       )}
 
       {/* Security Guarantee Badge */}
-      <div className="flex items-center justify-between text-xs text-slate-400 px-1">
+      <div className="flex items-center justify-between text-xs text-slate-500 px-1">
         <div className="flex items-center gap-1.5">
-          <ShieldCheck size={14} className="text-emerald-400" />
+          <ShieldCheck size={14} className="text-emerald-600" />
           <span>256-Bit SSL Encrypted & PCI-DSS Compliant</span>
         </div>
         <div className="flex items-center gap-1">
-          <Lock size={12} className="text-slate-500" />
+          <Lock size={12} className="text-slate-400" />
           <span>Voyana Secure Shield</span>
         </div>
       </div>
 
       {errorMessage && (
-        <div className="bg-rose-500/10 border border-rose-500/30 rounded-xl p-3 flex items-center gap-2 text-xs text-rose-300">
-          <AlertCircle size={15} className="text-rose-400 flex-shrink-0" />
+        <div className="bg-rose-50 border border-rose-200 rounded-xl p-3 flex items-center gap-2 text-xs text-rose-700">
+          <AlertCircle size={15} className="text-rose-500 flex-shrink-0" />
           <span>{errorMessage}</span>
         </div>
       )}
@@ -488,7 +488,7 @@ export const PaymentView: React.FC<PaymentProps> = ({
             type="button"
             onClick={onCancel}
             disabled={isProcessing}
-            className="px-5 py-3.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 text-sm font-semibold transition"
+            className="px-5 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-sm font-semibold transition"
           >
             Back
           </button>
@@ -497,7 +497,7 @@ export const PaymentView: React.FC<PaymentProps> = ({
           type="button"
           onClick={handlePay}
           disabled={isProcessing}
-          className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold text-sm tracking-wide hover:from-indigo-500 hover:to-violet-500 transition-all shadow-lg shadow-indigo-500/30 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="flex-1 py-3.5 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm tracking-wide transition-all shadow-lg shadow-emerald-700/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {isProcessing ? (
             <>
@@ -535,19 +535,19 @@ export const PaymentModal: React.FC<StandalonePaymentModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[220] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-lg bg-slate-900/95 backdrop-blur-2xl border border-white/15 rounded-3xl shadow-2xl shadow-black/80 overflow-hidden p-6 animate-in fade-in zoom-in-95 duration-300">
-        <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-5">
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-lg bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden p-6 animate-in fade-in zoom-in-95 duration-300">
+        <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-indigo-600/30 text-indigo-300 border border-indigo-500/40">
+            <div className="p-2 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200">
               <CreditCard size={18} />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white">Complete Payment</h2>
-              <p className="text-xs text-slate-400">Secure checkout for {props.bookingReference}</p>
+              <h2 className="text-base font-bold text-slate-900">Complete Payment</h2>
+              <p className="text-xs text-slate-500">Secure checkout for {props.bookingReference}</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition">
+          <button onClick={onClose} className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition">
             <X size={18} />
           </button>
         </div>

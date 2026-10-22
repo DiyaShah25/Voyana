@@ -32,10 +32,10 @@ type Step = 'search' | 'results' | 'passenger' | 'payment' | 'confirming' | 'suc
 
 // ─── Cabin Badge ─────────────────────────────────────────────────────────────
 const CABIN_COLORS: Record<CabinClass, string> = {
-  economy: 'bg-slate-600/40 text-slate-300 border-slate-600/50',
-  premium_economy: 'bg-indigo-600/30 text-indigo-300 border-indigo-500/40',
-  business: 'bg-amber-600/25 text-amber-300 border-amber-500/40',
-  first: 'bg-violet-600/25 text-violet-300 border-violet-500/40',
+  economy: 'bg-slate-100 text-slate-700 border-slate-200',
+  premium_economy: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+  business: 'bg-amber-50 text-amber-800 border-amber-200',
+  first: 'bg-purple-50 text-purple-800 border-purple-200',
 };
 
 const AIRLINE_COLORS: Record<string, string> = {
@@ -80,72 +80,72 @@ function FlightCard({
   return (
     <div
       onClick={() => onSelect(flight)}
-      className="group relative bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-indigo-400/40 rounded-2xl p-4 cursor-pointer transition-all duration-200 hover:shadow-lg hover:shadow-indigo-500/10"
+      className="group relative bg-white hover:bg-slate-50 border border-slate-200 hover:border-emerald-500/50 rounded-2xl p-4 cursor-pointer transition-all duration-200 hover:shadow-lg hover:shadow-emerald-950/5"
     >
       {/* Airline info */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <AirlineBadge code={flight.airlineCode} name={flight.airline} />
           <div>
-            <p className="text-sm font-semibold text-white">{flight.airline}</p>
-            <p className="text-xs text-slate-400 font-mono">{flight.flightNumber} · {flight.aircraft}</p>
+            <p className="text-sm font-bold text-slate-900">{flight.airline}</p>
+            <p className="text-xs text-slate-500 font-mono">{flight.flightNumber} · {flight.aircraft}</p>
           </div>
         </div>
         <div className="text-right">
-          <p className="text-xl font-bold text-white">${price.toLocaleString()}</p>
-          {passengers > 1 && <p className="text-xs text-slate-400">${perPax.toLocaleString()} / person</p>}
+          <p className="text-xl font-black text-slate-900">${price.toLocaleString()}</p>
+          {passengers > 1 && <p className="text-xs text-slate-500">${perPax.toLocaleString()} / person</p>}
         </div>
       </div>
 
       {/* Route timeline */}
       <div className="mt-4 flex items-center gap-3">
         <div className="text-center flex-shrink-0">
-          <p className="text-2xl font-bold text-white font-mono">{formatTime(flight.departureTime)}</p>
-          <p className="text-xs text-slate-400 font-bold">{flight.originAirport.code}</p>
+          <p className="text-2xl font-black text-slate-900 font-mono">{formatTime(flight.departureTime)}</p>
+          <p className="text-xs text-slate-500 font-bold">{flight.originAirport.code}</p>
         </div>
 
         <div className="flex-1 flex flex-col items-center gap-1">
-          <p className="text-xs text-slate-400">{formatDuration(flight.durationMinutes)}</p>
+          <p className="text-xs text-slate-500 font-medium">{formatDuration(flight.durationMinutes)}</p>
           <div className="w-full flex items-center gap-1">
-            <div className="h-px bg-gradient-to-r from-indigo-500/50 to-transparent flex-1" />
-            <Plane size={14} className="text-indigo-400 -rotate-0 flex-shrink-0" />
-            <div className="h-px bg-gradient-to-l from-indigo-500/50 to-transparent flex-1" />
+            <div className="h-px bg-slate-200 flex-1" />
+            <Plane size={14} className="text-emerald-700 -rotate-0 flex-shrink-0" />
+            <div className="h-px bg-slate-200 flex-1" />
           </div>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500">
             {flight.stops === 0 ? (
-              <span className="text-emerald-400 font-semibold">Nonstop</span>
+              <span className="text-emerald-700 font-semibold">Nonstop</span>
             ) : (
-              <span className="text-amber-400">{flight.stops} stop</span>
+              <span className="text-amber-700 font-medium">{flight.stops} stop</span>
             )}
           </p>
         </div>
 
         <div className="text-center flex-shrink-0">
-          <p className="text-2xl font-bold text-white font-mono">{formatTime(flight.arrivalTime)}</p>
-          <p className="text-xs text-slate-400 font-bold">{flight.destinationAirport.code}</p>
+          <p className="text-2xl font-black text-slate-900 font-mono">{formatTime(flight.arrivalTime)}</p>
+          <p className="text-xs text-slate-500 font-bold">{flight.destinationAirport.code}</p>
         </div>
       </div>
 
       {/* Cabin + Seats + Amenities */}
-      <div className="mt-3 flex items-center justify-between">
+      <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-2.5">
         <div className="flex items-center gap-2">
-          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${CABIN_COLORS[cabin]}`}>
+          <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${CABIN_COLORS[cabin]}`}>
             {getCabinLabel(cabin)}
           </span>
-          <span className="text-xs text-slate-400 flex items-center gap-1">
+          <span className="text-xs text-slate-500 flex items-center gap-1 font-medium">
             <Luggage size={11} />
             {cabin === 'economy' ? '23kg' : cabin === 'premium_economy' ? '32kg' : '50kg'}
           </span>
           {cabin !== 'economy' && (
-            <span className="text-xs text-slate-400 flex items-center gap-1"><Wifi size={11} />WiFi</span>
+            <span className="text-xs text-slate-500 flex items-center gap-1 font-medium"><Wifi size={11} />WiFi</span>
           )}
           {(cabin === 'business' || cabin === 'first') && (
-            <span className="text-xs text-slate-400 flex items-center gap-1"><Coffee size={11} />Meal</span>
+            <span className="text-xs text-slate-500 flex items-center gap-1 font-medium"><Coffee size={11} />Meal</span>
           )}
         </div>
         <button
           onClick={e => { e.stopPropagation(); onSelect(flight); }}
-          className="text-xs font-semibold text-indigo-400 group-hover:text-indigo-300 flex items-center gap-1 transition"
+          className="text-xs font-bold text-emerald-700 group-hover:text-emerald-800 flex items-center gap-1 transition"
         >
           Select <ArrowRight size={13} />
         </button>
@@ -268,19 +268,19 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={handleClose} />
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={handleClose} />
 
       {/* Panel */}
-      <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-slate-900/95 backdrop-blur-2xl border border-white/15 rounded-3xl shadow-2xl shadow-black/80 overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+      <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
 
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-white/10 flex-shrink-0">
+        <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/80 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-500/30">
+            <div className="p-2.5 rounded-xl bg-emerald-100 text-emerald-800 shadow-sm">
               <Plane size={18} />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white tracking-wide">
+              <h2 className="text-base font-bold text-slate-900 tracking-wide">
                 {step === 'search' && 'Search Flights'}
                 {step === 'results' && 'Available Flights'}
                 {step === 'passenger' && 'Passenger Details'}
@@ -288,7 +288,7 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                 {step === 'confirming' && 'Confirming Booking...'}
                 {step === 'success' && 'Booking Confirmed!'}
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 {step === 'search' && 'Find the best fares worldwide'}
                 {step === 'results' && `${sortedFlights.length} flights found · ${formatDate(departureDate)}`}
                 {step === 'passenger' && `${selectedFlight?.airline} ${selectedFlight?.flightNumber}`}
@@ -307,12 +307,12 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                   else if (step === 'passenger') setStep('results');
                   else setStep('search');
                 }}
-                className="text-xs text-slate-400 hover:text-white transition px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10"
+                className="text-xs font-semibold text-slate-600 hover:text-slate-900 transition px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200"
               >
                 ← Back
               </button>
             )}
-            <button onClick={handleClose} className="p-2 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition">
+            <button onClick={handleClose} className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition">
               <X size={18} />
             </button>
           </div>
@@ -327,8 +327,8 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
               {/* Origin/Destination */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <MapPin size={11} className="text-indigo-400" /> From
+                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                    <MapPin size={11} className="text-emerald-700" /> From
                   </label>
                   <div className="relative">
                     <input
@@ -336,7 +336,7 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                       onChange={e => setOrigin(e.target.value)}
                       placeholder="City or Airport code"
                       list="origin-list"
-                      className="w-full bg-white/5 border border-white/10 focus:border-indigo-400/60 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 outline-none transition"
+                      className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-600 focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition"
                     />
                     <datalist id="origin-list">
                       {Object.keys(CITY_TO_AIRPORT).map(c => (
@@ -346,15 +346,15 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <Plane size={11} className="text-indigo-400" /> To
+                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                    <Plane size={11} className="text-emerald-700" /> To
                   </label>
                   <input
                     value={destination}
                     onChange={e => setDestination(e.target.value)}
                     placeholder="City or Airport code"
                     list="destination-list"
-                    className="w-full bg-white/5 border border-white/10 focus:border-indigo-400/60 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 outline-none transition"
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-600 focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition"
                   />
                   <datalist id="destination-list">
                     {Object.keys(CITY_TO_AIRPORT).map(c => (
@@ -367,32 +367,32 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
               {/* Date + Passengers */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <Calendar size={11} className="text-indigo-400" /> Departure Date
+                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                    <Calendar size={11} className="text-emerald-700" /> Departure Date
                   </label>
                   <input
                     type="date"
                     min={today}
                     value={departureDate}
                     onChange={e => setDepartureDate(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 focus:border-indigo-400/60 rounded-xl px-4 py-3 text-sm text-white outline-none transition [color-scheme:dark]"
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-600 focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-900 outline-none transition"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <Users size={11} className="text-indigo-400" /> Passengers
+                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                    <Users size={11} className="text-emerald-700" /> Passengers
                   </label>
-                  <div className="flex items-center bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 gap-4">
-                    <button onClick={() => setPassengers(p => Math.max(1, p - 1))} className="text-slate-400 hover:text-white text-lg w-7 h-7 rounded-lg hover:bg-white/10 transition flex items-center justify-center font-bold">−</button>
-                    <span className="flex-1 text-center text-sm font-semibold text-white">{passengers}</span>
-                    <button onClick={() => setPassengers(p => Math.min(9, p + 1))} className="text-slate-400 hover:text-white text-lg w-7 h-7 rounded-lg hover:bg-white/10 transition flex items-center justify-center font-bold">+</button>
+                  <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 gap-4">
+                    <button onClick={() => setPassengers(p => Math.max(1, p - 1))} className="text-slate-500 hover:text-slate-900 text-lg w-7 h-7 rounded-lg hover:bg-slate-200 transition flex items-center justify-center font-bold">−</button>
+                    <span className="flex-1 text-center text-sm font-bold text-slate-900">{passengers}</span>
+                    <button onClick={() => setPassengers(p => Math.min(9, p + 1))} className="text-slate-500 hover:text-slate-900 text-lg w-7 h-7 rounded-lg hover:bg-slate-200 transition flex items-center justify-center font-bold">+</button>
                   </div>
                 </div>
               </div>
 
               {/* Cabin Class */}
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Cabin Class</label>
+                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Cabin Class</label>
                 <div className="grid grid-cols-4 gap-2">
                   {CABIN_OPTIONS.map(opt => (
                     <button
@@ -400,8 +400,8 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                       onClick={() => setCabin(opt.value)}
                       className={`py-2.5 px-2 rounded-xl border text-xs font-semibold transition-all text-center ${
                         cabin === opt.value
-                          ? 'bg-indigo-600/40 border-indigo-400/60 text-white shadow-lg shadow-indigo-500/20'
-                          : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:text-white'
+                          ? 'bg-emerald-700 border-emerald-700 text-white shadow-md shadow-emerald-700/20'
+                          : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                       }`}
                     >
                       <div className="text-base">{opt.icon}</div>
@@ -413,18 +413,18 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
 
               {/* Popular Routes */}
               <div className="space-y-2">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Popular Routes</p>
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Popular Routes</p>
                 <div className="grid grid-cols-2 gap-2">
                   {POPULAR_ROUTES.map(r => (
                     <button
                       key={`${r.from}-${r.to}`}
                       onClick={() => { setOrigin(r.fromCity); setDestination(r.toCity); }}
-                      className="flex items-center gap-2 p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/8 hover:border-white/20 transition text-left"
+                      className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition text-left"
                     >
-                      <span className="text-xs font-mono text-indigo-400 font-bold">{r.from}</span>
-                      <ArrowRight size={11} className="text-slate-500 flex-shrink-0" />
-                      <span className="text-xs font-mono text-indigo-400 font-bold">{r.to}</span>
-                      <span className="text-xs text-slate-400 truncate">{r.toCity}</span>
+                      <span className="text-xs font-mono text-emerald-700 font-bold">{r.from}</span>
+                      <ArrowRight size={11} className="text-slate-400 flex-shrink-0" />
+                      <span className="text-xs font-mono text-emerald-700 font-bold">{r.to}</span>
+                      <span className="text-xs text-slate-600 truncate font-medium">{r.toCity}</span>
                     </button>
                   ))}
                 </div>
@@ -434,7 +434,7 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
               <button
                 onClick={handleSearch}
                 disabled={!origin || !destination || !departureDate}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold text-sm tracking-wide hover:from-indigo-500 hover:to-violet-500 transition-all shadow-lg shadow-indigo-500/30 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-3.5 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm tracking-wide transition-all shadow-lg shadow-emerald-700/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 <Search size={17} />
                 Search Flights
@@ -446,22 +446,22 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
           {step === 'results' && (
             <div className="flex flex-col h-full">
               {/* Filter / Sort Bar */}
-              <div className="flex items-center gap-3 px-5 py-3 border-b border-white/8 bg-white/[0.02] flex-shrink-0">
-                <Filter size={13} className="text-slate-400" />
+              <div className="flex items-center gap-3 px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex-shrink-0">
+                <Filter size={13} className="text-slate-500" />
                 <div className="flex items-center gap-2 flex-1 flex-wrap">
                   {(['price', 'duration', 'departure'] as const).map(s => (
                     <button
                       key={s}
                       onClick={() => setSortBy(s)}
-                      className={`text-xs px-3 py-1 rounded-lg font-medium transition ${sortBy === s ? 'bg-indigo-600/40 text-indigo-300 border border-indigo-500/40' : 'text-slate-400 hover:text-white bg-white/5 border border-transparent'}`}
+                      className={`text-xs px-3 py-1.5 rounded-lg font-semibold transition ${sortBy === s ? 'bg-emerald-700 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 bg-slate-100 border border-slate-200'}`}
                     >
                       {s.charAt(0).toUpperCase() + s.slice(1)}
                     </button>
                   ))}
-                  <div className="w-px h-4 bg-white/15" />
+                  <div className="w-px h-4 bg-slate-200" />
                   <button
                     onClick={() => setFilterStops(f => f === 'any' ? 'nonstop' : 'any')}
-                    className={`text-xs px-3 py-1 rounded-lg font-medium transition ${filterStops === 'nonstop' ? 'bg-emerald-600/30 text-emerald-300 border border-emerald-500/40' : 'text-slate-400 hover:text-white bg-white/5 border border-transparent'}`}
+                    className={`text-xs px-3 py-1.5 rounded-lg font-semibold transition ${filterStops === 'nonstop' ? 'bg-emerald-700 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 bg-slate-100 border border-slate-200'}`}
                   >
                     Nonstop only
                   </button>
@@ -469,11 +469,11 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
               </div>
 
               {/* Flight List */}
-              <div className="p-4 space-y-3 overflow-y-auto">
+              <div className="p-4 space-y-3 overflow-y-auto bg-slate-50/40">
                 {sortedFlights.length === 0 ? (
-                  <div className="py-12 text-center text-slate-400">
-                    <Plane size={36} className="mx-auto mb-3 opacity-30" />
-                    <p>No flights found for this route on the selected date.</p>
+                  <div className="py-12 text-center text-slate-500">
+                    <Plane size={36} className="mx-auto mb-3 opacity-30 text-slate-400" />
+                    <p className="font-medium">No flights found for this route on the selected date.</p>
                   </div>
                 ) : (
                   sortedFlights.map(f => (
@@ -494,15 +494,15 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
           {step === 'passenger' && selectedFlight && (
             <div className="p-5 space-y-4">
               {/* Selected flight summary */}
-              <div className="bg-indigo-600/10 border border-indigo-400/25 rounded-2xl p-3.5 flex items-center gap-3">
+              <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-4 flex items-center gap-3">
                 <AirlineBadge code={selectedFlight.airlineCode} name={selectedFlight.airline} />
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-white">{selectedFlight.airline} · {selectedFlight.flightNumber}</p>
-                  <p className="text-xs text-slate-300">{selectedFlight.originAirport.code} → {selectedFlight.destinationAirport.code} · {formatTime(selectedFlight.departureTime)} – {formatTime(selectedFlight.arrivalTime)}</p>
+                  <p className="text-sm font-bold text-slate-900">{selectedFlight.airline} · {selectedFlight.flightNumber}</p>
+                  <p className="text-xs text-slate-600 font-medium">{selectedFlight.originAirport.code} → {selectedFlight.destinationAirport.code} · {formatTime(selectedFlight.departureTime)} – {formatTime(selectedFlight.arrivalTime)}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-bold text-indigo-300">${(selectedFlight.prices[cabin] * passengers).toLocaleString()}</p>
-                  <span className={`text-xs px-2 py-0.5 rounded-full border ${CABIN_COLORS[cabin]}`}>{getCabinLabel(cabin)}</span>
+                  <p className="text-lg font-black text-emerald-800">${(selectedFlight.prices[cabin] * passengers).toLocaleString()}</p>
+                  <span className={`text-xs px-2.5 py-0.5 rounded-full border ${CABIN_COLORS[cabin]}`}>{getCabinLabel(cabin)}</span>
                 </div>
               </div>
 
@@ -516,16 +516,16 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                   { id: 'contactPhone', label: 'Contact Phone', placeholder: '+91 98765 43210', type: 'tel' },
                 ].map(field => (
                   <div key={field.id} className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-300">{field.label}</label>
+                    <label className="text-xs font-semibold text-slate-600">{field.label}</label>
                     <input
                       type={field.type}
                       value={passenger[field.id as keyof PassengerDetails] as string}
                       onChange={e => setPassenger(prev => ({ ...prev, [field.id]: e.target.value }))}
                       placeholder={field.placeholder}
-                      className={`w-full bg-white/5 border rounded-xl px-3 py-2.5 text-sm text-white placeholder-slate-500 outline-none transition [color-scheme:dark] ${passengerErrors[field.id as keyof PassengerDetails] ? 'border-rose-500/60' : 'border-white/10 focus:border-indigo-400/60'}`}
+                      className={`w-full bg-slate-50 border rounded-xl px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 outline-none transition ${passengerErrors[field.id as keyof PassengerDetails] ? 'border-rose-400 focus:border-rose-500' : 'border-slate-200 focus:border-emerald-600 focus:bg-white'}`}
                     />
                     {passengerErrors[field.id as keyof PassengerDetails] && (
-                      <p className="text-xs text-rose-400">{passengerErrors[field.id as keyof PassengerDetails]}</p>
+                      <p className="text-xs text-rose-600 font-medium">{passengerErrors[field.id as keyof PassengerDetails]}</p>
                     )}
                   </div>
                 ))}
@@ -533,11 +533,11 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-300">Seat Preference</label>
+                  <label className="text-xs font-semibold text-slate-600">Seat Preference</label>
                   <select
                     value={passenger.seatPreference}
                     onChange={e => setPassenger(prev => ({ ...prev, seatPreference: e.target.value as PassengerDetails['seatPreference'] }))}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white outline-none transition [color-scheme:dark]"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-600 focus:bg-white"
                   >
                     <option value="window">Window</option>
                     <option value="aisle">Aisle</option>
@@ -546,11 +546,11 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-300">Meal Preference</label>
+                  <label className="text-xs font-semibold text-slate-600">Meal Preference</label>
                   <select
                     value={passenger.mealPreference}
                     onChange={e => setPassenger(prev => ({ ...prev, mealPreference: e.target.value as PassengerDetails['mealPreference'] }))}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white outline-none transition [color-scheme:dark]"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-600 focus:bg-white"
                   >
                     <option value="standard">Standard</option>
                     <option value="vegetarian">Vegetarian</option>
@@ -563,7 +563,7 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
 
               <button
                 onClick={handleProceedToPayment}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold text-sm tracking-wide hover:from-indigo-500 hover:to-violet-500 transition-all shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2"
+                className="w-full py-3.5 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm tracking-wide transition-all shadow-lg shadow-emerald-700/20 flex items-center justify-center gap-2"
               >
                 <span>Continue to Payment</span>
                 <ArrowRight size={17} />
@@ -599,11 +599,11 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
           {step === 'confirming' && (
             <div className="py-20 flex flex-col items-center gap-4">
               <div className="relative">
-                <div className="w-16 h-16 rounded-full border-4 border-indigo-600/30 border-t-indigo-500 animate-spin" />
-                <Plane size={22} className="absolute inset-0 m-auto text-indigo-400 animate-pulse" />
+                <div className="w-16 h-16 rounded-full border-4 border-emerald-100 border-t-emerald-700 animate-spin" />
+                <Plane size={22} className="absolute inset-0 m-auto text-emerald-700 animate-pulse" />
               </div>
-              <p className="text-white font-semibold">Securing your seat...</p>
-              <p className="text-slate-400 text-sm">Please wait while we confirm your reservation</p>
+              <p className="text-slate-900 font-bold">Securing your seat...</p>
+              <p className="text-slate-500 text-sm">Please wait while we confirm your reservation</p>
             </div>
           )}
 
@@ -612,56 +612,56 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
             <div className="p-5 space-y-5">
               {/* Success header */}
               <div className="text-center space-y-2">
-                <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center mx-auto">
-                  <CheckCircle2 size={30} className="text-emerald-400" />
+                <div className="w-16 h-16 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center mx-auto text-emerald-800">
+                  <CheckCircle2 size={30} />
                 </div>
-                <h3 className="text-xl font-bold text-white">Booking Confirmed!</h3>
-                <p className="text-slate-400 text-sm">Your ticket has been issued. Check your alerts for updates.</p>
+                <h3 className="text-xl font-bold text-slate-900">Booking Confirmed!</h3>
+                <p className="text-slate-500 text-sm">Your ticket has been issued. Check your alerts for updates.</p>
               </div>
 
               {/* E-Ticket */}
-              <div className="relative bg-gradient-to-br from-indigo-950/80 via-slate-900/90 to-violet-950/80 border border-indigo-400/30 rounded-3xl overflow-hidden">
+              <div className="relative bg-white border border-slate-200 rounded-3xl shadow-lg overflow-hidden">
                 {/* Perforation line */}
                 <div className="flex items-center gap-0 py-0">
-                  <div className="w-6 h-6 rounded-full bg-slate-900 -ml-3 flex-shrink-0" />
-                  <div className="flex-1 border-t border-dashed border-white/15" />
-                  <div className="w-6 h-6 rounded-full bg-slate-900 -mr-3 flex-shrink-0" />
+                  <div className="w-6 h-6 rounded-full bg-slate-100 -ml-3 flex-shrink-0 border-r border-slate-200" />
+                  <div className="flex-1 border-t border-dashed border-slate-200" />
+                  <div className="w-6 h-6 rounded-full bg-slate-100 -mr-3 flex-shrink-0 border-l border-slate-200" />
                 </div>
 
                 <div className="px-6 py-4 space-y-4">
                   {/* Booking ref */}
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-slate-400 uppercase tracking-widest">Booking Reference</p>
-                      <p className="text-2xl font-black text-white font-mono tracking-widest">{bookingRef}</p>
+                      <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">Booking Reference</p>
+                      <p className="text-2xl font-black text-emerald-800 font-mono tracking-widest">{bookingRef}</p>
                     </div>
-                    <div className="bg-white p-2 rounded-xl">
+                    <div className="bg-slate-50 border border-slate-200 p-2 rounded-xl">
                       <div className="w-14 h-14 grid grid-cols-7 gap-0.5">
                         {Array.from({ length: 49 }).map((_, i) => (
-                          <div key={i} className={`rounded-[1px] ${Math.random() > 0.5 ? 'bg-black' : 'bg-white'}`} />
+                          <div key={i} className={`rounded-[1px] ${Math.random() > 0.5 ? 'bg-slate-900' : 'bg-slate-100'}`} />
                         ))}
                       </div>
                     </div>
                   </div>
 
                   {/* Flight Route */}
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between border-t border-slate-100 pt-3">
                     <div>
-                      <p className="text-3xl font-black text-white font-mono">{selectedFlight.originAirport.code}</p>
-                      <p className="text-xs text-slate-400">{selectedFlight.originAirport.city}</p>
+                      <p className="text-3xl font-black text-slate-900 font-mono">{selectedFlight.originAirport.code}</p>
+                      <p className="text-xs text-slate-500 font-medium">{selectedFlight.originAirport.city}</p>
                     </div>
                     <div className="flex flex-col items-center gap-1">
-                      <Plane size={20} className="text-indigo-400" />
-                      <p className="text-xs text-slate-400">{formatDuration(selectedFlight.durationMinutes)}</p>
+                      <Plane size={20} className="text-emerald-700" />
+                      <p className="text-xs text-slate-500 font-semibold">{formatDuration(selectedFlight.durationMinutes)}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-3xl font-black text-white font-mono">{selectedFlight.destinationAirport.code}</p>
-                      <p className="text-xs text-slate-400">{selectedFlight.destinationAirport.city}</p>
+                      <p className="text-3xl font-black text-slate-900 font-mono">{selectedFlight.destinationAirport.code}</p>
+                      <p className="text-xs text-slate-500 font-medium">{selectedFlight.destinationAirport.city}</p>
                     </div>
                   </div>
 
                   {/* Details grid */}
-                  <div className="grid grid-cols-3 gap-3 text-sm">
+                  <div className="grid grid-cols-3 gap-3 text-sm bg-slate-50/80 p-3 rounded-2xl border border-slate-100">
                     {[
                       { label: 'Flight', value: selectedFlight.flightNumber },
                       { label: 'Date', value: formatDate(selectedFlight.departureTime) },
@@ -671,26 +671,26 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                       { label: 'Passenger', value: passenger.fullName.split(' ')[0] || 'Traveler' },
                     ].map(d => (
                       <div key={d.label}>
-                        <p className="text-[10px] text-slate-400 uppercase tracking-widest">{d.label}</p>
-                        <p className="text-xs font-semibold text-white truncate">{d.value}</p>
+                        <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">{d.label}</p>
+                        <p className="text-xs font-bold text-slate-900 truncate">{d.value}</p>
                       </div>
                     ))}
                   </div>
 
                   {/* Airline & Payment Status */}
-                  <div className="flex items-center justify-between border-t border-white/10 pt-3">
+                  <div className="flex items-center justify-between border-t border-slate-100 pt-3">
                     <div className="flex items-center gap-2">
                       <AirlineBadge code={selectedFlight.airlineCode} name={selectedFlight.airline} />
                       <div>
-                        <p className="text-xs font-semibold text-white">{selectedFlight.airline}</p>
-                        <span className="text-[11px] text-emerald-400 font-medium flex items-center gap-1">
+                        <p className="text-xs font-bold text-slate-900">{selectedFlight.airline}</p>
+                        <span className="text-[11px] text-emerald-700 font-semibold flex items-center gap-1">
                           <CheckCircle2 size={12} /> Payment Verified · {selectedFlight.aircraft}
                         </span>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-slate-400">Total Paid</p>
-                      <p className="text-lg font-black text-emerald-400">${(selectedFlight.prices[cabin] * passengers).toLocaleString()}</p>
+                      <p className="text-xs text-slate-500 font-semibold">Total Paid</p>
+                      <p className="text-lg font-black text-emerald-800">${(selectedFlight.prices[cabin] * passengers).toLocaleString()}</p>
                     </div>
                   </div>
                 </div>
@@ -701,7 +701,7 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                 <button
                   type="button"
                   onClick={() => alert(`E-Ticket ${bookingRef} downloaded to your device!`)}
-                  className="flex-1 py-3 rounded-2xl bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-400/40 text-indigo-200 font-semibold text-sm transition flex items-center justify-center gap-2"
+                  className="flex-1 py-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm transition flex items-center justify-center gap-2 shadow-md shadow-emerald-700/20"
                 >
                   <Sparkles size={15} />
                   Download E-Ticket
@@ -709,7 +709,7 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="flex-1 py-3 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/15 text-white font-semibold text-sm transition"
+                  className="flex-1 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 font-bold text-sm transition"
                 >
                   Done
                 </button>

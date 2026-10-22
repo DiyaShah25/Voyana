@@ -105,22 +105,22 @@ export default function UnifiedBundleBookingModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/90 backdrop-blur-2xl animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-4xl bg-slate-900 border border-white/15 rounded-3xl shadow-2xl overflow-hidden my-4 flex flex-col max-h-[92vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+      <div className="relative w-full max-w-4xl bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden my-4 flex flex-col max-h-[92vh]">
         {/* Modal Header */}
-        <div className="px-6 py-4 border-b border-white/10 bg-slate-950/70 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/80 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg">
+            <div className="p-2.5 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-sm">
               <Package size={22} />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-white">Unified Trip Bundle Checkout</h3>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                <h3 className="text-base font-bold text-slate-900">Unified Trip Bundle Checkout</h3>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
                   Multi-Service Bundle
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 Book Flights + Stays + Transport together & save up to 15% on cross-service bundles
               </p>
             </div>
@@ -128,7 +128,7 @@ export default function UnifiedBundleBookingModal({
 
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-white/10"
+            className="p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-colors"
           >
             <X size={20} />
           </button>
@@ -138,39 +138,39 @@ export default function UnifiedBundleBookingModal({
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {bookingSuccess ? (
             <div className="text-center py-8 space-y-5 animate-fade-in">
-              <div className="w-16 h-16 rounded-3xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto shadow-xl">
+              <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center mx-auto shadow-sm">
                 <CheckCircle2 size={36} />
               </div>
 
               <div>
-                <h3 className="text-xl font-bold text-white">Unified Travel Bundle Confirmed!</h3>
-                <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
+                <h3 className="text-xl font-bold text-slate-900">Unified Travel Bundle Confirmed!</h3>
+                <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
                   All selected reservations have been booked together and auto-synced with your Trip Workspace itinerary & split ledger.
                 </p>
               </div>
 
-              <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-5 max-w-lg mx-auto text-left space-y-3">
-                <div className="flex items-center justify-between text-xs pb-2 border-b border-white/5">
-                  <span className="text-slate-400">Bundle Booking Reference</span>
-                  <span className="font-mono font-bold text-indigo-300">{bookingSuccess.bundleReference}</span>
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 max-w-lg mx-auto text-left space-y-3 shadow-sm">
+                <div className="flex items-center justify-between text-xs pb-2 border-b border-slate-200">
+                  <span className="text-slate-500">Bundle Booking Reference</span>
+                  <span className="font-mono font-bold text-emerald-800">{bookingSuccess.bundleReference}</span>
                 </div>
-                <div className="flex items-center justify-between text-xs pb-2 border-b border-white/5">
-                  <span className="text-slate-400">Total Services Booked</span>
-                  <span className="font-bold text-white">{bookingSuccess.bookedItems.length} Services</span>
+                <div className="flex items-center justify-between text-xs pb-2 border-b border-slate-200">
+                  <span className="text-slate-500">Total Services Booked</span>
+                  <span className="font-bold text-slate-900">{bookingSuccess.bookedItems.length} Services</span>
                 </div>
-                <div className="flex items-center justify-between text-xs pb-2 border-b border-white/5">
-                  <span className="text-slate-400">Bundle Discount Saved</span>
-                  <span className="font-bold text-emerald-400">-${bookingSuccess.discountAmount} (15% OFF)</span>
+                <div className="flex items-center justify-between text-xs pb-2 border-b border-slate-200">
+                  <span className="text-slate-500">Bundle Discount Saved</span>
+                  <span className="font-bold text-emerald-700">-${bookingSuccess.discountAmount} (15% OFF)</span>
                 </div>
                 <div className="flex items-center justify-between text-sm pt-1 font-bold">
-                  <span className="text-white">Total Amount Paid</span>
-                  <span className="text-indigo-300">${bookingSuccess.finalPaidAmount}</span>
+                  <span className="text-slate-900">Total Amount Paid</span>
+                  <span className="text-slate-900">${bookingSuccess.finalPaidAmount}</span>
                 </div>
               </div>
 
               <button
                 onClick={onClose}
-                className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-lg"
+                className="px-6 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-md shadow-emerald-700/20"
               >
                 Back to Dashboard
               </button>
@@ -180,11 +180,11 @@ export default function UnifiedBundleBookingModal({
               {/* Bundle Items Selector */}
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-600">
                     Included Travel Services ({selectedItems.length} selected)
                   </h4>
                   {pricing.discountPercentage > 0 && (
-                    <span className="text-xs font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                    <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
                       <Percent size={12} />
                       <span>{pricing.discountPercentage}% Multi-Service Bundle Discount Applied</span>
                     </span>
@@ -202,27 +202,27 @@ export default function UnifiedBundleBookingModal({
                         onClick={() => toggleItem(item)}
                         className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
                           isSelected
-                            ? 'bg-indigo-950/40 border-indigo-500/40 shadow-lg shadow-indigo-600/10'
-                            : 'bg-white/[0.02] border-white/5 opacity-50 hover:opacity-80'
+                            ? 'bg-emerald-50/70 border-emerald-500 shadow-md ring-1 ring-emerald-500/30'
+                            : 'bg-slate-50/80 border-slate-200 opacity-60 hover:opacity-100'
                         }`}
                       >
                         <div>
                           <div className="flex items-center justify-between mb-2">
-                            <div className="p-2 rounded-xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/30">
+                            <div className="p-2 rounded-xl bg-emerald-100/70 text-emerald-800 border border-emerald-200">
                               <Icon size={16} />
                             </div>
-                            <span className="text-xs font-bold text-white">${item.price}</span>
+                            <span className="text-xs font-bold text-slate-900">${item.price}</span>
                           </div>
-                          <h5 className="text-xs font-bold text-white">{item.title}</h5>
-                          <p className="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
-                            <MapPin size={10} className="text-rose-400 flex-shrink-0" />
+                          <h5 className="text-xs font-bold text-slate-900">{item.title}</h5>
+                          <p className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
+                            <MapPin size={10} className="text-emerald-700 flex-shrink-0" />
                             <span className="truncate">{item.subTitle}</span>
                           </p>
                         </div>
 
-                        <div className="mt-3 pt-2 border-t border-white/5 flex items-center justify-between text-[10px] text-slate-400">
+                        <div className="mt-3 pt-2 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-500">
                           <span>{item.date}</span>
-                          <span className={`px-2 py-0.5 rounded font-bold ${isSelected ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/5'}`}>
+                          <span className={`px-2 py-0.5 rounded font-bold ${isSelected ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}`}>
                             {isSelected ? 'Included' : '+ Add'}
                           </span>
                         </div>
@@ -233,18 +233,18 @@ export default function UnifiedBundleBookingModal({
               </div>
 
               {/* Workspace Sync Dropdown */}
-              <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-4">
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                    <Sparkles size={14} className="text-indigo-400" />
+                  <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                    <Sparkles size={14} className="text-emerald-700" />
                     <span>Auto-Sync Itinerary to Trip Workspace</span>
                   </span>
-                  <span className="text-[10px] text-slate-400">Optional</span>
+                  <span className="text-[10px] text-slate-400 font-medium">Optional</span>
                 </div>
                 <select
                   value={selectedTripId}
                   onChange={(e) => setSelectedTripId(e.target.value)}
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
                 >
                   <option value="">Do not sync (Standalone booking)</option>
                   {availableTrips.map((t) => (
@@ -257,7 +257,7 @@ export default function UnifiedBundleBookingModal({
 
               {/* Payment Method Selector */}
               <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
                   Payment Method
                 </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -275,8 +275,8 @@ export default function UnifiedBundleBookingModal({
                         onClick={() => setPaymentMethod(m.id as any)}
                         className={`p-3 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all ${
                           paymentMethod === m.id
-                            ? 'bg-indigo-600 text-white border-indigo-500 shadow-md'
-                            : 'bg-white/[0.03] text-slate-300 border-white/10 hover:bg-white/[0.06]'
+                            ? 'bg-emerald-700 text-white border-emerald-700 shadow-md shadow-emerald-700/20'
+                            : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
                         }`}
                       >
                         <Icon size={15} />
@@ -288,31 +288,31 @@ export default function UnifiedBundleBookingModal({
               </div>
 
               {/* Cost Summary & Pay Button */}
-              <div className="bg-gradient-to-r from-indigo-950/70 via-purple-950/60 to-slate-900 border border-indigo-500/30 rounded-2xl p-5 space-y-3">
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-3 shadow-sm">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400">Total Services Subtotal</span>
-                  <span className="font-bold text-white">${pricing.subtotal}</span>
+                  <span className="text-slate-500">Total Services Subtotal</span>
+                  <span className="font-bold text-slate-900">${pricing.subtotal}</span>
                 </div>
                 {pricing.discountAmount > 0 && (
-                  <div className="flex items-center justify-between text-xs text-emerald-400">
+                  <div className="flex items-center justify-between text-xs text-emerald-700 font-semibold">
                     <span>Bundle Saver Discount ({pricing.discountPercentage}%)</span>
                     <span>-${pricing.discountAmount}</span>
                   </div>
                 )}
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400">Taxes & Service GST (5%)</span>
-                  <span className="font-bold text-white">${pricing.taxAmount}</span>
+                  <span className="text-slate-500">Taxes & Service GST (5%)</span>
+                  <span className="font-bold text-slate-900">${pricing.taxAmount}</span>
                 </div>
-                <div className="pt-2 border-t border-white/10 flex items-center justify-between">
+                <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
                   <div>
-                    <span className="text-xs text-slate-400 block">Final Bundle Total</span>
-                    <span className="text-xl font-black text-white">${pricing.totalAmount}</span>
+                    <span className="text-xs text-slate-500 block">Final Bundle Total</span>
+                    <span className="text-xl font-black text-slate-900">${pricing.totalAmount}</span>
                   </div>
 
                   <button
                     type="submit"
                     disabled={isProcessing}
-                    className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/30 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                    className="flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-md shadow-emerald-700/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
                   >
                     <span>{isProcessing ? 'Processing...' : 'Confirm & Book Bundle'}</span>
                     <ArrowRight size={14} />
