@@ -295,10 +295,10 @@ export default function MyBookingsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-5xl bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden my-6 flex flex-col max-h-[92vh]">
+    <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 sm:p-6 md:p-8 bg-slate-900/65 backdrop-blur-md animate-fade-in overflow-y-auto">
+      <div className="relative w-full max-w-5xl bg-white border border-slate-200/90 rounded-3xl shadow-2xl shadow-slate-950/20 overflow-hidden my-auto flex flex-col max-h-[88vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/80">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-slate-50/90 via-white to-slate-50/90">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center shadow-sm">
               <Briefcase size={20} />
@@ -522,8 +522,8 @@ export default function MyBookingsModal({
 
       {/* ─── MODIFICATION SUB-MODAL ─────────────────────────────────────────── */}
       {modifyingBooking && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-          <div className="relative w-full max-w-2xl bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 overflow-hidden my-6">
+        <div className="fixed inset-0 z-[1250] flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="relative w-full max-w-2xl bg-white border border-slate-200/90 rounded-3xl shadow-2xl p-6 overflow-hidden my-auto max-h-[88vh] overflow-y-auto">
             {/* Header */}
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div className="flex items-center gap-3">
@@ -802,8 +802,8 @@ export default function MyBookingsModal({
 
       {/* ─── CANCELLATION CONFIRMATION DIALOG ──────────────────────────────── */}
       {cancelTarget && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl text-center">
+        <div className="fixed inset-0 z-[1250] flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="relative w-full max-w-md bg-white border border-slate-200/90 rounded-3xl p-6 shadow-2xl text-center my-auto">
             <div className="w-14 h-14 rounded-full bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center mx-auto mb-4 shadow-sm">
               <Trash2 size={24} />
             </div>
@@ -832,8 +832,8 @@ export default function MyBookingsModal({
 
       {/* ─── DIGITAL VOUCHER MODAL ─────────────────────────────────────────── */}
       {voucherTarget && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl">
+        <div className="fixed inset-0 z-[1250] flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="relative w-full max-w-md bg-white border border-slate-200/90 rounded-3xl p-6 shadow-2xl my-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <div className="flex items-center gap-2">
                 <span className="text-xl">{getCategoryIcon(voucherTarget.bookingType)}</span>

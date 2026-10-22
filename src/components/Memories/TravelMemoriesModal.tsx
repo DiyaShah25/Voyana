@@ -331,10 +331,10 @@ export default function TravelMemoriesModal({
 
   // ── RENDER ────────────────────────────────────────────────────────────
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="memories-modal-title">
-      <div className="relative w-full max-w-5xl bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden my-4 flex flex-col max-h-[94vh]">
+    <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 sm:p-6 md:p-8 bg-slate-900/65 backdrop-blur-md animate-fade-in overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="memories-modal-title">
+      <div className="relative w-full max-w-5xl bg-white border border-slate-200/90 rounded-3xl shadow-2xl shadow-slate-950/20 overflow-hidden my-auto flex flex-col max-h-[88vh]">
         {/* ── HEADER ────────────────────────────────────────────────── */}
-        <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/80 flex flex-wrap items-center justify-between gap-4">
+        <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/90 via-white to-slate-50/90 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 shadow-sm">
               <Camera size={22} />
@@ -579,11 +579,11 @@ export default function TravelMemoriesModal({
       {lightboxMemory && (
         <div
           onClick={() => setLightboxMemory(null)}
-          className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-[1350] flex items-center justify-center p-4 bg-slate-900/85 backdrop-blur-md animate-fade-in overflow-y-auto"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="relative max-w-4xl w-full bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+            className="relative max-w-4xl w-full bg-white border border-slate-200/90 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[88vh] my-auto"
           >
             {/* Lightbox Image */}
             <div className="relative w-full aspect-[16/10] bg-slate-950 flex items-center justify-center overflow-hidden">
@@ -679,8 +679,8 @@ export default function TravelMemoriesModal({
 
       {/* ─── UPLOAD MEMORY FORM MODAL ───────────────────────────────────── */}
       {showUploadForm && (
-        <div className="fixed inset-0 z-65 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-          <div className="relative w-full max-w-lg bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl space-y-4 my-6 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[1250] flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="relative w-full max-w-lg bg-white border border-slate-200/90 rounded-3xl p-6 shadow-2xl space-y-4 my-auto max-h-[88vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">

@@ -534,9 +534,9 @@ export const PaymentModal: React.FC<StandalonePaymentModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[220] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-lg bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden p-6 animate-in fade-in zoom-in-95 duration-300">
+    <div className="fixed inset-0 z-[1300] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+      <div className="absolute inset-0 bg-slate-900/65 backdrop-blur-md" onClick={onClose} />
+      <div className="relative w-full max-w-lg bg-white border border-slate-200/90 rounded-3xl shadow-2xl shadow-slate-950/20 overflow-hidden p-6 my-auto max-h-[88vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-300">
         <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200">
