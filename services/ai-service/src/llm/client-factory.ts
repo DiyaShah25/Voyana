@@ -16,7 +16,7 @@ export function getLlmClient(): LlmClient {
     return cachedClient;
   }
 
-  if (config.llmProvider === 'groq' && config.groqApiKey) {
+  if (process.env.NODE_ENV !== 'test' && config.llmProvider === 'groq' && config.groqApiKey) {
     try {
       cachedClient = new GroqLlmClient(config.groqApiKey, config.groqModel);
       console.log(`[LLM Factory] Initialized GroqLlmClient with model: ${config.groqModel}`);

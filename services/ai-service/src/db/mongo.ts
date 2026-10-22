@@ -32,6 +32,7 @@ export async function connectMongo(): Promise<boolean> {
 
   try {
     mongoose.set('strictQuery', true);
+    mongoose.set('bufferCommands', false);
 
     await mongoose.connect(config.mongoUri, {
       dbName: config.dbName,

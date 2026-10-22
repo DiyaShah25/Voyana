@@ -293,9 +293,9 @@ function MainAppContent() {
       {/* 5. EDITORIAL DESTINATIONS GRID */}
       <DestinationGrid
         onSelectDestination={handleSelectLocation}
-        onOpenFlight={(dest) => { setFlightModalDestination(dest); setFlightModalOpen(true); }}
-        onOpenHotel={(dest) => { setHotelModalDestination(dest); setHotelModalOpen(true); }}
-        onOpenReviews={(dest) => { setReviewsDestination(dest); setReviewsModalOpen(true); }}
+        onOpenFlight={(dest: string) => { setFlightModalDestination(dest); setFlightModalOpen(true); }}
+        onOpenHotel={(dest: string) => { setHotelModalDestination(dest); setHotelModalOpen(true); }}
+        onOpenReviews={(dest: string) => { setReviewsDestination(dest); setReviewsModalOpen(true); }}
       />
 
       {/* 6. INTELLIGENT TRAVEL SUITE (Workspace, AI, Packing, Budget, Reviews, Memories) */}
