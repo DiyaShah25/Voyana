@@ -18,6 +18,7 @@ import { packingRouter } from './routes/packing.router.js';
 import { alertsRouter } from './routes/alerts.router.js';
 import { reviewsRouter } from './routes/reviews.router.js';
 import { destinationsRouter } from './routes/destinations.router.js';
+import { memoriesRouter } from './routes/memories.router.js';
 import { runDataMigration } from './services/migration.service.js';
 
 export function createApp(): Express {
@@ -42,6 +43,7 @@ export function createApp(): Express {
   app.use('/api/bookings', bookingsRouter);
   app.use('/api/budget', budgetRouter);
   app.use('/api/collaboration', collaborationRouter);
+  app.use('/api/memories', memoriesRouter);
   app.use('/api/packing', packingRouter);
   app.use('/api/alerts', alertsRouter);
   app.use('/api/reviews', reviewsRouter);

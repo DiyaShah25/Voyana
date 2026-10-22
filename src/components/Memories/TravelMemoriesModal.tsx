@@ -2,6 +2,7 @@
  * Travel Memories Modal
  * Photo journal and travel memories gallery with upload,
  * location tagging, captions, likes, and memory deletion.
+ * Fully connected to MongoDB Atlas 'memories' collection.
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -9,12 +10,15 @@ import {
   Camera, X, Heart, MapPin, Calendar, Tag, Search,
   ZoomIn, Download, Trash2, Plus, Clock, Grid3X3,
   Image as ImageIcon, Filter, Sparkles, ChevronDown,
+  Upload, CheckCircle2, Database,
 } from 'lucide-react';
 import {
+  getAllMemories,
   getTripMemories,
   uploadTripMemory,
   likeTripMemory,
   deleteTripMemory,
+  updateTripMemory,
   generateAiJournalStory,
   type TripMemory,
 } from '@/services/collaborationService';
@@ -28,6 +32,7 @@ export interface TravelMemoriesModalProps {
 }
 
 type ViewMode = 'gallery' | 'timeline';
+type SortMode = 'newest' | 'likes' | 'oldest';
 
 export default function TravelMemoriesModal({
   isOpen,
@@ -39,9 +44,11 @@ export default function TravelMemoriesModal({
   const [allMemories, setAllMemories] = useState<TripMemory[]>([]);
   const [userTrips, setUserTrips] = useState<Trip[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Filters
+  // Filters & Sorting
   const [viewMode, setViewMode] = useState<ViewMode>('gallery');
+  const [sortMode, setSortMode] = useState<SortMode>('newest');
   const [selectedTripId, setSelectedTripId] = useState<string>(initialTripId || 'all');
   const [selectedTag, setSelectedTag] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -58,30 +65,24 @@ export default function TravelMemoriesModal({
   const [uploadTags, setUploadTags] = useState('Travel, Moments');
   const [uploadTripTarget, setUploadTripTarget] = useState('trip-user-01');
 
-  // Load all memories across all user trips
+  // Load all memories directly from MongoDB Atlas
   const loadAllData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const trips = await getUserTrips();
+      const [trips, mems] = await Promise.all([
+        getUserTrips(),
+        getAllMemories(),
+      ]);
       setUserTrips(trips);
 
-      const allMems: TripMemory[] = [];
-      for (const trip of trips) {
-        const tripMems = await getTripMemories(trip.id);
-        allMems.push(...tripMems);
-      }
-
-      // Also load default trip memories if none found
-      if (allMems.length === 0) {
+      if (mems && mems.length > 0) {
+        setAllMemories(mems);
+      } else {
         const defaultMems = await getTripMemories('trip-user-01');
-        allMems.push(...defaultMems);
+        setAllMemories(defaultMems);
       }
-
-      // Sort by date descending
-      allMems.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      setAllMemories(allMems);
     } catch (err) {
-      console.error('[TravelMemoriesModal] Error loading memories:', err);
+      console.error('[TravelMemoriesModal] Error loading memories from Atlas:', err);
     } finally {
       setIsLoading(false);
     }
@@ -110,61 +111,113 @@ export default function TravelMemoriesModal({
     return matchesTripFilter && matchesTagFilter && matchesSearch;
   });
 
+  // Apply Sort
+  const sortedMemories = [...filteredMemories].sort((a, b) => {
+    if (sortMode === 'likes') return (b.likes?.length || 0) - (a.likes?.length || 0);
+    if (sortMode === 'oldest') return new Date(a.date).getTime() - new Date(b.date).getTime();
+    return new Date(b.date).getTime() - new Date(a.date).getTime();
+  });
+
   // Group by date for timeline view
   const groupedByDate: Record<string, TripMemory[]> = {};
-  filteredMemories.forEach((mem) => {
+  sortedMemories.forEach((mem) => {
     const dateKey = mem.date || 'Unknown Date';
     if (!groupedByDate[dateKey]) groupedByDate[dateKey] = [];
     groupedByDate[dateKey].push(mem);
   });
   const sortedDates = Object.keys(groupedByDate).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
-  const totalLikes = allMemories.reduce((sum, m) => sum + m.likes.length, 0);
+  const totalLikes = allMemories.reduce((sum, m) => sum + (m.likes?.length || 0), 0);
 
   // ── Handlers ──────────────────────────────────────────────────────────
   const handleLike = async (mem: TripMemory) => {
-    await likeTripMemory(mem.tripId, mem.id, currentUser.name);
-    await loadAllData();
-    // Update lightbox if open
+    // Optimistic UI toggle
+    const isLiked = mem.likes?.includes(currentUser.name);
+    const updatedLikes = isLiked
+      ? (mem.likes || []).filter((u) => u !== currentUser.name)
+      : [...(mem.likes || []), currentUser.name];
+
+    setAllMemories((prev) =>
+      prev.map((m) => (m.id === mem.id ? { ...m, likes: updatedLikes } : m))
+    );
+
     if (lightboxMemory && lightboxMemory.id === mem.id) {
-      const updatedMems = await getTripMemories(mem.tripId);
-      const updated = updatedMems.find((m) => m.id === mem.id);
-      if (updated) setLightboxMemory(updated);
+      setLightboxMemory({ ...lightboxMemory, likes: updatedLikes });
+    }
+
+    // Persist to MongoDB Atlas
+    const res = await likeTripMemory(mem.tripId, mem.id, currentUser.name);
+    if (res.success && res.likes) {
+      setAllMemories((prev) =>
+        prev.map((m) => (m.id === mem.id ? { ...m, likes: res.likes } : m))
+      );
+      if (lightboxMemory && lightboxMemory.id === mem.id) {
+        setLightboxMemory({ ...lightboxMemory, likes: res.likes });
+      }
     }
   };
 
   const handleDelete = async (mem: TripMemory) => {
-    await deleteTripMemory(mem.tripId, mem.id);
+    if (!window.confirm(`Delete "${mem.title}" from your travel memories journal?`)) {
+      return;
+    }
+    // Optimistic delete
+    setAllMemories((prev) => prev.filter((m) => m.id !== mem.id));
     if (lightboxMemory?.id === mem.id) setLightboxMemory(null);
-    await loadAllData();
+    // Delete in MongoDB Atlas
+    await deleteTripMemory(mem.tripId, mem.id);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        setUploadImageUrl(reader.result);
+        if (!uploadTitle.trim()) {
+          const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+          setUploadTitle(cleanName.charAt(0).toUpperCase() + cleanName.slice(1));
+        }
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!uploadTitle.trim() || !uploadImageUrl.trim()) return;
 
-    const parsedTags = uploadTags
-      .split(',')
-      .map((t) => t.trim().replace(/^#/, ''))
-      .filter((t) => t.length > 0);
+    setIsSubmitting(true);
+    try {
+      const parsedTags = uploadTags
+        .split(',')
+        .map((t) => t.trim().replace(/^#/, ''))
+        .filter((t) => t.length > 0);
 
-    await uploadTripMemory(uploadTripTarget, {
-      uploadedBy: currentUser.name,
-      title: uploadTitle,
-      caption: uploadCaption || undefined,
-      locationName: uploadLocation || undefined,
-      imageUrl: uploadImageUrl,
-      date: new Date().toISOString().split('T')[0],
-      tags: parsedTags.length > 0 ? parsedTags : ['Travel', 'Moments'],
-    });
+      const saved = await uploadTripMemory(uploadTripTarget, {
+        uploadedBy: currentUser.name,
+        title: uploadTitle.trim(),
+        caption: uploadCaption.trim() || undefined,
+        locationName: uploadLocation.trim() || undefined,
+        imageUrl: uploadImageUrl.trim(),
+        date: new Date().toISOString().split('T')[0],
+        tags: parsedTags.length > 0 ? parsedTags : ['Travel', 'Moments'],
+      });
 
-    setShowUploadForm(false);
-    setUploadTitle('');
-    setUploadCaption('');
-    setUploadLocation('');
-    setUploadImageUrl('');
-    setUploadTags('Travel, Moments');
-    await loadAllData();
+      setAllMemories((prev) => [saved, ...prev.filter((m) => m.id !== saved.id)]);
+      setShowUploadForm(false);
+      setUploadTitle('');
+      setUploadCaption('');
+      setUploadLocation('');
+      setUploadImageUrl('');
+      setUploadTags('Travel, Moments');
+      await loadAllData();
+    } catch (err) {
+      console.error('[TravelMemoriesModal] Failed to upload memory:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getTripNameById = (tripId: string) => {
@@ -290,24 +343,29 @@ export default function TravelMemoriesModal({
               <Camera size={22} />
             </div>
             <div>
-              <h2 id="memories-modal-title" className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h2 id="memories-modal-title" className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                 Travel Memories & Photo Journal
                 <span
                   style={{
                     fontSize: '10px',
                     fontWeight: 700,
-                    padding: '2px 8px',
+                    padding: '3px 9px',
                     borderRadius: '999px',
-                    background: 'rgba(236,72,153,0.2)',
-                    color: '#f9a8d4',
-                    border: '1px solid rgba(236,72,153,0.3)',
+                    background: 'rgba(16, 185, 129, 0.15)',
+                    color: '#34d399',
+                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px',
                   }}
+                  title="Directly connected to MongoDB Atlas 'memories' collection"
                 >
-                  Memories Vault
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px #10b981' }} />
+                  MongoDB Atlas ({allMemories.length})
                 </span>
               </h2>
               <p className="modal-subtitle">
-                Capture, relive & share your unforgettable travel highlights
+                Capture, relive & share your unforgettable travel moments — backed by shared cloud database
               </p>
             </div>
           </div>
@@ -436,6 +494,31 @@ export default function TravelMemoriesModal({
                   {trip.title} — {trip.destination}
                 </option>
               ))}
+            </select>
+            <ChevronDown size={12} style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+          </div>
+
+          {/* Sort Selector */}
+          <div style={{ position: 'relative' }}>
+            <select
+              value={sortMode}
+              onChange={(e) => setSortMode(e.target.value as any)}
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '10px',
+                padding: '7px 28px 7px 10px',
+                color: '#e2e8f0',
+                fontSize: '11px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                appearance: 'none',
+                outline: 'none',
+              }}
+            >
+              <option value="newest">Newest First</option>
+              <option value="likes">Most Liked</option>
+              <option value="oldest">Oldest First</option>
             </select>
             <ChevronDown size={12} style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
           </div>
@@ -576,7 +659,7 @@ export default function TravelMemoriesModal({
               </div>
               <p style={{ fontSize: '13px', color: '#94a3b8', fontWeight: 600 }}>Loading your travel memories...</p>
             </div>
-          ) : filteredMemories.length === 0 ? (
+          ) : sortedMemories.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 20px' }}>
               <div
                 style={{
@@ -635,7 +718,7 @@ export default function TravelMemoriesModal({
                 gap: '18px',
               }}
             >
-              {filteredMemories.map((mem) => (
+              {sortedMemories.map((mem) => (
                 <MemoryCard key={mem.id} mem={mem} />
               ))}
             </div>
@@ -984,17 +1067,46 @@ export default function TravelMemoriesModal({
                 />
               </div>
 
-              {/* Image URL */}
+              {/* Image Input (Device Upload + URL + Presets) */}
               <div>
-                <label style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginBottom: '4px', fontWeight: 600 }}>
-                  Photo URL *
-                </label>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>
+                    Photo Image *
+                  </label>
+                  <label
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      padding: '3px 10px',
+                      borderRadius: '8px',
+                      background: 'rgba(99, 102, 241, 0.15)',
+                      border: '1px solid rgba(165, 180, 252, 0.3)',
+                      color: '#c7d2fe',
+                      cursor: 'pointer',
+                      fontSize: '10px',
+                      fontWeight: 700,
+                      transition: 'all 0.2s',
+                    }}
+                    title="Select a photo directly from your device"
+                  >
+                    <Upload size={11} className="text-indigo-400" />
+                    <span>Upload from Device</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                </div>
+
                 <input
-                  type="url"
+                  type="text"
                   required
                   value={uploadImageUrl}
                   onChange={(e) => setUploadImageUrl(e.target.value)}
-                  placeholder="https://images.unsplash.com/..."
+                  placeholder="Paste image URL (https://...) or choose file from device above"
                   style={{
                     width: '100%',
                     background: 'rgba(15,23,42,0.8)',
@@ -1009,7 +1121,7 @@ export default function TravelMemoriesModal({
                 />
 
                 {/* Quick Presets */}
-                <div style={{ display: 'flex', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '6px', marginTop: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
                   <span style={{ fontSize: '10px', color: '#64748b', fontWeight: 600, marginRight: '2px', lineHeight: '24px' }}>Presets:</span>
                   {[
                     { label: '🌅 Sunset', url: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1000&auto=format&fit=crop&q=80' },
@@ -1017,6 +1129,7 @@ export default function TravelMemoriesModal({
                     { label: '🏛️ Architecture', url: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=1000&auto=format&fit=crop&q=80' },
                     { label: '🗼 Tokyo', url: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=1000&auto=format&fit=crop&q=80' },
                     { label: '🏖️ Beach', url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1000&auto=format&fit=crop&q=80' },
+                    { label: '🏔️ Alps', url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1000&auto=format&fit=crop&q=80' },
                   ].map((p) => (
                     <button
                       key={p.label}
@@ -1041,6 +1154,39 @@ export default function TravelMemoriesModal({
                     </button>
                   ))}
                 </div>
+
+                {/* Live Preview Thumbnail */}
+                {uploadImageUrl && (
+                  <div
+                    style={{
+                      marginTop: '10px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      background: 'rgba(255,255,255,0.03)',
+                      padding: '8px 12px',
+                      borderRadius: '10px',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                    }}
+                  >
+                    <img
+                      src={uploadImageUrl}
+                      alt="Preview"
+                      style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '8px', flexShrink: 0 }}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.opacity = '0.3';
+                      }}
+                    />
+                    <div style={{ minWidth: 0 }}>
+                      <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <CheckCircle2 size={12} /> Photo preview loaded
+                      </span>
+                      <div style={{ fontSize: '10px', color: '#94a3b8', truncate: true }}>
+                        Ready to store permanently in MongoDB Atlas
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Location & Tags */}
@@ -1207,19 +1353,24 @@ export default function TravelMemoriesModal({
                 </button>
                 <button
                   type="submit"
+                  disabled={isSubmitting}
                   style={{
                     padding: '9px 20px',
                     borderRadius: '12px',
-                    background: 'linear-gradient(135deg, #ec4899, #6366f1)',
+                    background: isSubmitting ? 'rgba(99,91,255,0.4)' : 'linear-gradient(135deg, #ec4899, #6366f1)',
                     color: '#fff',
                     fontSize: '12px',
                     fontWeight: 700,
                     border: 'none',
-                    cursor: 'pointer',
-                    boxShadow: '0 4px 15px rgba(236,72,153,0.25)',
+                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                    boxShadow: isSubmitting ? 'none' : '0 4px 15px rgba(236,72,153,0.25)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
                   }}
                 >
-                  Publish Memory
+                  {isSubmitting && <Sparkles size={13} className="animate-spin" />}
+                  <span>{isSubmitting ? 'Saving to Atlas DB...' : 'Publish Memory'}</span>
                 </button>
               </div>
             </form>
