@@ -44,4 +44,8 @@ export interface VoyanaGlobeProps {
   autoRotate?: boolean;
   onLocationSelect?: (location: GlobeLocation) => void;
   onGlobeReady?: () => void;
+  metadata?: {
+    temperature?: string;
+    style?: string;
+  };
 }

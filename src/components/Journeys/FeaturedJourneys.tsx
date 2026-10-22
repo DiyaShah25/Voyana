@@ -125,7 +125,7 @@ export const sampleJourneys: FeaturedJourney[] = [
 
 interface FeaturedJourneysProps {
   onSelectRoute: (routes: GlobeRoute[], startLocation: GlobeLocation) => void;
-  onOpenWorkspaceWithRoute: (title: string, destination: string) => void;
+  onOpenWorkspaceWithRoute?: (title: string, destination: string) => void;
 }
 
 export const FeaturedJourneys: React.FC<FeaturedJourneysProps> = ({
@@ -194,7 +194,7 @@ export const FeaturedJourneys: React.FC<FeaturedJourneysProps> = ({
                   type="button"
                   className="btn-plan-journey"
                   onClick={() => {
-                    onOpenWorkspaceWithRoute(journey.title, journey.stops[0]);
+                    onOpenWorkspaceWithRoute?.(journey.title, journey.stops[0]);
                   }}
                   aria-label={`Plan ${journey.title} in Workspace`}
                 >
