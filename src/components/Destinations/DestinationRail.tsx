@@ -138,6 +138,8 @@ export const DestinationRail: React.FC<DestinationRailProps> = ({
                   latitude: dest.latitude,
                   longitude: dest.longitude,
                   type: 'city',
+                  style: dest.style,
+                  temperature: dest.temperature,
                 });
               }}
               role="button"

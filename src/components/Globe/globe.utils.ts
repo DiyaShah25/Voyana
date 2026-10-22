@@ -11,13 +11,10 @@ import * as THREE from 'three';
 export function latLngToVector3(latitude: number, longitude: number, radius: number): THREE.Vector3 {
   const lat = THREE.MathUtils.degToRad(latitude);
   const lon = THREE.MathUtils.degToRad(longitude);
-  const cosLat = Math.cos(lat);
-  
-  // Greenwich sits on +X, 90E on -Z and 90W on +Z
   return new THREE.Vector3(
-    radius * cosLat * Math.cos(lon),
+    radius * Math.cos(lat) * Math.sin(lon),
     radius * Math.sin(lat),
-    -radius * cosLat * Math.sin(lon),
+    -radius * Math.cos(lat) * Math.cos(lon),
   );
 }
 
@@ -32,12 +29,10 @@ export function vector3ToLatLng(position: THREE.Vector3): { latitude: number; lo
 
 // Build a quaternion that rotates the globe to bring a lat/lng into view
 export function makeFocusQuaternion(latitude: number, longitude: number): THREE.Quaternion {
-  const lat = THREE.MathUtils.degToRad(latitude);
-  const lon = THREE.MathUtils.degToRad(longitude);
-  
-  // Ry swings the meridian round to face the camera; Rx tilts the parallel up
-  const euler = new THREE.Euler(lat, -(Math.PI / 2 + lon), 0, 'XYZ');
-  return new THREE.Quaternion().setFromEuler(euler);
+  const location = latLngToVector3(latitude, longitude, 1).normalize();
+  // Target vector positions the selected location prominently in the exposed left hemisphere of the right-wall globe
+  const targetVector = new THREE.Vector3(-0.35, 0.05, 0.93).normalize();
+  return new THREE.Quaternion().setFromUnitVectors(location, targetVector);
 }
 
 // Generate interpolated points along a great-circle arc between two locations
