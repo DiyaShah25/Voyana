@@ -16,6 +16,8 @@ export interface GlobeLocation {
   latitude: number;
   longitude: number;
   type: GlobeLocationType;
+  style?: string;
+  temperature?: string;
 }
 
 // Travel route between two locations

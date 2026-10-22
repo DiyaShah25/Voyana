@@ -44,6 +44,7 @@ export const DestinationCard: React.FC<DestinationCardProps> = ({
     latitude: destination.coordinates.latitude,
     longitude: destination.coordinates.longitude,
     type: 'city',
+    style: destination.style,
   };
 
   return (
