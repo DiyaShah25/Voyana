@@ -50,7 +50,7 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
     {
       id: 'welcome-1',
       role: 'assistant',
-      content: `Hello! I'm **Voyana AI**, your collaborative travel concierge for **${destination}**.\n\nAsk me anything about creating custom itineraries, curated destination recommendations, group budget optimization, or smart packing gear checklists!`,
+      content: `Hello! I'm **VoyaBot**, your intelligent travel co-pilot for **${destination}**.\n\nAsk me anything about creating custom itineraries, curated destination recommendations, group budget optimization, or smart packing gear checklists!`,
       timestamp: 'Just now',
       aiGenerated: true,
       citedContext: {
@@ -213,7 +213,7 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
     <div
       className={`chat-assistant-container ${isMinimized ? 'minimized' : ''}`}
       role="dialog"
-      aria-label="Voyana AI Travel Concierge"
+      aria-label="VoyaBot Travel Assistant"
     >
       {/* 1. Header Bar */}
       <div className="chat-header">
@@ -223,7 +223,7 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
           </div>
           <div className="chat-brand-meta">
             <div className="chat-title-row">
-              <span className="chat-title">Voyana AI Concierge</span>
+              <span className="chat-title">VoyaBot AI</span>
               <span className="chat-status-badge">
                 <span className="status-pulse-dot" /> Online
               </span>
