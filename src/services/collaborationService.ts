@@ -754,8 +754,59 @@ export async function uploadTripDocument(
 }
 
 // ---------------------------------------------------------------------------
-// 6. Trip Memories & Travel Journal
 // ---------------------------------------------------------------------------
+// 6. Trip Memories & Travel Journal (Connected to MongoDB Atlas)
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetch all travel memories across all trips from MongoDB Atlas,
+ * with optional filtering by tripId, tag, search query, or sorting.
+ */
+export async function getAllMemories(params?: {
+  tripId?: string;
+  tag?: string;
+  search?: string;
+  sortBy?: string;
+}): Promise<TripMemory[]> {
+  try {
+    const query = new URLSearchParams();
+    if (params?.tripId && params.tripId !== 'all') query.set('tripId', params.tripId);
+    if (params?.tag && params.tag !== 'all') query.set('tag', params.tag);
+    if (params?.search && params.search.trim()) query.set('search', params.search.trim());
+    if (params?.sortBy) query.set('sortBy', params.sortBy);
+
+    const queryString = query.toString() ? `?${query.toString()}` : '';
+    const res = await apiRequest<{ ok: boolean; memories: TripMemory[] }>(`/api/memories${queryString}`);
+    if (res.ok && Array.isArray(res.data?.memories) && res.data.memories.length > 0) {
+      const raw = localStorage.getItem(MEMORIES_KEY);
+      const store = raw ? JSON.parse(raw) : INITIAL_MEMORIES;
+      res.data.memories.forEach((mem) => {
+        if (!store[mem.tripId]) store[mem.tripId] = [];
+        const existingIdx = store[mem.tripId].findIndex((m: TripMemory) => m.id === mem.id);
+        if (existingIdx > -1) {
+          store[mem.tripId][existingIdx] = mem;
+        } else {
+          store[mem.tripId].push(mem);
+        }
+      });
+      localStorage.setItem(MEMORIES_KEY, JSON.stringify(store));
+      return res.data.memories;
+    }
+  } catch (err) {
+    console.warn('[collaborationService] getAllMemories API failed, falling back to local store:', err);
+  }
+
+  // Fallback to local storage
+  try {
+    const raw = localStorage.getItem(MEMORIES_KEY);
+    const store: Record<string, TripMemory[]> = raw ? JSON.parse(raw) : INITIAL_MEMORIES;
+    const all = Object.values(store).flat();
+    return all;
+  } catch {
+    return Object.values(INITIAL_MEMORIES).flat();
+  }
+}
+
 export async function getTripMemories(tripId: string): Promise<TripMemory[]> {
   try {
     const res = await apiRequest<{ ok: boolean; memories: TripMemory[] }>(`/api/collaboration/${tripId}/memories`);
@@ -781,6 +832,30 @@ export async function uploadTripMemory(
   tripId: string,
   memory: Omit<TripMemory, 'id' | 'tripId' | 'likes'>
 ): Promise<TripMemory> {
+  // 1. Persist directly to MongoDB Atlas backend
+  try {
+    const res = await apiRequest<{ ok: boolean; memory: TripMemory }>(`/api/collaboration/${tripId}/memories`, {
+      method: 'POST',
+      body: JSON.stringify({
+        ...memory,
+        tripId,
+      }),
+    });
+
+    if (res.ok && res.data?.memory) {
+      const saved = res.data.memory;
+      const raw = localStorage.getItem(MEMORIES_KEY);
+      const store = raw ? JSON.parse(raw) : INITIAL_MEMORIES;
+      if (!store[tripId]) store[tripId] = [];
+      store[tripId].unshift(saved);
+      localStorage.setItem(MEMORIES_KEY, JSON.stringify(store));
+      return saved;
+    }
+  } catch (err) {
+    console.warn('[collaborationService] uploadTripMemory API failed, falling back to local save:', err);
+  }
+
+  // 2. Fallback to localStorage if API is temporarily unavailable
   const raw = localStorage.getItem(MEMORIES_KEY);
   const store = raw ? JSON.parse(raw) : INITIAL_MEMORIES;
 
@@ -803,6 +878,33 @@ export async function likeTripMemory(
   memoryId: string,
   userName: string
 ): Promise<{ success: boolean; likes: string[] }> {
+  // 1. Sync with MongoDB Atlas backend
+  try {
+    const res = await apiRequest<{ ok: boolean; likes: string[]; isLiked: boolean }>(
+      `/api/collaboration/${tripId}/memories/${memoryId}/like`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ userName }),
+      }
+    );
+
+    if (res.ok && Array.isArray(res.data?.likes)) {
+      const likes = res.data.likes;
+      const raw = localStorage.getItem(MEMORIES_KEY);
+      const store = raw ? JSON.parse(raw) : INITIAL_MEMORIES;
+      const list: TripMemory[] = store[tripId] || [];
+      const target = list.find((m) => m.id === memoryId);
+      if (target) {
+        target.likes = likes;
+        localStorage.setItem(MEMORIES_KEY, JSON.stringify(store));
+      }
+      return { success: true, likes };
+    }
+  } catch (err) {
+    console.warn('[collaborationService] likeTripMemory API failed, falling back to local toggle:', err);
+  }
+
+  // 2. Fallback to localStorage
   const raw = localStorage.getItem(MEMORIES_KEY);
   const store = raw ? JSON.parse(raw) : INITIAL_MEMORIES;
 
@@ -824,6 +926,25 @@ export async function deleteTripMemory(
   tripId: string,
   memoryId: string
 ): Promise<{ success: boolean }> {
+  // 1. Delete from MongoDB Atlas backend
+  try {
+    const res = await apiRequest<{ ok: boolean }>(`/api/collaboration/${tripId}/memories/${memoryId}`, {
+      method: 'DELETE',
+    });
+    if (res.ok) {
+      const raw = localStorage.getItem(MEMORIES_KEY);
+      const store = raw ? JSON.parse(raw) : INITIAL_MEMORIES;
+      if (store[tripId]) {
+        store[tripId] = store[tripId].filter((m: TripMemory) => m.id !== memoryId);
+        localStorage.setItem(MEMORIES_KEY, JSON.stringify(store));
+      }
+      return { success: true };
+    }
+  } catch (err) {
+    console.warn('[collaborationService] deleteTripMemory API failed, falling back to local delete:', err);
+  }
+
+  // 2. Fallback to localStorage
   const raw = localStorage.getItem(MEMORIES_KEY);
   const store = raw ? JSON.parse(raw) : INITIAL_MEMORIES;
 
@@ -833,6 +954,32 @@ export async function deleteTripMemory(
   }
 
   return { success: true };
+}
+
+export async function updateTripMemory(
+  memoryId: string,
+  updates: Partial<TripMemory>
+): Promise<{ success: boolean; memory?: TripMemory }> {
+  try {
+    const res = await apiRequest<{ ok: boolean; memory: TripMemory }>(`/api/memories/${memoryId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+    if (res.ok && res.data?.memory) {
+      const updated = res.data.memory;
+      const raw = localStorage.getItem(MEMORIES_KEY);
+      const store = raw ? JSON.parse(raw) : INITIAL_MEMORIES;
+      if (updated.tripId && store[updated.tripId]) {
+        const idx = store[updated.tripId].findIndex((m: TripMemory) => m.id === memoryId);
+        if (idx > -1) store[updated.tripId][idx] = updated;
+        localStorage.setItem(MEMORIES_KEY, JSON.stringify(store));
+      }
+      return { success: true, memory: updated };
+    }
+  } catch (err) {
+    console.warn('[collaborationService] updateTripMemory API failed:', err);
+  }
+  return { success: false };
 }
 
 /**

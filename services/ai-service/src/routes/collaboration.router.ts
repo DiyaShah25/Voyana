@@ -251,3 +251,55 @@ collaborationRouter.post('/:tripId/memories', optionalAuth, async (req: Authenti
     res.status(500).json({ ok: false, message: 'Failed to save memory.', error: err?.message });
   }
 });
+
+collaborationRouter.post('/:tripId/memories/:memoryId/like', optionalAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const memoryId = String(req.params.memoryId);
+    const userName = req.body.userName || req.user?.name || 'Voyana Traveler';
+
+    const memory = await MemoryModel.findOne({
+      $or: [{ id: memoryId }, { _id: /^[0-9a-fA-F]{24}$/.test(memoryId) ? memoryId : null }],
+    });
+
+    if (!memory) {
+      res.status(404).json({ ok: false, message: 'Memory not found.' });
+      return;
+    }
+
+    const idx = memory.likes.indexOf(userName);
+    let isLiked = false;
+    if (idx > -1) {
+      memory.likes.splice(idx, 1);
+      isLiked = false;
+    } else {
+      memory.likes.push(userName);
+      isLiked = true;
+    }
+
+    memory.markModified('likes');
+    await memory.save();
+
+    res.status(200).json({ ok: true, likes: memory.likes, isLiked });
+  } catch (err: any) {
+    res.status(500).json({ ok: false, message: 'Failed to update like.', error: err?.message });
+  }
+});
+
+collaborationRouter.delete('/:tripId/memories/:memoryId', optionalAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const memoryId = String(req.params.memoryId);
+    const result = await MemoryModel.deleteOne({
+      $or: [{ id: memoryId }, { _id: /^[0-9a-fA-F]{24}$/.test(memoryId) ? memoryId : null }],
+    });
+
+    if (result.deletedCount === 0) {
+      res.status(404).json({ ok: false, message: 'Memory not found.' });
+      return;
+    }
+
+    res.status(200).json({ ok: true, message: 'Memory deleted.' });
+  } catch (err: any) {
+    res.status(500).json({ ok: false, message: 'Failed to delete memory.', error: err?.message });
+  }
+});
+
