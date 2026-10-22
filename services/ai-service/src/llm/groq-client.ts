@@ -35,7 +35,7 @@ export class GroqLlmClient implements LlmClient {
       model,
       messages: groqMessages as any,
       temperature: options?.temperature ?? 0.3,
-      max_completion_tokens: options?.maxTokens ?? 1024,
+      max_completion_tokens: options?.maxTokens ?? 4096,
       response_format: { type: 'json_object' },
     });
 
