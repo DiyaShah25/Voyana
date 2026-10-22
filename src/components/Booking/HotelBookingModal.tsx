@@ -66,7 +66,7 @@ function HotelCard({
   return (
     <div
       onClick={() => onSelect(hotel)}
-      className="group relative bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-indigo-400/40 rounded-2xl overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg hover:shadow-indigo-500/10 flex flex-col md:flex-row"
+      className="group relative bg-white hover:bg-slate-50/80 border border-slate-200 hover:border-emerald-500/50 rounded-2xl overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-md flex flex-col md:flex-row"
     >
       {/* Hotel Image */}
       <div className="relative md:w-56 h-48 md:h-auto flex-shrink-0 overflow-hidden">
@@ -75,11 +75,11 @@ function HotelCard({
           alt={hotel.name}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        <div className="absolute top-3 left-3 flex items-center gap-1 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/20 text-xs font-semibold text-amber-300">
-          <Star size={12} className="fill-amber-400 text-amber-400" />
+        <div className="absolute top-3 left-3 flex items-center gap-1 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full border border-slate-200 text-xs font-semibold text-amber-700 shadow-sm">
+          <Star size={12} className="fill-amber-500 text-amber-500" />
           <span>{hotel.starRating.toFixed(1)}</span>
         </div>
-        <div className="absolute bottom-3 left-3 bg-indigo-950/80 backdrop-blur-md px-2.5 py-0.5 rounded-lg border border-indigo-400/30 text-[11px] font-medium text-indigo-300">
+        <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-md px-2.5 py-0.5 rounded-lg border border-slate-200 text-[11px] font-medium text-slate-800 shadow-sm">
           {hotel.city}
         </div>
       </div>
@@ -89,24 +89,24 @@ function HotelCard({
         <div>
           <div className="flex items-start justify-between gap-2">
             <div>
-              <h3 className="text-base font-bold text-white group-hover:text-indigo-300 transition-colors">
+              <h3 className="text-base font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">
                 {hotel.name}
               </h3>
-              <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
-                <MapPin size={12} className="text-indigo-400 flex-shrink-0" />
+              <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                <MapPin size={12} className="text-emerald-700 flex-shrink-0" />
                 <span className="truncate">{hotel.address}</span>
               </p>
             </div>
             <div className="text-right flex-shrink-0">
-              <div className="flex items-center gap-1 bg-emerald-500/20 border border-emerald-500/30 px-2 py-0.5 rounded-lg text-emerald-400 text-xs font-bold">
+              <div className="flex items-center gap-1 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg text-emerald-800 text-xs font-bold">
                 <span>{hotel.reviewScore}</span>
-                <span className="text-[10px] text-emerald-400/80">/10</span>
+                <span className="text-[10px] text-emerald-600">/10</span>
               </div>
               <p className="text-[10px] text-slate-400 mt-0.5">{hotel.reviewCount} reviews</p>
             </div>
           </div>
 
-          <p className="text-xs text-slate-300 mt-2.5 line-clamp-2 leading-relaxed">
+          <p className="text-xs text-slate-600 mt-2.5 line-clamp-2 leading-relaxed">
             {hotel.description}
           </p>
 
@@ -115,7 +115,7 @@ function HotelCard({
             {hotel.amenities.slice(0, 4).map((amenity) => (
               <span
                 key={amenity}
-                className="text-[11px] px-2 py-0.5 rounded-md bg-white/[0.05] border border-white/10 text-slate-300"
+                className="text-[11px] px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-700"
               >
                 {amenity}
               </span>
@@ -129,12 +129,12 @@ function HotelCard({
         </div>
 
         {/* Pricing & CTA */}
-        <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
+        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
           <div>
-            <p className="text-xs text-slate-400 font-medium">
-              <span className="text-white font-bold text-lg">${nightlyRate.toLocaleString()}</span> / night
+            <p className="text-xs text-slate-500 font-medium">
+              <span className="text-slate-900 font-bold text-lg">${nightlyRate.toLocaleString()}</span> / night
             </p>
-            <p className="text-[11px] text-indigo-300 font-medium">
+            <p className="text-[11px] text-emerald-800 font-medium">
               ${totalPrice.toLocaleString()} total for {nights} night{nights > 1 ? 's' : ''}, {rooms} room{rooms > 1 ? 's' : ''}
             </p>
           </div>
@@ -144,7 +144,7 @@ function HotelCard({
               e.stopPropagation();
               onSelect(hotel);
             }}
-            className="text-xs font-semibold text-white bg-indigo-600/80 hover:bg-indigo-600 px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-md shadow-indigo-600/20"
+            className="text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-md shadow-emerald-700/20"
           >
             Select Room <ArrowRight size={13} />
           </button>
@@ -263,19 +263,19 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={handleClose} />
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={handleClose} />
 
       {/* Modal Card */}
-      <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-slate-900/95 backdrop-blur-2xl border border-white/15 rounded-3xl shadow-2xl shadow-black/80 overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+      <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
 
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-5 border-b border-white/10 flex-shrink-0">
+        <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/80 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-500/30">
+            <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-sm">
               <Building2 size={18} />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white tracking-wide">
+              <h2 className="text-base font-bold text-slate-900 tracking-wide">
                 {step === 'search' && 'Search Hotels & Resorts'}
                 {step === 'results' && 'Available Accommodations'}
                 {step === 'guest' && 'Guest & Reservation Details'}
@@ -283,7 +283,7 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                 {step === 'confirming' && 'Securing Hotel Reservation...'}
                 {step === 'success' && 'Hotel Reservation Confirmed!'}
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 {step === 'search' && 'Handpicked luxury and boutique stays across the globe'}
                 {step === 'results' && `${sortedHotels.length} properties found · ${formatDateRange(checkInDate, checkOutDate)}`}
                 {step === 'guest' && `${selectedHotel?.name} · ${roomType}`}
@@ -302,14 +302,14 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                   else if (step === 'guest') setStep('results');
                   else setStep('search');
                 }}
-                className="text-xs text-slate-400 hover:text-white transition px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10"
+                className="text-xs text-slate-600 hover:text-slate-900 transition px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 font-medium"
               >
                 ← Back
               </button>
             )}
             <button
               onClick={handleClose}
-              className="p-2 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition"
+              className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition"
             >
               <X size={18} />
             </button>
@@ -324,8 +324,8 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
             <div className="p-5 space-y-5">
               {/* Destination Input */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                  <MapPin size={11} className="text-indigo-400" /> Destination City
+                <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <MapPin size={11} className="text-emerald-700" /> Destination City
                 </label>
                 <div className="relative">
                   <input
@@ -333,7 +333,7 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                     onChange={(e) => setLocation(e.target.value)}
                     placeholder="Enter city name (e.g. Paris, Tokyo, Dubai, New York, Ahmedabad)"
                     list="hotel-dest-list"
-                    className="w-full bg-white/5 border border-white/10 focus:border-indigo-400/60 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 outline-none transition"
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-600 focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition"
                   />
                   <datalist id="hotel-dest-list">
                     {Object.keys(SEED_HOTELS).map((city) => (
@@ -346,8 +346,8 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
               {/* Check-In / Check-Out Dates */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <Calendar size={11} className="text-indigo-400" /> Check-in Date
+                  <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <Calendar size={11} className="text-emerald-700" /> Check-in Date
                   </label>
                   <input
                     type="date"
@@ -360,19 +360,19 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                         setCheckOutDate(nextD.toISOString().split('T')[0]);
                       }
                     }}
-                    className="w-full bg-white/5 border border-white/10 focus:border-indigo-400/60 rounded-xl px-4 py-3 text-sm text-white outline-none transition [color-scheme:dark]"
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-600 focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-900 outline-none transition"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <Calendar size={11} className="text-indigo-400" /> Check-out Date
+                  <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <Calendar size={11} className="text-emerald-700" /> Check-out Date
                   </label>
                   <input
                     type="date"
                     min={checkInDate || today}
                     value={checkOutDate}
                     onChange={(e) => setCheckOutDate(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 focus:border-indigo-400/60 rounded-xl px-4 py-3 text-sm text-white outline-none transition [color-scheme:dark]"
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-600 focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-900 outline-none transition"
                   />
                 </div>
               </div>
@@ -380,24 +380,24 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
               {/* Rooms & Guests */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <Users size={11} className="text-indigo-400" /> Guests
+                  <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <Users size={11} className="text-emerald-700" /> Guests
                   </label>
-                  <div className="flex items-center bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 gap-4">
+                  <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 gap-4">
                     <button
                       type="button"
                       onClick={() => setGuests((g) => Math.max(1, g - 1))}
-                      className="text-slate-400 hover:text-white text-lg w-7 h-7 rounded-lg hover:bg-white/10 transition flex items-center justify-center font-bold"
+                      className="text-slate-500 hover:text-slate-900 text-lg w-7 h-7 rounded-lg hover:bg-slate-200 transition flex items-center justify-center font-bold"
                     >
                       −
                     </button>
-                    <span className="flex-1 text-center text-sm font-semibold text-white">
+                    <span className="flex-1 text-center text-sm font-semibold text-slate-900">
                       {guests} Guest{guests > 1 ? 's' : ''}
                     </span>
                     <button
                       type="button"
                       onClick={() => setGuests((g) => Math.min(10, g + 1))}
-                      className="text-slate-400 hover:text-white text-lg w-7 h-7 rounded-lg hover:bg-white/10 transition flex items-center justify-center font-bold"
+                      className="text-slate-500 hover:text-slate-900 text-lg w-7 h-7 rounded-lg hover:bg-slate-200 transition flex items-center justify-center font-bold"
                     >
                       +
                     </button>
@@ -405,24 +405,24 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <BedDouble size={11} className="text-indigo-400" /> Rooms
+                  <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <BedDouble size={11} className="text-emerald-700" /> Rooms
                   </label>
-                  <div className="flex items-center bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 gap-4">
+                  <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 gap-4">
                     <button
                       type="button"
                       onClick={() => setRooms((r) => Math.max(1, r - 1))}
-                      className="text-slate-400 hover:text-white text-lg w-7 h-7 rounded-lg hover:bg-white/10 transition flex items-center justify-center font-bold"
+                      className="text-slate-500 hover:text-slate-900 text-lg w-7 h-7 rounded-lg hover:bg-slate-200 transition flex items-center justify-center font-bold"
                     >
                       −
                     </button>
-                    <span className="flex-1 text-center text-sm font-semibold text-white">
+                    <span className="flex-1 text-center text-sm font-semibold text-slate-900">
                       {rooms} Room{rooms > 1 ? 's' : ''}
                     </span>
                     <button
                       type="button"
                       onClick={() => setRooms((r) => Math.min(5, r + 1))}
-                      className="text-slate-400 hover:text-white text-lg w-7 h-7 rounded-lg hover:bg-white/10 transition flex items-center justify-center font-bold"
+                      className="text-slate-500 hover:text-slate-900 text-lg w-7 h-7 rounded-lg hover:bg-slate-200 transition flex items-center justify-center font-bold"
                     >
                       +
                     </button>
@@ -432,7 +432,7 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
 
               {/* Room Category Selection */}
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
                   Preferred Room Category
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -443,13 +443,13 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                       onClick={() => setRoomType(opt.value)}
                       className={`p-2.5 rounded-xl border text-left transition-all ${
                         roomType === opt.value
-                          ? 'bg-indigo-600/40 border-indigo-400/60 text-white shadow-lg shadow-indigo-500/20'
-                          : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:text-white'
+                          ? 'bg-emerald-50 border-emerald-500 text-emerald-950 shadow-sm ring-1 ring-emerald-500/30'
+                          : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
                       <div className="text-base">{opt.icon}</div>
-                      <div className="mt-1 text-xs font-semibold leading-tight text-white">{opt.label}</div>
-                      <div className="text-[10px] text-slate-400 leading-tight mt-0.5">{opt.desc}</div>
+                      <div className="mt-1 text-xs font-semibold leading-tight text-slate-900">{opt.label}</div>
+                      <div className="text-[10px] text-slate-500 leading-tight mt-0.5">{opt.desc}</div>
                     </button>
                   ))}
                 </div>
@@ -457,7 +457,7 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
 
               {/* Popular Hotel Destinations */}
               <div className="space-y-2">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   Popular Hotel Destinations
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -466,10 +466,10 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                       key={d.city}
                       type="button"
                       onClick={() => setLocation(d.city)}
-                      className="flex flex-col p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/8 hover:border-white/20 transition text-left"
+                      className="flex flex-col p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition text-left"
                     >
-                      <span className="text-xs font-bold text-indigo-300">{d.city}</span>
-                      <span className="text-[10px] text-slate-400">{d.country} · {d.hotelCount}</span>
+                      <span className="text-xs font-bold text-emerald-800">{d.city}</span>
+                      <span className="text-[10px] text-slate-500">{d.country} · {d.hotelCount}</span>
                     </button>
                   ))}
                 </div>
@@ -480,7 +480,7 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                 type="button"
                 onClick={handleSearch}
                 disabled={!location.trim() || !checkInDate || !checkOutDate}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold text-sm tracking-wide hover:from-indigo-500 hover:to-violet-500 transition-all shadow-lg shadow-indigo-500/30 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-3.5 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm tracking-wide transition-all shadow-lg shadow-emerald-700/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 <Search size={17} />
                 Search Hotels ({nights} night{nights > 1 ? 's' : ''})
@@ -492,7 +492,7 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
           {step === 'results' && (
             <div className="flex flex-col h-full">
               {/* Filter / Sort Bar */}
-              <div className="flex items-center gap-3 px-5 py-3 border-b border-white/8 bg-white/[0.02] flex-shrink-0 flex-wrap">
+              <div className="flex items-center gap-3 px-5 py-3 border-b border-slate-100 bg-slate-50/50 flex-shrink-0 flex-wrap">
                 <Filter size={13} className="text-slate-400" />
                 <div className="flex items-center gap-2 flex-1 flex-wrap">
                   {(['rating', 'price', 'name'] as const).map((s) => (
@@ -500,23 +500,23 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                       key={s}
                       type="button"
                       onClick={() => setSortBy(s)}
-                      className={`text-xs px-3 py-1 rounded-lg font-medium transition ${
+                      className={`text-xs px-3 py-1.5 rounded-lg font-medium transition ${
                         sortBy === s
-                          ? 'bg-indigo-600/40 text-indigo-300 border border-indigo-500/40'
-                          : 'text-slate-400 hover:text-white bg-white/5 border border-transparent'
+                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-300 font-semibold shadow-sm'
+                          : 'text-slate-600 hover:text-slate-900 bg-white border border-slate-200'
                       }`}
                     >
                       {s === 'rating' ? 'Top Rated' : s === 'price' ? 'Price: Low to High' : 'Name'}
                     </button>
                   ))}
-                  <div className="w-px h-4 bg-white/15" />
+                  <div className="w-px h-4 bg-slate-200" />
                   <button
                     type="button"
                     onClick={() => setFilterStars((curr) => (curr === 5 ? null : 5))}
-                    className={`text-xs px-3 py-1 rounded-lg font-medium transition ${
+                    className={`text-xs px-3 py-1.5 rounded-lg font-medium transition ${
                       filterStars === 5
-                        ? 'bg-amber-500/30 text-amber-300 border border-amber-500/40'
-                        : 'text-slate-400 hover:text-white bg-white/5 border border-transparent'
+                        ? 'bg-amber-50 text-amber-800 border border-amber-300 font-semibold shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900 bg-white border border-slate-200'
                     }`}
                   >
                     ⭐ 5-Star Only
@@ -527,8 +527,8 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
               {/* Hotels List */}
               <div className="p-4 space-y-3 overflow-y-auto">
                 {sortedHotels.length === 0 ? (
-                  <div className="py-12 text-center text-slate-400">
-                    <Building2 size={36} className="mx-auto mb-3 opacity-30" />
+                  <div className="py-12 text-center text-slate-500">
+                    <Building2 size={36} className="mx-auto mb-3 opacity-30 text-slate-400" />
                     <p>No hotels found in "{location}". Try searching for Paris, Tokyo, Dubai, New York, or Ahmedabad.</p>
                   </div>
                 ) : (
@@ -552,26 +552,26 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
           {step === 'guest' && selectedHotel && (
             <div className="p-5 space-y-4">
               {/* Selected Hotel Summary Card */}
-              <div className="bg-indigo-600/10 border border-indigo-400/25 rounded-2xl p-3.5 flex items-center gap-3">
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 flex items-center gap-3 shadow-sm">
                 <img
                   src={selectedHotel.imageUrl}
                   alt={selectedHotel.name}
-                  className="w-16 h-16 rounded-xl object-cover border border-white/10"
+                  className="w-16 h-16 rounded-xl object-cover border border-slate-200"
                 />
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-white">{selectedHotel.name}</p>
-                  <p className="text-xs text-slate-300">
+                  <p className="text-sm font-semibold text-slate-900">{selectedHotel.name}</p>
+                  <p className="text-xs text-slate-600">
                     {roomType} · {formatDateRange(checkInDate, checkOutDate)} ({nights} night{nights > 1 ? 's' : ''})
                   </p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
+                  <p className="text-[11px] text-slate-500 mt-0.5">
                     {rooms} room{rooms > 1 ? 's' : ''}, {guests} guest{guests > 1 ? 's' : ''}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-bold text-indigo-300">
+                  <p className="text-lg font-bold text-slate-900">
                     ${((selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate) * nights * rooms).toLocaleString()}
                   </p>
-                  <span className="text-[11px] px-2 py-0.5 rounded-full border bg-indigo-600/30 text-indigo-300 border-indigo-500/40">
+                  <span className="text-[11px] px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200 font-medium">
                     ${(selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate).toLocaleString()} / night
                   </span>
                 </div>
@@ -587,31 +587,31 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                   { id: 'nationality', label: 'Nationality', placeholder: 'United States', type: 'text' },
                 ].map((field) => (
                   <div key={field.id} className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-300">{field.label}</label>
+                    <label className="text-xs font-semibold text-slate-700">{field.label}</label>
                     <input
                       type={field.type}
                       value={guest[field.id as keyof GuestDetails] as string}
                       onChange={(e) => setGuest((prev) => ({ ...prev, [field.id]: e.target.value }))}
                       placeholder={field.placeholder}
-                      className={`w-full bg-white/5 border rounded-xl px-3 py-2.5 text-sm text-white placeholder-slate-500 outline-none transition [color-scheme:dark] ${
-                        errors[field.id as keyof GuestDetails] ? 'border-rose-500/60' : 'border-white/10 focus:border-indigo-400/60'
+                      className={`w-full bg-white border rounded-xl px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 outline-none transition ${
+                        errors[field.id as keyof GuestDetails] ? 'border-rose-400' : 'border-slate-200 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600'
                       }`}
                     />
                     {errors[field.id as keyof GuestDetails] && (
-                      <p className="text-xs text-rose-400">{errors[field.id as keyof GuestDetails]}</p>
+                      <p className="text-xs text-rose-500 font-medium">{errors[field.id as keyof GuestDetails]}</p>
                     )}
                   </div>
                 ))}
 
                 {/* Bed Preference */}
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-300">Bed Preference</label>
+                  <label className="text-xs font-semibold text-slate-700">Bed Preference</label>
                   <select
                     value={guest.bedPreference}
                     onChange={(e) =>
                       setGuest((prev) => ({ ...prev, bedPreference: e.target.value as GuestDetails['bedPreference'] }))
                     }
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white outline-none transition [color-scheme:dark]"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
                   >
                     <option value="king">1 King Bed</option>
                     <option value="twin">2 Twin Beds</option>
@@ -623,20 +623,20 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
 
               {/* Special Requests */}
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-300">Special Requests / Check-in Notes (Optional)</label>
+                <label className="text-xs font-semibold text-slate-700">Special Requests / Check-in Notes (Optional)</label>
                 <textarea
                   rows={2}
                   value={guest.specialRequests}
                   onChange={(e) => setGuest((prev) => ({ ...prev, specialRequests: e.target.value }))}
                   placeholder="Late check-in, high floor, quiet room, honeymoon setup..."
-                  className="w-full bg-white/5 border border-white/10 focus:border-indigo-400/60 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition resize-none"
+                  className="w-full bg-white border border-slate-200 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 rounded-xl px-3 py-2 text-sm text-slate-900 placeholder-slate-400 outline-none transition resize-none"
                 />
               </div>
 
               <button
                 type="button"
                 onClick={handleProceedToPayment}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold text-sm tracking-wide hover:from-indigo-500 hover:to-violet-500 transition-all shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2"
+                className="w-full py-3.5 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm tracking-wide transition-all shadow-lg shadow-emerald-700/20 flex items-center justify-center gap-2"
               >
                 <span>Continue to Payment</span>
                 <ArrowRight size={17} />
@@ -675,11 +675,11 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
           {step === 'confirming' && (
             <div className="py-20 flex flex-col items-center gap-4">
               <div className="relative">
-                <div className="w-16 h-16 rounded-full border-4 border-indigo-600/30 border-t-indigo-500 animate-spin" />
-                <Building2 size={22} className="absolute inset-0 m-auto text-indigo-400 animate-pulse" />
+                <div className="w-16 h-16 rounded-full border-4 border-emerald-200 border-t-emerald-700 animate-spin" />
+                <Building2 size={22} className="absolute inset-0 m-auto text-emerald-700 animate-pulse" />
               </div>
-              <p className="text-white font-semibold">Reserving your hotel room...</p>
-              <p className="text-slate-400 text-sm">Please wait while we confirm your reservation with the property</p>
+              <p className="text-slate-900 font-semibold">Reserving your hotel room...</p>
+              <p className="text-slate-500 text-sm">Please wait while we confirm your reservation with the property</p>
             </div>
           )}
 
@@ -688,48 +688,48 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
             <div className="p-5 space-y-5">
               {/* Success Header */}
               <div className="text-center space-y-2">
-                <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center mx-auto">
-                  <CheckCircle2 size={30} className="text-emerald-400" />
+                <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto shadow-sm">
+                  <CheckCircle2 size={30} className="text-emerald-700" />
                 </div>
-                <h3 className="text-xl font-bold text-white">Hotel Booking Confirmed!</h3>
-                <p className="text-slate-400 text-sm">Your reservation has been locked in. Check your alerts panel for updates.</p>
+                <h3 className="text-xl font-bold text-slate-900">Hotel Booking Confirmed!</h3>
+                <p className="text-slate-500 text-sm">Your reservation has been locked in. Check your alerts panel for updates.</p>
               </div>
 
               {/* Luxury Hotel Voucher Card */}
-              <div className="relative bg-gradient-to-br from-indigo-950/80 via-slate-900/90 to-violet-950/80 border border-indigo-400/30 rounded-3xl overflow-hidden">
+              <div className="relative bg-slate-50 border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
                 {/* Perforation Line */}
                 <div className="flex items-center gap-0 py-0">
-                  <div className="w-6 h-6 rounded-full bg-slate-900 -ml-3 flex-shrink-0" />
-                  <div className="flex-1 border-t border-dashed border-white/15" />
-                  <div className="w-6 h-6 rounded-full bg-slate-900 -mr-3 flex-shrink-0" />
+                  <div className="w-6 h-6 rounded-full bg-white border border-slate-200 -ml-3 flex-shrink-0" />
+                  <div className="flex-1 border-t border-dashed border-slate-300" />
+                  <div className="w-6 h-6 rounded-full bg-white border border-slate-200 -mr-3 flex-shrink-0" />
                 </div>
 
                 <div className="px-6 py-4 space-y-4">
                   {/* Voucher Header & Ref */}
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-slate-400 uppercase tracking-widest">Reservation Voucher</p>
-                      <p className="text-2xl font-black text-white font-mono tracking-widest">{bookingRef}</p>
+                      <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold">Reservation Voucher</p>
+                      <p className="text-2xl font-black text-slate-900 font-mono tracking-widest">{bookingRef}</p>
                     </div>
-                    <div className="bg-white p-2 rounded-xl">
+                    <div className="bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
                       <div className="w-14 h-14 grid grid-cols-7 gap-0.5">
                         {Array.from({ length: 49 }).map((_, i) => (
-                          <div key={i} className={`rounded-[1px] ${Math.random() > 0.5 ? 'bg-black' : 'bg-white'}`} />
+                          <div key={i} className={`rounded-[1px] ${Math.random() > 0.5 ? 'bg-slate-900' : 'bg-slate-100'}`} />
                         ))}
                       </div>
                     </div>
                   </div>
 
                   {/* Property Banner */}
-                  <div className="flex items-center justify-between border-y border-white/10 py-3">
+                  <div className="flex items-center justify-between border-y border-slate-200 py-3">
                     <div>
-                      <p className="text-xl font-bold text-white">{selectedHotel.name}</p>
-                      <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
-                        <MapPin size={11} className="text-indigo-400" /> {selectedHotel.address}
+                      <p className="text-xl font-bold text-slate-900">{selectedHotel.name}</p>
+                      <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                        <MapPin size={11} className="text-emerald-700" /> {selectedHotel.address}
                       </p>
                     </div>
-                    <div className="flex items-center gap-1 bg-amber-500/20 px-2 py-1 rounded-lg border border-amber-500/30 text-amber-300 text-xs font-semibold">
-                      <Star size={12} className="fill-amber-400 text-amber-400" /> {selectedHotel.starRating.toFixed(1)}
+                    <div className="flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-lg border border-amber-200 text-amber-800 text-xs font-semibold">
+                      <Star size={12} className="fill-amber-500 text-amber-500" /> {selectedHotel.starRating.toFixed(1)}
                     </div>
                   </div>
 
@@ -744,23 +744,23 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                       { label: 'Lead Guest', value: guest.fullName.split(' ')[0] || 'Traveler' },
                     ].map((d) => (
                       <div key={d.label}>
-                        <p className="text-[10px] text-slate-400 uppercase tracking-widest">{d.label}</p>
-                        <p className="text-xs font-semibold text-white truncate">{d.value}</p>
+                        <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">{d.label}</p>
+                        <p className="text-xs font-semibold text-slate-800 truncate">{d.value}</p>
                       </div>
                     ))}
                   </div>
 
                   {/* Total Paid & Payment Status */}
-                  <div className="flex items-center justify-between border-t border-white/10 pt-3">
+                  <div className="flex items-center justify-between border-t border-slate-200 pt-3">
                     <div>
-                      <p className="text-xs font-semibold text-white flex items-center gap-1">
-                        <CheckCircle2 size={13} className="text-emerald-400" /> Status: Paid & Guaranteed
+                      <p className="text-xs font-semibold text-slate-800 flex items-center gap-1">
+                        <CheckCircle2 size={13} className="text-emerald-700" /> Status: Paid & Guaranteed
                       </p>
-                      <p className="text-[11px] text-slate-400">Free cancellation up to 24h prior to check-in</p>
+                      <p className="text-[11px] text-slate-500">Free cancellation up to 24h prior to check-in</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-slate-400">Total Paid</p>
-                      <p className="text-lg font-black text-emerald-400">
+                      <p className="text-xs text-slate-500">Total Paid</p>
+                      <p className="text-lg font-black text-emerald-800">
                         ${((selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate) * nights * rooms).toLocaleString()}
                       </p>
                     </div>
@@ -773,7 +773,7 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                 <button
                   type="button"
                   onClick={() => alert(`Hotel Voucher ${bookingRef} downloaded to your device!`)}
-                  className="flex-1 py-3 rounded-2xl bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-400/40 text-indigo-200 font-semibold text-sm transition flex items-center justify-center gap-2"
+                  className="flex-1 py-3 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-semibold text-sm transition flex items-center justify-center gap-2"
                 >
                   <Sparkles size={15} />
                   Download Voucher
@@ -781,7 +781,7 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="flex-1 py-3 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/15 text-white font-semibold text-sm transition"
+                  className="flex-1 py-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-sm transition shadow-md shadow-emerald-700/20"
                 >
                   Done
                 </button>
