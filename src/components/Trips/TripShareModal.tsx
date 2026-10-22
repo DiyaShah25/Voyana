@@ -74,8 +74,8 @@ export default function TripShareModal({
   };
 
   return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-lg bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 overflow-hidden my-6">
+    <div className="fixed inset-0 z-[1200] flex items-center justify-center p-4 sm:p-6 bg-slate-900/65 backdrop-blur-md animate-fade-in overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-white border border-slate-200/90 rounded-3xl shadow-2xl p-6 overflow-hidden my-auto max-h-[88vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-100">
           <div className="flex items-center gap-3">
@@ -213,8 +213,8 @@ export default function TripShareModal({
 
       {/* ─── PUBLIC ITINERARY PREVIEW SUB-MODAL ────────────────────────────── */}
       {showPublicPreview && (
-        <div className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-          <div className="relative w-full max-w-2xl bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl my-6">
+        <div className="fixed inset-0 z-[1300] flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="relative w-full max-w-2xl bg-white border border-slate-200/90 rounded-3xl p-6 shadow-2xl my-auto max-h-[88vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <div className="flex items-center gap-2">
                 <Globe2 size={16} className="text-emerald-700" />

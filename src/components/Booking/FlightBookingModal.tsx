@@ -266,15 +266,15 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 sm:p-6 md:p-8 overflow-y-auto">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={handleClose} />
+      <div className="absolute inset-0 bg-slate-900/65 backdrop-blur-md" onClick={handleClose} />
 
       {/* Panel */}
-      <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-2xl max-h-[88vh] my-auto flex flex-col bg-white border border-slate-200/90 rounded-3xl shadow-2xl shadow-slate-950/20 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
 
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/80 flex-shrink-0">
+        <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-gradient-to-r from-slate-50/90 via-white to-slate-50/90 flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-emerald-100 text-emerald-800 shadow-sm">
               <Plane size={18} />

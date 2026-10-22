@@ -158,10 +158,10 @@ export default function TravelReviewsModal({
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-5xl bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden my-4 flex flex-col max-h-[94vh]">
+    <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 sm:p-6 md:p-8 bg-slate-900/65 backdrop-blur-md animate-fade-in overflow-y-auto">
+      <div className="relative w-full max-w-5xl bg-white border border-slate-200/90 rounded-3xl shadow-2xl shadow-slate-950/20 overflow-hidden my-auto flex flex-col max-h-[88vh]">
         {/* Header Bar */}
-        <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/80 flex flex-wrap items-center justify-between gap-4">
+        <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/90 via-white to-slate-50/90 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shadow-sm">
               <Star size={22} className="fill-amber-500 text-amber-500" />
@@ -490,8 +490,8 @@ export default function TravelReviewsModal({
 
       {/* ─── WRITE REVIEW MODAL WIZARD ────────────────────────────────────── */}
       {showWriteModal && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-          <div className="relative w-full max-w-lg bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl space-y-4 my-6 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[1250] flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="relative w-full max-w-lg bg-white border border-slate-200/90 rounded-3xl p-6 shadow-2xl space-y-4 my-auto max-h-[88vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <div className="flex items-center gap-2">
                 <Star size={18} className="text-amber-500 fill-amber-500" />
@@ -670,7 +670,7 @@ export default function TravelReviewsModal({
       {activePhoto && (
         <div
           onClick={() => setActivePhoto(null)}
-          className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-[1350] flex items-center justify-center p-4 bg-slate-900/85 backdrop-blur-md animate-fade-in"
         >
           <div className="relative max-w-3xl w-full">
             <img src={activePhoto} alt="Full resolution" className="w-full rounded-2xl shadow-2xl object-contain max-h-[85vh] mx-auto" />
