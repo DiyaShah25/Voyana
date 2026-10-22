@@ -13,6 +13,7 @@ import type {
   UserProfile,
   UserRole,
 } from '@/types/auth.types';
+import { apiRequest } from './apiClient';
 
 // Validation constants
 export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -172,7 +173,28 @@ export async function signIn(email: string, password: string): Promise<AuthResul
     return { ok: false, message: 'Please enter your password.', fieldErrors: { password: 'Password is required' } };
   }
 
-  // Attempt Supabase authentication first
+  // Attempt MongoDB Atlas Backend authentication first
+  try {
+    const apiRes = await apiRequest('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email: trimmedEmail, password }),
+    });
+
+    if (apiRes.ok && apiRes.data?.session) {
+      saveSession(apiRes.data.session);
+      return { ok: true, message: apiRes.data.message || 'Welcome back!', session: apiRes.data.session };
+    } else if (apiRes.status === 400 || apiRes.status === 401) {
+      return {
+        ok: false,
+        message: apiRes.data?.message || 'Invalid email or password.',
+        fieldErrors: apiRes.data?.fieldErrors,
+      };
+    }
+  } catch {
+    // Fall through to other auth providers
+  }
+
+  // Attempt Supabase authentication
   if (supabase) {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email: trimmedEmail, password });
@@ -263,6 +285,27 @@ export async function signUp(
       message: `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`,
       fieldErrors: { password: `Password must be at least ${MIN_PASSWORD_LENGTH} characters` },
     };
+  }
+
+  // Attempt MongoDB Atlas Backend registration first
+  try {
+    const apiRes = await apiRequest('/api/auth/signup', {
+      method: 'POST',
+      body: JSON.stringify({ name: trimmedName, email: trimmedEmail, password, role }),
+    });
+
+    if (apiRes.ok && apiRes.data?.session) {
+      saveSession(apiRes.data.session);
+      return { ok: true, message: apiRes.data.message || 'Account created! Welcome to Voyana.', session: apiRes.data.session };
+    } else if (apiRes.status === 400 || apiRes.status === 409) {
+      return {
+        ok: false,
+        message: apiRes.data?.message || 'Registration failed.',
+        fieldErrors: apiRes.data?.fieldErrors,
+      };
+    }
+  } catch {
+    // Fall through to other auth providers
   }
 
   // Attempt Supabase registration first

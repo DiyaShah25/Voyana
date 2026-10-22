@@ -1,25 +1,36 @@
 /**
- * Packing Checklist Mongoose Model for MongoDB
- * Schema definition for weather-aware travel checklists, member item assignments,
- * and packing readiness metrics.
+ * Smart Packing Checklist Mongoose Model
+ * Manages category-based packing items, checklist progress tracking,
+ * and member assignments for Voyana.
  */
 
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Model } from 'mongoose';
+
+export type PackingCategory =
+  | 'Clothing'
+  | 'Electronics'
+  | 'Documents & Money'
+  | 'Toiletries & Health'
+  | 'Destination Essentials'
+  | 'Accessories';
+
+export type PackingPriority = 'essential' | 'recommended' | 'optional';
 
 export interface IPackingItem {
   id: string;
   name: string;
-  category: string;
+  category: PackingCategory;
   isPacked: boolean;
+  priority: PackingPriority;
   assignedTo: string;
-  priority: 'essential' | 'recommended' | 'optional';
   quantity: number;
   notes?: string;
   weatherTag?: string;
 }
 
 export interface IPackingList extends Document {
-  tripId: string;
+  id: string;
+  tripId?: string;
   destination: string;
   tripDurationDays: number;
   seasonOrWeather: string;
@@ -28,33 +39,56 @@ export interface IPackingList extends Document {
   updatedAt: Date;
 }
 
-const PackingItemSchema = new Schema(
+const PackingItemSchema = new Schema<IPackingItem>(
   {
     id: { type: String, required: true },
     name: { type: String, required: true },
-    category: { type: String, required: true },
+    category: {
+      type: String,
+      enum: [
+        'Clothing',
+        'Electronics',
+        'Documents & Money',
+        'Toiletries & Health',
+        'Destination Essentials',
+        'Accessories',
+      ],
+      default: 'Clothing',
+    },
     isPacked: { type: Boolean, default: false },
+    priority: {
+      type: String,
+      enum: ['essential', 'recommended', 'optional'],
+      default: 'recommended',
+    },
     assignedTo: { type: String, default: 'Everyone' },
-    priority: { type: String, enum: ['essential', 'recommended', 'optional'], default: 'recommended' },
     quantity: { type: Number, default: 1 },
-    notes: { type: String, default: '' },
-    weatherTag: { type: String, default: '' },
+    notes: { type: String },
+    weatherTag: { type: String },
   },
   { _id: false }
 );
 
-const PackingListSchema: Schema = new Schema(
+const PackingListSchema = new Schema<IPackingList>(
   {
-    tripId: { type: String, required: true, unique: true, index: true },
+    id: { type: String, required: true, unique: true, index: true },
+    tripId: { type: String, index: true },
     destination: { type: String, required: true },
     tripDurationDays: { type: Number, default: 5 },
-    seasonOrWeather: { type: String, default: 'Mild / Spring' },
+    seasonOrWeather: { type: String, default: 'Mild' },
     items: { type: [PackingItemSchema], default: [] },
   },
   {
     timestamps: true,
+    toJSON: {
+      transform(_doc, ret: Record<string, any>) {
+        delete ret._id;
+        delete ret.__v;
+        return ret;
+      },
+    },
   }
 );
 
-export const PackingListModel =
-  mongoose.models.PackingList || mongoose.model<IPackingList>('PackingList', PackingListSchema, 'packing_lists');
+export const PackingListModel: Model<IPackingList> =
+  mongoose.models.PackingList || mongoose.model<IPackingList>('PackingList', PackingListSchema);

@@ -1,60 +1,87 @@
 /**
- * Booking Mongoose Model for MongoDB
- * Schema definition for flights, hotels, and transportation reservations.
+ * Booking Mongoose Model
+ * Manages flights, hotels, transport, and package bookings
+ * with status tracking, payment lifecycle, and guest information.
  */
 
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Model } from 'mongoose';
+
+export type BookingType = 'flight' | 'hotel' | 'transport' | 'package';
+export type BookingStatus = 'pending' | 'confirmed' | 'delayed' | 'cancelled' | 'completed' | 'refunded';
+export type PaymentStatus = 'unpaid' | 'authorized' | 'paid' | 'refunded' | 'failed' | 'pending';
 
 export interface IBooking extends Document {
-  bookingId: string;
+  id?: string;
+  bookingId?: string;
   userId: string;
   bookingReference: string;
-  bookingType: 'flight' | 'hotel' | 'transport';
-  title: string;
+  bookingType: BookingType;
+  title?: string;
   description?: string;
-  amount: number;
+  amount?: number;
+  totalAmount?: number;
   currency: string;
-  status: 'pending' | 'confirmed' | 'cancelled' | 'delayed' | 'refunded';
-  paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
+  status: BookingStatus;
+  paymentStatus: PaymentStatus;
   paymentReference?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  specialRequests?: string;
   details?: Record<string, any>;
+  flightDetails?: Record<string, any>;
+  hotelDetails?: Record<string, any>;
+  transportDetails?: Record<string, any>;
   createdAt: Date;
   updatedAt: Date;
 }
 
-const BookingSchema: Schema = new Schema(
+const BookingSchema = new Schema<IBooking>(
   {
-    bookingId: { type: String, required: true, unique: true, index: true },
+    id: { type: String, sparse: true, index: true },
+    bookingId: { type: String, sparse: true, index: true },
     userId: { type: String, required: true, index: true },
     bookingReference: { type: String, required: true, unique: true, index: true },
     bookingType: {
       type: String,
-      enum: ['flight', 'hotel', 'transport'],
+      enum: ['flight', 'hotel', 'transport', 'package'],
       required: true,
       index: true,
     },
-    title: { type: String, required: true },
+    title: { type: String },
     description: { type: String, default: '' },
-    amount: { type: Number, required: true },
+    amount: { type: Number },
+    totalAmount: { type: Number, default: 0 },
     currency: { type: String, default: 'USD' },
     status: {
       type: String,
-      enum: ['pending', 'confirmed', 'cancelled', 'delayed', 'refunded'],
-      default: 'pending',
+      default: 'confirmed',
       index: true,
     },
     paymentStatus: {
       type: String,
-      enum: ['pending', 'paid', 'failed', 'refunded'],
-      default: 'pending',
+      default: 'paid',
     },
     paymentReference: { type: String },
-    details: { type: Schema.Types.Mixed, default: {} },
+    contactEmail: { type: String, lowercase: true, trim: true },
+    contactPhone: { type: String },
+    specialRequests: { type: String },
+    details: { type: Schema.Types.Mixed },
+    flightDetails: { type: Schema.Types.Mixed },
+    hotelDetails: { type: Schema.Types.Mixed },
+    transportDetails: { type: Schema.Types.Mixed },
   },
   {
     timestamps: true,
+    toJSON: {
+      transform(_doc, ret: Record<string, any>) {
+        delete ret._id;
+        delete ret.__v;
+        return ret;
+      },
+    },
   }
 );
 
-export const BookingModel =
+export const BookingModel: Model<IBooking> =
   mongoose.models.Booking || mongoose.model<IBooking>('Booking', BookingSchema, 'bookings');
+

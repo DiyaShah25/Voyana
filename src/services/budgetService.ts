@@ -4,6 +4,8 @@
  * AI budget planning, transaction ledger, and debt settlement.
  */
 
+import { apiRequest } from './apiClient';
+
 export type ExpenseCategory =
   | 'Flights'
   | 'Accommodations'
@@ -74,78 +76,114 @@ const STORAGE_KEY = 'voyana_trip_budget_v1';
 const INITIAL_BUDGET: TripBudget = {
   id: 'trip-paris-01',
   destination: 'Paris',
-  totalBudget: 4200,
+  totalBudget: 4200.00,
   currency: 'USD',
-  members: ['Diya Shah', 'Tirth Gandhi', 'Jagrat Kumar'],
+  members: ['Alex Morgan', 'Diya Shah', 'Bhavika Sainani', 'Jagrat Kumar'],
   allocations: [
-    { category: 'Flights', allocated: 1400, color: '#635BFF' },
-    { category: 'Accommodations', allocated: 1200, color: '#00D4B2' },
-    { category: 'Food & Dining', allocated: 750, color: '#FF9900' },
-    { category: 'Activities', allocated: 450, color: '#EC4899' },
-    { category: 'Transport', allocated: 250, color: '#3B82F6' },
-    { category: 'Shopping', allocated: 100, color: '#8B5CF6' },
-    { category: 'Miscellaneous', allocated: 50, color: '#64748B' },
+    { category: 'Flights', allocated: 1400.00, color: '#635BFF' },
+    { category: 'Accommodations', allocated: 1200.00, color: '#00D4B2' },
+    { category: 'Food & Dining', allocated: 750.00, color: '#FF9900' },
+    { category: 'Activities', allocated: 450.00, color: '#EC4899' },
+    { category: 'Transport', allocated: 250.00, color: '#3B82F6' },
+    { category: 'Shopping', allocated: 100.00, color: '#8B5CF6' },
+    { category: 'Miscellaneous', allocated: 50.00, color: '#64748B' },
   ],
   expenses: [
     {
-      id: 'exp-1',
-      title: 'Roundtrip Flights (Air France)',
-      amount: 1280,
+      id: 'exp-p1',
+      title: 'Roundtrip Flights: Air France AF-022 JFK to CDG (Economy Preferred)',
+      amount: 842.60,
       currency: 'USD',
       category: 'Flights',
       date: '2026-09-10',
-      paidBy: 'Diya Shah',
-      splitAmong: ['Diya Shah', 'Tirth Gandhi', 'Jagrat Kumar'],
-      notes: 'Direct flights from JFK to CDG',
+      paidBy: 'Alex Morgan',
+      splitAmong: ['Alex Morgan'],
+      notes: 'Direct flight ticket with seat selection 14A',
       createdAt: '2026-09-10T10:00:00Z',
     },
     {
-      id: 'exp-2',
-      title: 'Boutique Hotel Le Marais (4 Nights)',
-      amount: 890,
+      id: 'exp-p2',
+      title: 'Boutique Hôtel Saint-Germain-des-Prés (4 Nights Deluxe Triple)',
+      amount: 884.20,
       currency: 'USD',
       category: 'Accommodations',
       date: '2026-09-12',
-      paidBy: 'Tirth Gandhi',
-      splitAmong: ['Diya Shah', 'Tirth Gandhi', 'Jagrat Kumar'],
-      notes: 'Deluxe Triple Suite',
+      paidBy: 'Diya Shah',
+      splitAmong: ['Alex Morgan', 'Diya Shah', 'Bhavika Sainani'],
+      notes: 'Room reservation with organic breakfast buffet included',
       createdAt: '2026-09-12T14:30:00Z',
     },
     {
-      id: 'exp-3',
-      title: 'Louvre Guided VIP Tickets',
-      amount: 195,
+      id: 'exp-p3',
+      title: 'Musée du Louvre Priority Skip-the-Line & Audio Guide (3 Passes)',
+      amount: 68.40,
       currency: 'USD',
       category: 'Activities',
       date: '2026-09-13',
       paidBy: 'Jagrat Kumar',
-      splitAmong: ['Diya Shah', 'Tirth Gandhi', 'Jagrat Kumar'],
-      notes: 'Fast track access + audio guide',
+      splitAmong: ['Alex Morgan', 'Diya Shah', 'Jagrat Kumar'],
+      notes: 'Direct entry via Richelieu wing at 09:30 AM slot',
       createdAt: '2026-09-13T09:15:00Z',
     },
     {
-      id: 'exp-4',
-      title: 'Dinner at Le Comptoir du Relais',
-      amount: 165,
+      id: 'exp-p4',
+      title: 'Angelina Paris (Rue de Rivoli) - Hot Chocolate & 2 Mont-Blanc Pastries',
+      amount: 26.80,
+      currency: 'USD',
+      category: 'Food & Dining',
+      date: '2026-09-14',
+      paidBy: 'Bhavika Sainani',
+      splitAmong: ['Bhavika Sainani', 'Diya Shah'],
+      notes: 'Afternoon salon de thé receipt',
+      createdAt: '2026-09-14T15:40:00Z',
+    },
+    {
+      id: 'exp-p5',
+      title: 'Le Comptoir du Relais Bistro - 4-Course Dinner & Sancerre Wine',
+      amount: 146.50,
       currency: 'USD',
       category: 'Food & Dining',
       date: '2026-09-14',
       paidBy: 'Diya Shah',
-      splitAmong: ['Diya Shah', 'Tirth Gandhi', 'Jagrat Kumar'],
-      notes: 'Wine & authentic bistro menu',
+      splitAmong: ['Alex Morgan', 'Diya Shah', 'Bhavika Sainani'],
+      notes: 'Authentic Parisian bistro dinner in Saint-Germain',
       createdAt: '2026-09-14T20:45:00Z',
     },
     {
-      id: 'exp-5',
-      title: 'Metro Navigo Travel Passes',
-      amount: 90,
+      id: 'exp-p6',
+      title: 'Navigo Découverte Weekly Metro/RER Passes (Zones 1-5, 3 cards)',
+      amount: 84.60,
       currency: 'USD',
       category: 'Transport',
       date: '2026-09-15',
-      paidBy: 'Tirth Gandhi',
-      splitAmong: ['Diya Shah', 'Tirth Gandhi', 'Jagrat Kumar'],
-      notes: 'All zones 1-5 pass',
+      paidBy: 'Alex Morgan',
+      splitAmong: ['Alex Morgan', 'Diya Shah', 'Bhavika Sainani'],
+      notes: 'Unlimited weekly travel on all Paris metro, buses & RER trains',
       createdAt: '2026-09-15T08:00:00Z',
+    },
+    {
+      id: 'exp-p7',
+      title: 'Bateaux Parisiens Gourmet Seine River Dinner Cruise (2 Seats)',
+      amount: 120.00,
+      currency: 'USD',
+      category: 'Activities',
+      date: '2026-09-16',
+      paidBy: 'Bhavika Sainani',
+      splitAmong: ['Bhavika Sainani', 'Alex Morgan'],
+      notes: 'Eiffel Tower boarding 20:30 PM, window table guarantee',
+      createdAt: '2026-09-16T18:00:00Z',
+    },
+    {
+      id: 'exp-p8',
+      title: 'Monoprix Saint-Germain - Mineral Water, Toiletries & Local Snacks',
+      amount: 22.40,
+      currency: 'USD',
+      category: 'Miscellaneous',
+      date: '2026-09-17',
+      paidBy: 'Jagrat Kumar',
+      splitAmong: ['Alex Morgan', 'Diya Shah', 'Jagrat Kumar'],
+      notes: 'Daily travel essentials & sparkling water packs',
+      createdAt: '2026-09-17T11:20:00Z',
     },
   ],
 };
@@ -182,6 +220,15 @@ export function addExpense(expense: Omit<TripExpense, 'id' | 'createdAt'>): Trip
   };
 
   saveTripBudget(updated);
+
+  // Sync to shared MongoDB Atlas backend
+  try {
+    apiRequest(`/api/budget/${encodeURIComponent(current.id || 'trip-paris-01')}/expenses`, {
+      method: 'POST',
+      body: JSON.stringify(newExpense),
+    });
+  } catch { }
+
   return updated;
 }
 
@@ -192,6 +239,14 @@ export function deleteExpense(expenseId: string): TripBudget {
     expenses: current.expenses.filter((e) => e.id !== expenseId),
   };
   saveTripBudget(updated);
+
+  // Sync to shared MongoDB Atlas backend
+  try {
+    apiRequest(`/api/budget/${encodeURIComponent(current.id || 'trip-paris-01')}/expenses/${encodeURIComponent(expenseId)}`, {
+      method: 'DELETE',
+    });
+  } catch { }
+
   return updated;
 }
 
