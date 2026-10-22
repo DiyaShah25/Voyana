@@ -6,6 +6,7 @@
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { createAlert } from './alertService';
+import { apiRequest } from './apiClient';
 
 // ---------------------------------------------------------------------------
 // Types & Interfaces
@@ -182,6 +183,103 @@ const INITIAL_REVIEWS: TravelReview[] = [
     createdAt: new Date(Date.now() - 5 * 86400000).toISOString(),
     updatedAt: new Date(Date.now() - 5 * 86400000).toISOString(),
   },
+  {
+    id: 'rev-05',
+    targetType: 'destination',
+    targetId: 'rome',
+    targetTitle: 'Rome, Italy',
+    userId: 'usr-diya-04',
+    userName: 'Diya Shah',
+    userAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&auto=format&fit=crop&q=80',
+    rating: 4.9,
+    categoryRatings: { cleanliness: 4.6, service: 4.8, valueForMoney: 4.7, location: 5.0, safety: 4.7 },
+    title: 'Living antiquity, incredible cacio e pepe, and sunset over the Forum',
+    comment: 'Rome is mesmerizing. Touring the Colosseum underground with our Voyana priority pass made us feel like we stepped directly into the 1st century. Do not miss evening dining in Trastevere!',
+    pros: ['Unparalleled ancient history on every corner', 'World-class pasta and gelato', 'Warm Italian hospitality'],
+    cons: ['Cobblestone streets can tire your ankles without proper walking shoes'],
+    travelerType: 'Couples',
+    visitDate: '2026-09',
+    photos: [
+      'https://images.pexels.com/photos/1797161/pexels-photo-1797161.jpeg?auto=compress&cs=tinysrgb&w=800',
+    ],
+    helpfulVotes: 41,
+    votedUsers: ['Alex Morgan', 'Elena Rostova'],
+    verifiedBooking: true,
+    createdAt: new Date(Date.now() - 8 * 86400000).toISOString(),
+    updatedAt: new Date(Date.now() - 8 * 86400000).toISOString(),
+  },
+  {
+    id: 'rev-06',
+    targetType: 'destination',
+    targetId: 'santorini',
+    targetTitle: 'Santorini, Greece',
+    userId: 'usr-org-02',
+    userName: 'Elena Rostova',
+    rating: 5.0,
+    categoryRatings: { cleanliness: 4.9, service: 4.9, valueForMoney: 4.4, location: 5.0, safety: 4.9 },
+    title: 'The most breathtaking sunset and caldera views on the planet',
+    comment: 'Perched in Oia overlooking the sapphire Aegean caldera waters. The private catamaran cruise to the volcanic hot springs and sunset dinner at Ammoudi Bay was the highlight of our European summer.',
+    pros: ['Iconic Cycladic white architecture', 'Unmatched sunset panoramas', 'Exceptional fresh seafood and Greek wines'],
+    cons: ['Steep village steps requiring good mobility', 'High season crowds in narrow alleys'],
+    travelerType: 'Couples',
+    visitDate: '2026-08',
+    photos: [
+      'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=800&q=80',
+    ],
+    helpfulVotes: 52,
+    votedUsers: ['Diya Shah', 'Megha Lalwani', 'Alex Morgan'],
+    verifiedBooking: true,
+    createdAt: new Date(Date.now() - 12 * 86400000).toISOString(),
+    updatedAt: new Date(Date.now() - 12 * 86400000).toISOString(),
+  },
+  {
+    id: 'rev-07',
+    targetType: 'destination',
+    targetId: 'bali',
+    targetTitle: 'Bali, Indonesia',
+    userId: 'usr-traveler-03',
+    userName: 'Alex Morgan',
+    rating: 4.8,
+    categoryRatings: { cleanliness: 4.6, service: 4.9, valueForMoney: 5.0, location: 4.8, safety: 4.8 },
+    title: 'Spiritual rejuvenation, emerald rice paddies, and volcano sunrise',
+    comment: 'The Mount Batur sunrise hike at 05:30 AM above the clouds was magical. Ubud has an energy unlike anywhere else — lush rainforest villas, sound of flowing rivers, and incredible organic Balinese cuisine.',
+    pros: ['Incredible value for money', 'World-class wellness & spas', 'Warm, welcoming local community'],
+    cons: ['Heavy road traffic between Denpasar and Ubud'],
+    travelerType: 'Solo',
+    visitDate: '2026-09',
+    photos: [
+      'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=800&q=80',
+    ],
+    helpfulVotes: 38,
+    votedUsers: ['Diya Shah', 'Bhavika Sainani'],
+    verifiedBooking: true,
+    createdAt: new Date(Date.now() - 18 * 86400000).toISOString(),
+    updatedAt: new Date(Date.now() - 18 * 86400000).toISOString(),
+  },
+  {
+    id: 'rev-08',
+    targetType: 'hotel',
+    targetId: 'hotel-ritz-paris',
+    targetTitle: 'Hôtel Ritz Paris',
+    userId: 'usr-diya-04',
+    userName: 'Diya Shah',
+    rating: 5.0,
+    categoryRatings: { cleanliness: 5.0, service: 5.0, valueForMoney: 4.6, location: 5.0, safety: 5.0 },
+    title: 'The pinnacle of French luxury, heritage, and discreet hospitality',
+    comment: 'From the personalized welcome champagne at Place Vendôme to the neoclassical spa and gardens, our stay at the Ritz Paris was perfection. Concierge organized private museum entry and dinner reservations flawlessly.',
+    pros: ['Historic prestige', 'Impeccable personalized butler service', 'Prime Place Vendôme location'],
+    cons: ['Exclusive price point'],
+    travelerType: 'Couples',
+    visitDate: '2026-10',
+    photos: [
+      'https://images.pexels.com/photos/189296/pexels-photo-189296.jpeg?auto=compress&cs=tinysrgb&w=800',
+    ],
+    helpfulVotes: 64,
+    votedUsers: ['Megha Lalwani', 'Alex Morgan', 'Bhavika Sainani'],
+    verifiedBooking: true,
+    createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+    updatedAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+  },
 ];
 
 function getStoredReviews(): TravelReview[] {
@@ -215,6 +313,20 @@ export async function getReviews(
     sortBy?: 'helpful' | 'newest' | 'highest';
   }
 ): Promise<TravelReview[]> {
+  try {
+    const params = new URLSearchParams();
+    if (targetType) params.append('targetType', targetType);
+    if (targetId && targetId !== 'all') params.append('targetId', targetId);
+    if (filter?.travelerType && filter.travelerType !== 'all') params.append('travelerType', filter.travelerType);
+    if (filter?.minRating) params.append('minRating', String(filter.minRating));
+    if (filter?.sortBy) params.append('sortBy', filter.sortBy);
+
+    const apiRes = await apiRequest<{ ok: boolean; reviews: TravelReview[] }>(`/api/reviews?${params.toString()}`);
+    if (apiRes.ok && apiRes.data?.reviews && apiRes.data.reviews.length > 0) {
+      return apiRes.data.reviews;
+    }
+  } catch {}
+
   const all = getStoredReviews();
   let filtered = all;
 

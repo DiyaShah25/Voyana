@@ -6,6 +6,7 @@
  */
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { apiRequest } from './apiClient';
 
 export type BookingStatus = 'pending' | 'confirmed' | 'delayed' | 'cancelled' | 'completed';
 export type BookingType = 'flight' | 'hotel' | 'transport' | 'package';
@@ -132,6 +133,17 @@ const subscribers = new Set<AlertSubscriber>();
  * Fetch all alerts for the current user.
  */
 export async function fetchAlerts(userId?: string): Promise<BookingAlert[]> {
+  // 1. Fetch from shared MongoDB Atlas backend
+  try {
+    const apiRes = await apiRequest<{ ok: boolean; alerts: BookingAlert[] }>(
+      userId ? `/api/alerts?userId=${encodeURIComponent(userId)}` : '/api/alerts'
+    );
+    if (apiRes.ok && apiRes.data?.alerts && apiRes.data.alerts.length > 0) {
+      saveStoredMockAlerts(apiRes.data.alerts);
+      return apiRes.data.alerts;
+    }
+  } catch {}
+
   if (supabase) {
     let query = supabase
       .from('booking_alerts')
@@ -159,6 +171,11 @@ export async function fetchAlerts(userId?: string): Promise<BookingAlert[]> {
  * Mark a single alert as read.
  */
 export async function markAlertAsRead(alertId: string): Promise<boolean> {
+  // Sync to shared MongoDB Atlas backend
+  try {
+    apiRequest(`/api/alerts/${encodeURIComponent(alertId)}/read`, { method: 'PUT' });
+  } catch {}
+
   if (supabase) {
     const { error } = await supabase
       .from('booking_alerts')

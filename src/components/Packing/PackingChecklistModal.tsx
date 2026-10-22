@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import {
   getPackingList,
+  fetchPackingList,
   toggleItemPacked,
   addPackingItem,
   deletePackingItem,
@@ -84,8 +85,11 @@ export const PackingChecklistModal: React.FC<PackingChecklistModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setPackingState(getPackingList());
+      fetchPackingList(destination || 'trip-paris-01')
+        .then((live) => setPackingState(live))
+        .catch(() => {});
     }
-  }, [isOpen]);
+  }, [isOpen, destination]);
 
   if (!isOpen) return null;
 
