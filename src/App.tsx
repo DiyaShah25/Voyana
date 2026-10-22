@@ -14,6 +14,8 @@ import DestinationRail from '@/components/Destinations/DestinationRail';
 import DestinationGrid from '@/components/Destinations/DestinationGrid';
 import TravelSuiteHub from '@/components/Services/TravelSuiteHub';
 import FeaturedJourneys from '@/components/Journeys/FeaturedJourneys';
+import DestinationDetailsModal from '@/components/Destinations/DestinationDetailsModal';
+import type { DestinationItem } from '@/components/Destinations/DestinationCard';
 
 // Auth & Modals
 import { AuthProvider, useAuth } from '@/context/AuthContext';
@@ -116,6 +118,9 @@ function MainAppContent() {
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [adminModalOpen, setAdminModalOpen] = useState(false);
 
+  // Destination Details Full Explore Modal
+  const [selectedDestinationForModal, setSelectedDestinationForModal] = useState<DestinationItem | null>(null);
+
   const globeRef = useRef<VoyanaGlobeHandle>(null);
 
   // Handle protected and action routes
@@ -147,6 +152,72 @@ function MainAppContent() {
   const handleSelectRoute = (routes: GlobeRoute[], startLocation: GlobeLocation) => {
     setActiveRoutes(routes);
     handleSelectLocation(startLocation);
+    document.getElementById('top')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Launch Trip Workspace initialized for a destination
+  const handlePlanTripInWorkspace = (title: string, destination: string, description?: string) => {
+    const newTrip: Trip = {
+      id: `trip-plan-${Date.now()}`,
+      title,
+      destination,
+      country: 'Global Destination',
+      startDate: new Date(Date.now() + 86400000 * 14).toISOString().split('T')[0],
+      endDate: new Date(Date.now() + 86400000 * 21).toISOString().split('T')[0],
+      description: description || `Curated itinerary, logistics, and collaborative schedule for exploring ${destination}.`,
+      coverImage:
+        selectedDestinationForModal?.image ||
+        'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&h=650&w=940&q=80',
+      budgetTarget: 3500,
+      currency: 'USD',
+      visibility: 'shared',
+      travelStyle: 'Culture & Discovery',
+      createdBy: activeUserContext.id,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      members: [
+        {
+          id: activeUserContext.id,
+          name: activeUserContext.name,
+          email: activeUserContext.email,
+          role: 'owner',
+        },
+      ],
+      activities: [
+        {
+          id: `act-${Date.now()}-1`,
+          dayNumber: 1,
+          timeSlot: 'morning',
+          title: `Arrival & Check-in at ${destination}`,
+          description: `Transfer from airport, hotel check-in, orientation walk and welcome dinner.`,
+          locationName: destination,
+          votes: [],
+          status: 'confirmed',
+          category: 'sightseeing',
+        },
+        {
+          id: `act-${Date.now()}-2`,
+          dayNumber: 2,
+          timeSlot: 'afternoon',
+          title: `Cultural Highlights & Landmarks`,
+          description: `Guided exploration of historical quarters, local markets, and scenic viewpoints.`,
+          locationName: destination,
+          votes: [],
+          status: 'proposed',
+          category: 'sightseeing',
+        },
+      ],
+      packingItems: [
+        { id: `pk-${Date.now()}-1`, name: 'Passport & Travel Docs', category: 'documents', packed: false },
+        { id: `pk-${Date.now()}-2`, name: 'Universal Power Adapter', category: 'electronics', packed: false },
+        { id: `pk-${Date.now()}-3`, name: 'Comfortable Walking Shoes', category: 'clothing', packed: false },
+      ],
+      expenses: [],
+      tags: ['Voyana Curated', destination],
+    };
+
+    setSelectedDestinationForModal(null);
+    setActiveWorkspaceTrip(newTrip);
   };
 
   // Auth pages view
@@ -292,10 +363,12 @@ function MainAppContent() {
 
       {/* 5. EDITORIAL DESTINATIONS GRID */}
       <DestinationGrid
+        selectedLocationName={selectedDestination.name}
         onSelectDestination={handleSelectLocation}
         onOpenFlight={(dest: string) => { setFlightModalDestination(dest); setFlightModalOpen(true); }}
         onOpenHotel={(dest: string) => { setHotelModalDestination(dest); setHotelModalOpen(true); }}
         onOpenReviews={(dest: string) => { setReviewsDestination(dest); setReviewsModalOpen(true); }}
+        onOpenDestinationDetails={(dest) => setSelectedDestinationForModal(dest)}
       />
 
       {/* 6. INTELLIGENT TRAVEL SUITE (Workspace, AI, Packing, Budget, Reviews, Memories) */}
@@ -433,6 +506,58 @@ function MainAppContent() {
         onClose={() => {
           setAdminModalOpen(false);
           if (route === 'admin') window.location.hash = '/';
+        }}
+      />
+
+      {/* Destination Card Full Details & Instant Actions Modal */}
+      <DestinationDetailsModal
+        isOpen={!!selectedDestinationForModal}
+        onClose={() => setSelectedDestinationForModal(null)}
+        destination={selectedDestinationForModal}
+        onBookFlight={(city) => {
+          setSelectedDestinationForModal(null);
+          setFlightModalDestination(city);
+          setFlightModalOpen(true);
+        }}
+        onBookHotel={(city) => {
+          setSelectedDestinationForModal(null);
+          setHotelModalDestination(city);
+          setHotelModalOpen(true);
+        }}
+        onBookTransport={(city) => {
+          setSelectedDestinationForModal(null);
+          setTransportModalDestination(city);
+          setTransportModalOpen(true);
+        }}
+        onViewReviews={(city) => {
+          setSelectedDestinationForModal(null);
+          setReviewsDestination(city);
+          setReviewsModalOpen(true);
+        }}
+        onPlanTripInWorkspace={(title, dest) => {
+          handlePlanTripInWorkspace(title, dest);
+        }}
+        onAskAiGuide={(city, prompt) => {
+          setSelectedDestinationForModal(null);
+          setChatInitialPrompt(
+            prompt ||
+              `I am planning an expedition to ${city}. What are the essential highlights, climate tips, top neighborhoods, and recommended local customs?`
+          );
+          setChatModalOpen(true);
+        }}
+        onFocusOnGlobe={() => {
+          if (selectedDestinationForModal) {
+            handleSelectLocation({
+              name: selectedDestinationForModal.name,
+              city: selectedDestinationForModal.name,
+              country: selectedDestinationForModal.country,
+              latitude: selectedDestinationForModal.coordinates.latitude,
+              longitude: selectedDestinationForModal.coordinates.longitude,
+              type: 'city',
+              style: selectedDestinationForModal.style,
+            });
+            document.getElementById('top')?.scrollIntoView({ behavior: 'smooth' });
+          }
         }}
       />
     </div>

@@ -189,7 +189,7 @@ export const curatedDestinations: DestinationItem[] = [
   },
 ];
 
-interface DestinationGridProps {
+export interface DestinationGridProps {
   selectedLocationName?: string;
   onSelectOnGlobe?: (loc: GlobeLocation) => void;
   onSelectDestination?: (loc: GlobeLocation) => void;
@@ -199,6 +199,7 @@ interface DestinationGridProps {
   onOpenHotel?: (city: string) => void;
   onViewReviews?: (city: string) => void;
   onOpenReviews?: (city: string) => void;
+  onOpenDestinationDetails?: (dest: DestinationItem) => void;
 }
 
 export const DestinationGrid: React.FC<DestinationGridProps> = ({
@@ -211,6 +212,7 @@ export const DestinationGrid: React.FC<DestinationGridProps> = ({
   onOpenHotel,
   onViewReviews,
   onOpenReviews,
+  onOpenDestinationDetails,
 }) => {
   const handleSelectOnGlobe = onSelectOnGlobe || onSelectDestination || (() => {});
   const handleBookFlight = onBookFlight || onOpenFlight || (() => {});
@@ -295,6 +297,7 @@ export const DestinationGrid: React.FC<DestinationGridProps> = ({
             destination={dest}
             isSelected={selectedLocationName?.toLowerCase() === dest.name.toLowerCase()}
             onSelectOnGlobe={handleSelectOnGlobe}
+            onOpenDetails={onOpenDestinationDetails}
             onBookFlight={handleBookFlight}
             onBookHotel={handleBookHotel}
             onViewReviews={handleViewReviews}

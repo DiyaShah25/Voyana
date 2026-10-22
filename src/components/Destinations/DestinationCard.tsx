@@ -24,6 +24,7 @@ interface DestinationCardProps {
   destination: DestinationItem;
   isSelected?: boolean;
   onSelectOnGlobe: (loc: GlobeLocation) => void;
+  onOpenDetails?: (destination: DestinationItem) => void;
   onBookFlight: (city: string) => void;
   onBookHotel: (city: string) => void;
   onViewReviews: (city: string) => void;
@@ -33,6 +34,7 @@ export const DestinationCard: React.FC<DestinationCardProps> = ({
   destination,
   isSelected,
   onSelectOnGlobe,
+  onOpenDetails,
   onBookFlight,
   onBookHotel,
   onViewReviews,
@@ -47,10 +49,20 @@ export const DestinationCard: React.FC<DestinationCardProps> = ({
     style: destination.style,
   };
 
+  const handleCardClick = () => {
+    onSelectOnGlobe(globeLoc);
+    if (onOpenDetails) {
+      onOpenDetails(destination);
+    }
+  };
+
   return (
-    <article className={`destination-card-premium ${isSelected ? 'active-selection' : ''}`}>
+    <article
+      className={`destination-card-premium cursor-pointer ${isSelected ? 'active-selection' : ''}`}
+      onClick={handleCardClick}
+    >
       {/* Image Wrap */}
-      <div className="card-image-wrap" onClick={() => onSelectOnGlobe(globeLoc)}>
+      <div className="card-image-wrap cursor-pointer" onClick={handleCardClick}>
         <img
           src={destination.image}
           alt={`${destination.name}, ${destination.country}`}
@@ -64,7 +76,7 @@ export const DestinationCard: React.FC<DestinationCardProps> = ({
         <div className="card-fly-overlay">
           <span className="card-fly-chip">
             <Compass size={13} />
-            <span>Fly Globe Here</span>
+            <span>Explore Details & Globe</span>
           </span>
         </div>
       </div>
@@ -73,7 +85,7 @@ export const DestinationCard: React.FC<DestinationCardProps> = ({
       <div className="card-body-wrap">
         <div className="card-header-row">
           <div>
-            <h3 className="card-title" onClick={() => onSelectOnGlobe(globeLoc)}>
+            <h3 className="card-title cursor-pointer" onClick={handleCardClick}>
               {destination.name}
             </h3>
             <p className="card-country">{destination.country}</p>
@@ -81,15 +93,17 @@ export const DestinationCard: React.FC<DestinationCardProps> = ({
           <span className="card-style-tag">{destination.style}</span>
         </div>
 
-        <p className="card-highlight-text">{destination.highlight}</p>
+        <p className="card-highlight-text cursor-pointer" onClick={handleCardClick}>
+          {destination.highlight}
+        </p>
 
         {/* Action Row */}
         <div className="card-action-bar">
           <button
             type="button"
             className="btn-card-explore"
-            onClick={() => onSelectOnGlobe(globeLoc)}
-            aria-label={`Explore ${destination.name} on globe`}
+            onClick={handleCardClick}
+            aria-label={`Explore ${destination.name} details`}
           >
             <span>Explore</span>
             <ArrowRight size={14} />
