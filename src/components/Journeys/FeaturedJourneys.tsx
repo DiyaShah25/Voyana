@@ -123,15 +123,25 @@ export const sampleJourneys: FeaturedJourney[] = [
   },
 ];
 
-interface FeaturedJourneysProps {
+export interface FeaturedJourneysProps {
   onSelectRoute: (routes: GlobeRoute[], startLocation: GlobeLocation) => void;
   onOpenWorkspaceWithRoute?: (title: string, destination: string) => void;
+  onOpenJourneyDetails?: (journey: FeaturedJourney) => void;
 }
 
 export const FeaturedJourneys: React.FC<FeaturedJourneysProps> = ({
   onSelectRoute,
   onOpenWorkspaceWithRoute,
+  onOpenJourneyDetails,
 }) => {
+  const handlePlanClick = (journey: FeaturedJourney) => {
+    if (onOpenJourneyDetails) {
+      onOpenJourneyDetails(journey);
+    } else {
+      onOpenWorkspaceWithRoute?.(journey.title, journey.stops[0]);
+    }
+  };
+
   return (
     <section className="featured-journeys-section" id="journeys">
       <div className="section-header-wrap">
@@ -142,16 +152,25 @@ export const FeaturedJourneys: React.FC<FeaturedJourneysProps> = ({
           </div>
           <h2 className="section-title">Seamless journeys across continents</h2>
           <p className="section-subtitle">
-            Preview great-circle flight arcs rendered directly on the 3D globe. Select a journey to fly to the starting coordinates and examine connected route logistics.
+            Preview great-circle flight arcs rendered directly on the 3D globe. Select any journey to inspect full expedition itineraries, multi-stop logistics, and booking packages.
           </p>
         </div>
       </div>
 
       <div className="journeys-grid">
         {sampleJourneys.map((journey) => (
-          <article key={journey.id} className="journey-card">
+          <article
+            key={journey.id}
+            className="journey-card cursor-pointer group hover:shadow-xl transition-all duration-300"
+            onClick={() => handlePlanClick(journey)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handlePlanClick(journey);
+            }}
+          >
             <div className="journey-image-wrap">
-              <img src={journey.image} alt={journey.title} className="journey-cover-img" />
+              <img src={journey.image} alt={journey.title} className="journey-cover-img group-hover:scale-105 transition-transform duration-500" />
               <div className="journey-badge-row">
                 <span className="journey-duration-badge">
                   <Calendar size={12} /> {journey.duration}
@@ -173,14 +192,15 @@ export const FeaturedJourneys: React.FC<FeaturedJourneysProps> = ({
                 ))}
               </div>
 
-              <h3 className="journey-title">{journey.title}</h3>
+              <h3 className="journey-title group-hover:text-emerald-800 transition-colors">{journey.title}</h3>
               <p className="journey-desc">{journey.description}</p>
 
               <div className="journey-action-bar">
                 <button
                   type="button"
                   className="btn-preview-route"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     const startLoc = journey.routes[0].from;
                     onSelectRoute(journey.routes, startLoc);
                   }}
@@ -193,10 +213,11 @@ export const FeaturedJourneys: React.FC<FeaturedJourneysProps> = ({
                 <button
                   type="button"
                   className="btn-plan-journey"
-                  onClick={() => {
-                    onOpenWorkspaceWithRoute?.(journey.title, journey.stops[0]);
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePlanClick(journey);
                   }}
-                  aria-label={`Plan ${journey.title} in Workspace`}
+                  aria-label={`Plan ${journey.title}`}
                 >
                   <span>Plan</span>
                   <ArrowRight size={13} />
