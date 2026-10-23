@@ -6,8 +6,12 @@
 
 import React from 'react';
 import { Compass, Globe2, ShieldCheck, Heart } from 'lucide-react';
+import { useCurrency } from '@/context/CurrencyContext';
+import type { SupportedCurrency } from '@/services/currencyService';
 
 export const Footer: React.FC = () => {
+  const { currency, setCurrency, supportedCurrencies } = useCurrency();
+
   return (
     <footer className="voyana-footer">
       <div className="footer-top">
@@ -78,9 +82,21 @@ export const Footer: React.FC = () => {
           </span>
         </div>
         <div className="footer-bottom-right">
-          <div className="footer-selector">
-            <Globe2 size={14} />
-            <span>Global (EN) &bull; USD ($)</span>
+          <div className="footer-selector flex items-center gap-2 bg-slate-900/40 px-3 py-1.5 rounded-xl border border-white/10 hover:border-emerald-500/40 transition">
+            <Globe2 size={14} className="text-emerald-400 flex-shrink-0" />
+            <span className="text-xs text-slate-400">Global (EN) &bull;</span>
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value as SupportedCurrency)}
+              className="bg-transparent text-xs font-semibold text-white cursor-pointer border-none outline-none focus:ring-0 pr-1"
+              aria-label="Select Preferred Currency"
+            >
+              {supportedCurrencies.map((c) => (
+                <option key={c.code} value={c.code} className="text-slate-900 bg-white font-medium">
+                  {c.code} ({c.symbol})
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>

@@ -26,6 +26,7 @@ import {
   type PassengerDetails,
 } from '@/services/flightService';
 import { PaymentView } from '@/components/Payment/PaymentModal';
+import { useCurrency } from '@/context/CurrencyContext';
 
 // ─── Step types ─────────────────────────────────────────────────────────────
 type Step = 'search' | 'results' | 'passenger' | 'payment' | 'confirming' | 'success';
@@ -74,6 +75,7 @@ function FlightCard({
   passengers: number;
   onSelect: (f: Flight) => void;
 }) {
+  const { formatUSD } = useCurrency();
   const price = flight.prices[cabin] * passengers;
   const perPax = flight.prices[cabin];
 
@@ -92,8 +94,8 @@ function FlightCard({
           </div>
         </div>
         <div className="text-right">
-          <p className="text-xl font-black text-slate-900">${price.toLocaleString()}</p>
-          {passengers > 1 && <p className="text-xs text-slate-500">${perPax.toLocaleString()} / person</p>}
+          <p className="text-xl font-black text-slate-900">{formatUSD(price)}</p>
+          {passengers > 1 && <p className="text-xs text-slate-500">{formatUSD(perPax)} / person</p>}
         </div>
       </div>
 
@@ -180,6 +182,7 @@ const POPULAR_ROUTES = [
 export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
   isOpen, onClose, initialDestination,
 }) => {
+  const { currency, formatUSD } = useCurrency();
   const [step, setStep] = useState<Step>('search');
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState(initialDestination || '');
@@ -501,7 +504,7 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                   <p className="text-xs text-slate-600 font-medium">{selectedFlight.originAirport.code} → {selectedFlight.destinationAirport.code} · {formatTime(selectedFlight.departureTime)} – {formatTime(selectedFlight.arrivalTime)}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-black text-emerald-800">${(selectedFlight.prices[cabin] * passengers).toLocaleString()}</p>
+                  <p className="text-lg font-black text-emerald-800">{formatUSD(selectedFlight.prices[cabin] * passengers)}</p>
                   <span className={`text-xs px-2.5 py-0.5 rounded-full border ${CABIN_COLORS[cabin]}`}>{getCabinLabel(cabin)}</span>
                 </div>
               </div>
@@ -581,7 +584,7 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                 title={`${selectedFlight.airline} · Flight ${selectedFlight.flightNumber}`}
                 subtitle={`${selectedFlight.originAirport.city} (${selectedFlight.originAirport.code}) → ${selectedFlight.destinationAirport.city} (${selectedFlight.destinationAirport.code}) · ${formatDate(selectedFlight.departureTime)}`}
                 amount={selectedFlight.prices[cabin] * passengers}
-                currency="USD"
+                currency={currency}
                 lineItems={[
                   { label: `${getCabinLabel(cabin)} Fare (${passengers} passenger${passengers > 1 ? 's' : ''})`, amount: selectedFlight.prices[cabin] * passengers },
                   { label: 'Airport Taxes & Passenger Facility Charges', amount: 0 },
@@ -690,7 +693,7 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-slate-500 font-semibold">Total Paid</p>
-                      <p className="text-lg font-black text-emerald-800">${(selectedFlight.prices[cabin] * passengers).toLocaleString()}</p>
+                      <p className="text-lg font-black text-emerald-800">{formatUSD(selectedFlight.prices[cabin] * passengers)}</p>
                     </div>
                   </div>
                 </div>

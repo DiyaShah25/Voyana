@@ -20,6 +20,8 @@ import {
   Users,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useCurrency } from '@/context/CurrencyContext';
+import { SUPPORTED_CURRENCIES, type SupportedCurrency } from '@/services/currencyService';
 import type { UserRole } from '@/types/auth.types';
 
 interface ProfileModalProps {
@@ -35,13 +37,11 @@ const AVATAR_OPTIONS = [
   'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
 ];
 
-const CURRENCIES = [
-  { code: 'USD', symbol: '$', label: 'USD ($) - US Dollar' },
-  { code: 'EUR', symbol: '€', label: 'EUR (€) - Euro' },
-  { code: 'GBP', symbol: '£', label: 'GBP (£) - British Pound' },
-  { code: 'JPY', symbol: '¥', label: 'JPY (¥) - Japanese Yen' },
-  { code: 'INR', symbol: '₹', label: 'INR (₹) - Indian Rupee' },
-];
+const CURRENCIES = SUPPORTED_CURRENCIES.map((c) => ({
+  code: c.code,
+  symbol: c.symbol,
+  label: c.label,
+}));
 
 const TRAVEL_STYLES = [
   'Cultural & Historic',
@@ -54,6 +54,7 @@ const TRAVEL_STYLES = [
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
   const { user, updateProfile, switchRole } = useAuth();
+  const { currency: globalCurrency, setCurrency: setGlobalCurrency } = useCurrency();
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -74,13 +75,13 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
       setPhone(user.phone || '');
       setBio(user.bio || '');
       setAvatarUrl(user.avatarUrl || AVATAR_OPTIONS[0]);
-      setCurrency(user.preferences?.preferredCurrency || 'USD');
+      setCurrency(user.preferences?.preferredCurrency || globalCurrency || 'USD');
       setTravelStyle(user.preferences?.travelStyle || 'Cultural & Historic');
       setHomeAirport(user.preferences?.homeAirport || 'JFK');
       setEmailAlerts(user.preferences?.emailNotifications ?? true);
       setSmsAlerts(user.preferences?.smsAlerts ?? false);
     }
-  }, [user, isOpen]);
+  }, [user, isOpen, globalCurrency]);
 
   if (!isOpen || !user) return null;
 
@@ -111,6 +112,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
     setSaving(false);
 
     if (ok) {
+      setGlobalCurrency(currency as SupportedCurrency);
       setSavedSuccess(true);
       window.setTimeout(() => setSavedSuccess(false), 2500);
     } else {

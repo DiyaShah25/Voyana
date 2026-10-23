@@ -19,6 +19,7 @@ import type { DestinationItem } from '@/components/Destinations/DestinationCard'
 
 // Auth & Modals
 import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { CurrencyProvider } from '@/context/CurrencyContext';
 import AuthLayout from '@/pages/AuthLayout';
 import LoginPage from '@/pages/LoginPage';
 import SignupPage from '@/pages/SignupPage';
@@ -171,48 +172,46 @@ function MainAppContent() {
       budgetTarget: 3500,
       currency: 'USD',
       visibility: 'shared',
-      travelStyle: 'Culture & Discovery',
-      createdBy: activeUserContext.id,
+      ownerId: activeUserContext.id,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       members: [
         {
-          id: activeUserContext.id,
+          id: `mem-${activeUserContext.id}`,
+          tripId: `trip-plan-${Date.now()}`,
+          userId: activeUserContext.id,
           name: activeUserContext.name,
           email: activeUserContext.email,
           role: 'owner',
+          joinedAt: new Date().toISOString(),
         },
       ],
       activities: [
         {
           id: `act-${Date.now()}-1`,
+          tripId: `trip-plan-${Date.now()}`,
           dayNumber: 1,
           timeSlot: 'morning',
           title: `Arrival & Check-in at ${destination}`,
           description: `Transfer from airport, hotel check-in, orientation walk and welcome dinner.`,
           locationName: destination,
-          votes: [],
-          status: 'confirmed',
+          orderIndex: 0,
+          isCompleted: false,
           category: 'sightseeing',
         },
         {
           id: `act-${Date.now()}-2`,
+          tripId: `trip-plan-${Date.now()}`,
           dayNumber: 2,
           timeSlot: 'afternoon',
           title: `Cultural Highlights & Landmarks`,
           description: `Guided exploration of historical quarters, local markets, and scenic viewpoints.`,
           locationName: destination,
-          votes: [],
-          status: 'proposed',
+          orderIndex: 1,
+          isCompleted: false,
           category: 'sightseeing',
         },
       ],
-      packingItems: [
-        { id: `pk-${Date.now()}-1`, name: 'Passport & Travel Docs', category: 'documents', packed: false },
-        { id: `pk-${Date.now()}-2`, name: 'Universal Power Adapter', category: 'electronics', packed: false },
-        { id: `pk-${Date.now()}-3`, name: 'Comfortable Walking Shoes', category: 'clothing', packed: false },
-      ],
-      expenses: [],
       tags: ['Voyana Curated', destination],
     };
 
@@ -567,7 +566,9 @@ function MainAppContent() {
 export function App() {
   return (
     <AuthProvider>
-      <MainAppContent />
+      <CurrencyProvider>
+        <MainAppContent />
+      </CurrencyProvider>
     </AuthProvider>
   );
 }
