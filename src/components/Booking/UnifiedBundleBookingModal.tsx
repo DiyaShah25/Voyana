@@ -18,6 +18,7 @@ import {
 } from '@/services/bookingIntegrationService';
 import { getStoredTrips } from '@/services/tripService';
 import { useCurrency } from '@/context/CurrencyContext';
+import OtpVerificationView from '@/components/Payment/OtpVerificationView';
 
 export interface UnifiedBundleBookingModalProps {
   isOpen: boolean;
@@ -71,6 +72,7 @@ export default function UnifiedBundleBookingModal({
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'upi' | 'wallet' | 'netbanking'>('card');
   const [isProcessing, setIsProcessing] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState<UnifiedBundleBookingResult | null>(null);
+  const [showOtp, setShowOtp] = useState(false);
 
   if (!isOpen) return null;
 
@@ -86,8 +88,12 @@ export default function UnifiedBundleBookingModal({
     }
   };
 
-  const handleCheckout = async (e: React.FormEvent) => {
+  const handleProceedToOtp = (e: React.FormEvent) => {
     e.preventDefault();
+    setShowOtp(true);
+  };
+
+  const handleCheckoutAfterOtp = async () => {
     setIsProcessing(true);
 
     const result = await processUnifiedBundleCheckout({
@@ -102,6 +108,7 @@ export default function UnifiedBundleBookingModal({
 
     setIsProcessing(false);
     if (result.success) {
+      setShowOtp(false);
       setBookingSuccess(result);
       if (onBookingConfirmed) onBookingConfirmed(result);
     }
@@ -178,8 +185,20 @@ export default function UnifiedBundleBookingModal({
                 Back to Dashboard
               </button>
             </div>
+          ) : showOtp ? (
+            <div className="max-w-lg mx-auto py-4">
+              <OtpVerificationView
+                userId={currentUser.id || 'usr-demo-01'}
+                amount={pricing.totalAmount}
+                currency={currency}
+                bookingReference="BDL-CHECKOUT"
+                onVerified={handleCheckoutAfterOtp}
+                onCancel={() => setShowOtp(false)}
+                isProcessing={isProcessing}
+              />
+            </div>
           ) : (
-            <form onSubmit={handleCheckout} className="space-y-6">
+            <form onSubmit={handleProceedToOtp} className="space-y-6">
               {/* Bundle Items Selector */}
               <div>
                 <div className="flex items-center justify-between mb-3">
@@ -317,7 +336,7 @@ export default function UnifiedBundleBookingModal({
                     disabled={isProcessing}
                     className="flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-md shadow-emerald-700/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
                   >
-                    <span>{isProcessing ? 'Processing...' : 'Confirm & Book Bundle'}</span>
+                    <span>{isProcessing ? 'Processing...' : 'Proceed to Security Verification'}</span>
                     <ArrowRight size={14} />
                   </button>
                 </div>
