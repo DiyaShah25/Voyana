@@ -31,6 +31,7 @@ import {
   type CardDetails,
 } from '@/services/paymentService';
 import { useCurrency } from '@/context/CurrencyContext';
+import OtpVerificationView from './OtpVerificationView';
 
 export interface PaymentSummaryItem {
   label: string;
@@ -176,6 +177,7 @@ export const PaymentView: React.FC<PaymentProps> = ({
     cvv: '',
     postalCode: '',
   });
+  const [paymentStep, setPaymentStep] = useState<'details' | 'otp'>('details');
   const [copiedUPI, setCopiedUPI] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(299); // 5 min timer
   const [isProcessing, setIsProcessing] = useState(false);
@@ -229,9 +231,13 @@ export const PaymentView: React.FC<PaymentProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handlePay = async () => {
+  const handleProceedToOtp = () => {
     if (!validateCard()) return;
+    setErrorMessage(null);
+    setPaymentStep('otp');
+  };
 
+  const handleVerifiedPayment = async () => {
     setIsProcessing(true);
     setErrorMessage(null);
 
@@ -248,12 +254,14 @@ export const PaymentView: React.FC<PaymentProps> = ({
           booking_type: bookingType,
           payment_channel: selectedMethod,
           base_usd_amount: amount,
+          otp_verified: true,
+          otp_verified_at: new Date().toISOString(),
         },
       });
 
       if (!initResult.success || !initResult.paymentId) {
         setErrorMessage(initResult.error || 'Failed to initiate payment.');
-        setIsProcessing(false);
+        setPaymentStep('details');
         return;
       }
 
@@ -262,13 +270,13 @@ export const PaymentView: React.FC<PaymentProps> = ({
         bookingReference,
         bookingType,
         title: `${title} Payment Received`,
-        description: `Payment of ${formatCurrency(chargedAmount, activeCurrency)} for ${bookingReference} successfully authorized via ${selectedMethod}.`,
+        description: `Payment of ${formatCurrency(chargedAmount, activeCurrency)} for ${bookingReference} successfully authorized via ${selectedMethod} with 2FA OTP.`,
         userId,
       });
 
       if (!confirmResult.success || !confirmResult.transactionReference) {
         setErrorMessage(confirmResult.error || 'Payment authorization failed.');
-        setIsProcessing(false);
+        setPaymentStep('details');
         return;
       }
 
@@ -280,10 +288,49 @@ export const PaymentView: React.FC<PaymentProps> = ({
     } catch (err: any) {
       console.error('[PaymentView] Unexpected error:', err);
       setErrorMessage(err.message || 'An unexpected error occurred during payment.');
+      setPaymentStep('details');
     } finally {
       setIsProcessing(false);
     }
   };
+
+  if (paymentStep === 'otp') {
+    return (
+      <div className="space-y-4">
+        {/* Compact summary header */}
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 shadow-sm flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-bold border border-emerald-200">
+                {bookingReference}
+              </span>
+              <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">
+                {bookingType} RESERVATION
+              </span>
+            </div>
+            <h3 className="text-sm font-bold text-slate-900 mt-1">{title}</h3>
+            <p className="text-xs text-slate-500">{subtitle}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-xs text-slate-500 font-medium">Authorizing Total</p>
+            <p className="text-lg font-black text-slate-900">
+              {formatCurrency(chargedAmount, activeCurrency)}
+            </p>
+          </div>
+        </div>
+
+        <OtpVerificationView
+          userId={userId || 'usr-demo-01'}
+          amount={chargedAmount}
+          currency={activeCurrency}
+          bookingReference={bookingReference}
+          onVerified={handleVerifiedPayment}
+          onCancel={() => setPaymentStep('details')}
+          isProcessing={isProcessing}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -501,7 +548,7 @@ export const PaymentView: React.FC<PaymentProps> = ({
         )}
         <button
           type="button"
-          onClick={handlePay}
+          onClick={handleProceedToOtp}
           disabled={isProcessing}
           className="flex-1 py-3.5 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm tracking-wide transition-all shadow-lg shadow-emerald-700/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
@@ -515,9 +562,10 @@ export const PaymentView: React.FC<PaymentProps> = ({
               <Lock size={15} />
               <span>
                 {selectedMethod === 'credit_card'
-                  ? `Pay ${formatCurrency(chargedAmount, activeCurrency)} & Complete Booking`
-                  : `Verify & Approve ${formatCurrency(chargedAmount, activeCurrency)} Payment`}
+                  ? `Proceed to OTP Verification (${formatCurrency(chargedAmount, activeCurrency)})`
+                  : `Authorize with OTP (${formatCurrency(chargedAmount, activeCurrency)})`}
               </span>
+              <ArrowRight size={16} />
             </>
           )}
         </button>
