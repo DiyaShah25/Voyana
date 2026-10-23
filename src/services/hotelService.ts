@@ -667,6 +667,31 @@ export async function searchHotels(
     roomType,
   };
 
+  // 1. Attempt Live Booking.com API via Voyana Backend
+  try {
+    const backendUrl = import.meta.env.VITE_AI_SERVICE_URL || 'http://localhost:3001';
+    const query = new URLSearchParams({
+      location,
+      checkInDate,
+      checkOutDate,
+      guests: String(guests),
+    });
+
+    const res = await fetch(`${backendUrl}/api/live/hotels?${query.toString()}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.hotels && data.hotels.length > 0) {
+        return data.hotels;
+      }
+    }
+  } catch (err) {
+    console.warn('[HotelService] Live Booking.com fetch failed, falling back:', err);
+  }
+
+  // 2. Attempt Supabase if configured
   if (supabase) {
     try {
       let query = supabase
