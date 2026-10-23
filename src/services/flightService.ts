@@ -69,40 +69,83 @@ export interface FlightBookingResult {
 // Airport Catalog (matching Voyana Globe destinations)
 // ---------------------------------------------------------------------------
 export const AIRPORTS: Record<string, Airport> = {
+  // Global Metros
   CDG: { code: 'CDG', city: 'Paris', country: 'France', name: 'Charles de Gaulle Airport' },
+  LHR: { code: 'LHR', city: 'London', country: 'UK', name: 'Heathrow Airport' },
+  JFK: { code: 'JFK', city: 'New York', country: 'USA', name: 'John F. Kennedy International Airport' },
+  DXB: { code: 'DXB', city: 'Dubai', country: 'UAE', name: 'Dubai International Airport' },
+  SIN: { code: 'SIN', city: 'Singapore', country: 'Singapore', name: 'Changi Airport' },
   HND: { code: 'HND', city: 'Tokyo', country: 'Japan', name: 'Haneda Airport' },
   NRT: { code: 'NRT', city: 'Tokyo', country: 'Japan', name: 'Narita International Airport' },
-  DXB: { code: 'DXB', city: 'Dubai', country: 'UAE', name: 'Dubai International Airport' },
-  JFK: { code: 'JFK', city: 'New York', country: 'USA', name: 'John F. Kennedy International Airport' },
-  LGA: { code: 'LGA', city: 'New York', country: 'USA', name: 'LaGuardia Airport' },
-  AMD: { code: 'AMD', city: 'Ahmedabad', country: 'India', name: 'Sardar Vallabhbhai Patel International Airport' },
-  BOM: { code: 'BOM', city: 'Mumbai', country: 'India', name: 'Chhatrapati Shivaji Maharaj International Airport' },
-  LHR: { code: 'LHR', city: 'London', country: 'UK', name: 'Heathrow Airport' },
-  SYD: { code: 'SYD', city: 'Sydney', country: 'Australia', name: 'Sydney Kingsford Smith Airport' },
-  SIN: { code: 'SIN', city: 'Singapore', country: 'Singapore', name: 'Changi Airport' },
-  FCO: { code: 'FCO', city: 'Rome', country: 'Italy', name: "Leonardo da Vinci International Airport" },
   BKK: { code: 'BKK', city: 'Bangkok', country: 'Thailand', name: 'Suvarnabhumi Airport' },
+  DPS: { code: 'DPS', city: 'Bali', country: 'Indonesia', name: 'Ngurah Rai International Airport' },
+  SYD: { code: 'SYD', city: 'Sydney', country: 'Australia', name: 'Sydney Kingsford Smith Airport' },
+  FCO: { code: 'FCO', city: 'Rome', country: 'Italy', name: 'Leonardo da Vinci Airport' },
+  BCN: { code: 'BCN', city: 'Barcelona', country: 'Spain', name: 'Josep Tarradellas Barcelona-El Prat Airport' },
+  AMS: { code: 'AMS', city: 'Amsterdam', country: 'Netherlands', name: 'Amsterdam Airport Schiphol' },
+  BER: { code: 'BER', city: 'Berlin', country: 'Germany', name: 'Berlin Brandenburg Airport' },
+  ZRH: { code: 'ZRH', city: 'Zurich', country: 'Switzerland', name: 'Zurich Airport' },
+  IST: { code: 'IST', city: 'Istanbul', country: 'Turkey', name: 'Istanbul Airport' },
+  SFO: { code: 'SFO', city: 'San Francisco', country: 'USA', name: 'San Francisco International Airport' },
+  LAX: { code: 'LAX', city: 'Los Angeles', country: 'USA', name: 'Los Angeles International Airport' },
+  MLE: { code: 'MLE', city: 'Maldives', country: 'Maldives', name: 'Velana International Airport' },
+  HKG: { code: 'HKG', city: 'Hong Kong', country: 'Hong Kong', name: 'Hong Kong International Airport' },
+  ICN: { code: 'ICN', city: 'Seoul', country: 'South Korea', name: 'Incheon International Airport' },
   GIG: { code: 'GIG', city: 'Rio de Janeiro', country: 'Brazil', name: 'Galeão International Airport' },
+  
+  // Top Indian Hubs & Destinations
   DEL: { code: 'DEL', city: 'New Delhi', country: 'India', name: 'Indira Gandhi International Airport' },
+  BOM: { code: 'BOM', city: 'Mumbai', country: 'India', name: 'Chhatrapati Shivaji Maharaj International Airport' },
+  BLR: { code: 'BLR', city: 'Bengaluru', country: 'India', name: 'Kempegowda International Airport' },
+  AMD: { code: 'AMD', city: 'Ahmedabad', country: 'India', name: 'Sardar Vallabhbhai Patel International Airport' },
+  GOI: { code: 'GOI', city: 'Goa', country: 'India', name: 'Dabolim Airport' },
+  JAI: { code: 'JAI', city: 'Jaipur', country: 'India', name: 'Jaipur International Airport' },
+  HYD: { code: 'HYD', city: 'Hyderabad', country: 'India', name: 'Rajiv Gandhi International Airport' },
+  CCU: { code: 'CCU', city: 'Kolkata', country: 'India', name: 'Netaji Subhash Chandra Bose Airport' },
+  MAA: { code: 'MAA', city: 'Chennai', country: 'India', name: 'Chennai International Airport' },
+  COK: { code: 'COK', city: 'Kochi', country: 'India', name: 'Cochin International Airport' },
+  UDR: { code: 'UDR', city: 'Udaipur', country: 'India', name: 'Maharana Pratap Airport' },
 };
 
 // City name to primary airport mapping
 export const CITY_TO_AIRPORT: Record<string, string> = {
   'paris': 'CDG',
-  'tokyo': 'HND',
-  'dubai': 'DXB',
-  'new york': 'JFK',
-  'ahmedabad': 'AMD',
-  'mumbai': 'BOM',
   'london': 'LHR',
-  'sydney': 'SYD',
+  'new york': 'JFK',
+  'dubai': 'DXB',
   'singapore': 'SIN',
-  'rome': 'FCO',
+  'tokyo': 'HND',
   'bangkok': 'BKK',
+  'bali': 'DPS',
+  'denpasar': 'DPS',
+  'sydney': 'SYD',
+  'rome': 'FCO',
+  'barcelona': 'BCN',
+  'amsterdam': 'AMS',
+  'berlin': 'BER',
+  'zurich': 'ZRH',
+  'istanbul': 'IST',
+  'san francisco': 'SFO',
+  'los angeles': 'LAX',
+  'maldives': 'MLE',
+  'male': 'MLE',
+  'hong kong': 'HKG',
+  'seoul': 'ICN',
   'rio de janeiro': 'GIG',
   'rio': 'GIG',
   'new delhi': 'DEL',
   'delhi': 'DEL',
+  'mumbai': 'BOM',
+  'bengaluru': 'BLR',
+  'bangalore': 'BLR',
+  'ahmedabad': 'AMD',
+  'goa': 'GOI',
+  'jaipur': 'JAI',
+  'hyderabad': 'HYD',
+  'kolkata': 'CCU',
+  'chennai': 'MAA',
+  'kochi': 'COK',
+  'udaipur': 'UDR',
 };
 
 // ---------------------------------------------------------------------------
@@ -156,11 +199,18 @@ function generateFlightPrice(
 }
 
 export function generateMockFlights(params: FlightSearchParams): Flight[] {
-  const { originCode, destinationCode, departureDate, passengers } = params;
-  const origin = AIRPORTS[originCode];
-  const destination = AIRPORTS[destinationCode];
-
-  if (!origin || !destination) return [];
+  const origin = AIRPORTS[originCode] || {
+    code: originCode,
+    city: originCode,
+    country: '',
+    name: `${originCode} Airport`,
+  };
+  const destination = AIRPORTS[destinationCode] || {
+    code: destinationCode,
+    city: destinationCode,
+    country: '',
+    name: `${destinationCode} Airport`,
+  };
 
   // Estimate flight duration based on common distances
   const durationMap: Record<string, number> = {
@@ -252,6 +302,36 @@ export function generateMockFlights(params: FlightSearchParams): Flight[] {
   return flights.sort((a, b) =>
     new Date(a.departureTime).getTime() - new Date(b.departureTime).getTime()
   );
+}
+
+// ---------------------------------------------------------------------------
+// Live AviationStack Flight Search with Fallback
+// ---------------------------------------------------------------------------
+export async function searchFlightsLive(params: FlightSearchParams): Promise<Flight[]> {
+  try {
+    const backendUrl = import.meta.env.VITE_AI_SERVICE_URL || 'http://localhost:3001';
+    const query = new URLSearchParams({
+      origin: params.originCode,
+      destination: params.destinationCode || '',
+    });
+
+    const res = await fetch(`${backendUrl}/api/live/flights?${query.toString()}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.flights && data.flights.length > 0) {
+        // Adjust prices by passenger count if needed
+        return data.flights;
+      }
+    }
+  } catch (err) {
+    console.warn('[FlightService] Live AviationStack fetch failed, falling back:', err);
+  }
+
+  // Graceful fallback to rich mock generator
+  return generateMockFlights(params);
 }
 
 // ---------------------------------------------------------------------------

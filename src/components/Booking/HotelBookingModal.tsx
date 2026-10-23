@@ -36,12 +36,25 @@ const ROOM_TYPES: { value: RoomType; label: string; icon: string; desc: string }
 ];
 
 const POPULAR_DESTINATIONS = [
-  { city: 'Paris', country: 'France', hotelCount: '4 luxury properties' },
-  { city: 'Tokyo', country: 'Japan', hotelCount: '3 prime stays' },
-  { city: 'Dubai', country: 'UAE', hotelCount: '3 iconic resorts' },
-  { city: 'New York', country: 'USA', hotelCount: '3 landmark hotels' },
-  { city: 'Ahmedabad', country: 'India', hotelCount: '3 heritage & modern stays' },
-  { city: 'London', country: 'UK', hotelCount: 'River Thames luxury' },
+  { city: 'Paris', country: 'France', hotelCount: 'Luxury stays' },
+  { city: 'Bali', country: 'Indonesia', hotelCount: 'Villas & Resorts' },
+  { city: 'Dubai', country: 'UAE', hotelCount: '5-Star Luxury' },
+  { city: 'Tokyo', country: 'Japan', hotelCount: 'City Center' },
+  { city: 'New York', country: 'USA', hotelCount: 'Manhattan & Brooklyn' },
+  { city: 'London', country: 'UK', hotelCount: 'Historic & Modern' },
+  { city: 'Goa', country: 'India', hotelCount: 'Beach Resorts' },
+  { city: 'Ahmedabad', country: 'India', hotelCount: 'Heritage & Modern' },
+  { city: 'Mumbai', country: 'India', hotelCount: 'Sea-View Stays' },
+  { city: 'Rome', country: 'Italy', hotelCount: 'Colosseum & Vatican' },
+  { city: 'Barcelona', country: 'Spain', hotelCount: 'Mediterranean' },
+  { city: 'Maldives', country: 'Maldives', hotelCount: 'Overwater Bungalows' },
+];
+
+const SUGGESTED_HOTEL_CITIES = [
+  'Paris', 'Bali', 'Dubai', 'Tokyo', 'New York', 'London', 'Rome', 'Barcelona',
+  'Amsterdam', 'Berlin', 'Zurich', 'Istanbul', 'San Francisco', 'Los Angeles',
+  'Bangkok', 'Singapore', 'Sydney', 'Maldives', 'Seoul', 'Hong Kong',
+  'Mumbai', 'New Delhi', 'Bengaluru', 'Ahmedabad', 'Goa', 'Jaipur', 'Udaipur', 'Kochi', 'Kolkata', 'Chennai', 'Hyderabad'
 ];
 
 // ─── Hotel Card Component ───────────────────────────────────────────────────
@@ -89,9 +102,17 @@ function HotelCard({
         <div>
           <div className="flex items-start justify-between gap-2">
             <div>
-              <h3 className="text-base font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">
-                {hotel.name}
-              </h3>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-base font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">
+                  {hotel.name}
+                </h3>
+                {(hotel as any).isLiveBookingCom && (
+                  <span className="bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
+                    Booking.com Live
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
                 <MapPin size={12} className="text-emerald-700 flex-shrink-0" />
                 <span className="truncate">{hotel.address}</span>
@@ -206,14 +227,20 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
     }
   }, [initialDestination]);
 
+  const [isSearching, setIsSearching] = useState(false);
   const nights = calculateNights(checkInDate, checkOutDate);
   const today = new Date().toISOString().split('T')[0];
 
   const handleSearch = useCallback(async () => {
     if (!location.trim() || !checkInDate || !checkOutDate) return;
-    const results = await searchHotels(location, checkInDate, checkOutDate, guests, rooms, roomType);
-    setHotels(results);
-    setStep('results');
+    setIsSearching(true);
+    try {
+      const results = await searchHotels(location, checkInDate, checkOutDate, guests, rooms, roomType);
+      setHotels(results);
+      setStep('results');
+    } finally {
+      setIsSearching(false);
+    }
   }, [location, checkInDate, checkOutDate, guests, rooms, roomType]);
 
   const sortedHotels = [...hotels]
@@ -336,7 +363,7 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                     className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-600 focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition"
                   />
                   <datalist id="hotel-dest-list">
-                    {Object.keys(SEED_HOTELS).map((city) => (
+                    {SUGGESTED_HOTEL_CITIES.map((city) => (
                       <option key={city} value={city} />
                     ))}
                   </datalist>
@@ -479,11 +506,20 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
               <button
                 type="button"
                 onClick={handleSearch}
-                disabled={!location.trim() || !checkInDate || !checkOutDate}
+                disabled={!location.trim() || !checkInDate || !checkOutDate || isSearching}
                 className="w-full py-3.5 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm tracking-wide transition-all shadow-lg shadow-emerald-700/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                <Search size={17} />
-                Search Hotels ({nights} night{nights > 1 ? 's' : ''})
+                {isSearching ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Searching Live Booking.com...</span>
+                  </>
+                ) : (
+                  <>
+                    <Search size={17} />
+                    <span>Search Hotels ({nights} night{nights > 1 ? 's' : ''})</span>
+                  </>
+                )}
               </button>
             </div>
           )}

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import {
   generateMockFlights,
+  searchFlightsLive,
   createFlightBooking,
   formatDuration,
   formatTime,
@@ -87,7 +88,15 @@ function FlightCard({
         <div className="flex items-center gap-3">
           <AirlineBadge code={flight.airlineCode} name={flight.airline} />
           <div>
-            <p className="text-sm font-bold text-slate-900">{flight.airline}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-bold text-slate-900">{flight.airline}</p>
+              {(flight as any).isLiveGDS && (
+                <span className="bg-sky-50 text-sky-700 border border-sky-200 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+                  <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
+                  Live GDS
+                </span>
+              )}
+            </div>
             <p className="text-xs text-slate-500 font-mono">{flight.flightNumber} · {flight.aircraft}</p>
           </div>
         </div>
@@ -101,7 +110,8 @@ function FlightCard({
       <div className="mt-4 flex items-center gap-3">
         <div className="text-center flex-shrink-0">
           <p className="text-2xl font-black text-slate-900 font-mono">{formatTime(flight.departureTime)}</p>
-          <p className="text-xs text-slate-500 font-bold">{flight.originAirport.code}</p>
+          <p className="text-xs text-slate-800 font-bold">{flight.originAirport.code}</p>
+          <p className="text-[10px] text-slate-400 max-w-[85px] truncate font-medium">{flight.originAirport.city}</p>
         </div>
 
         <div className="flex-1 flex flex-col items-center gap-1">
@@ -122,7 +132,8 @@ function FlightCard({
 
         <div className="text-center flex-shrink-0">
           <p className="text-2xl font-black text-slate-900 font-mono">{formatTime(flight.arrivalTime)}</p>
-          <p className="text-xs text-slate-500 font-bold">{flight.destinationAirport.code}</p>
+          <p className="text-xs text-slate-800 font-bold">{flight.destinationAirport.code}</p>
+          <p className="text-[10px] text-slate-400 max-w-[85px] truncate font-medium">{flight.destinationAirport.city}</p>
         </div>
       </div>
 
@@ -170,10 +181,13 @@ const CABIN_OPTIONS: { value: CabinClass; label: string; icon: string }[] = [
 
 const POPULAR_ROUTES = [
   { from: 'DEL', to: 'DXB', fromCity: 'New Delhi', toCity: 'Dubai' },
+  { from: 'BOM', to: 'DPS', fromCity: 'Mumbai', toCity: 'Bali' },
   { from: 'BOM', to: 'LHR', fromCity: 'Mumbai', toCity: 'London' },
-  { from: 'CDG', to: 'HND', fromCity: 'Paris', toCity: 'Tokyo' },
-  { from: 'JFK', to: 'LHR', fromCity: 'New York', toCity: 'London' },
-  { from: 'SIN', to: 'SYD', fromCity: 'Singapore', toCity: 'Sydney' },
+  { from: 'DEL', to: 'BLR', fromCity: 'New Delhi', toCity: 'Bengaluru' },
+  { from: 'BOM', to: 'GOI', fromCity: 'Mumbai', toCity: 'Goa' },
+  { from: 'AMD', to: 'DXB', fromCity: 'Ahmedabad', toCity: 'Dubai' },
+  { from: 'CDG', to: 'JFK', fromCity: 'Paris', toCity: 'New York' },
+  { from: 'SIN', to: 'DPS', fromCity: 'Singapore', toCity: 'Bali' },
   { from: 'DXB', to: 'BKK', fromCity: 'Dubai', toCity: 'Bangkok' },
 ];
 
@@ -196,7 +210,7 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
     nationality: '', seatPreference: 'window',
     mealPreference: 'standard', contactEmail: '', contactPhone: '',
   });
-  const [passengerErrors, setPassengerErrors] = useState<Partial<Record<keyof PassengerDetails, string>>>({});
+  const [isSearching, setIsSearching] = useState(false);
 
   // Set min date to today
   const today = new Date().toISOString().split('T')[0];
@@ -209,22 +223,37 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
     }
   }, [initialDestination]);
 
-  const handleSearch = useCallback(() => {
+  const handleSearch = useCallback(async () => {
     const resolvedOrigin = resolveAirportCode(origin) || origin.toUpperCase().slice(0, 3);
     const resolvedDest = resolveAirportCode(destination) || destination.toUpperCase().slice(0, 3);
 
-    if (!AIRPORTS[resolvedOrigin] || !AIRPORTS[resolvedDest]) return;
+    if (!resolvedOrigin || !resolvedDest) return;
     if (!departureDate) return;
 
-    const results = generateMockFlights({
-      originCode: resolvedOrigin,
-      destinationCode: resolvedDest,
-      departureDate,
-      passengers,
-      cabinClass: cabin,
-    });
-    setFlights(results);
-    setStep('results');
+    setIsSearching(true);
+    try {
+      const results = await searchFlightsLive({
+        originCode: resolvedOrigin,
+        destinationCode: resolvedDest,
+        departureDate,
+        passengers,
+        cabinClass: cabin,
+      });
+      setFlights(results);
+      setStep('results');
+    } catch {
+      const results = generateMockFlights({
+        originCode: resolvedOrigin,
+        destinationCode: resolvedDest,
+        departureDate,
+        passengers,
+        cabinClass: cabin,
+      });
+      setFlights(results);
+      setStep('results');
+    } finally {
+      setIsSearching(false);
+    }
   }, [origin, destination, departureDate, passengers, cabin]);
 
   const sortedFlights = [...flights]
@@ -433,11 +462,20 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
               {/* Search Button */}
               <button
                 onClick={handleSearch}
-                disabled={!origin || !destination || !departureDate}
+                disabled={!origin || !destination || !departureDate || isSearching}
                 className="w-full py-3.5 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm tracking-wide transition-all shadow-lg shadow-emerald-700/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                <Search size={17} />
-                Search Flights
+                {isSearching ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Searching Live AviationStack GDS...</span>
+                  </>
+                ) : (
+                  <>
+                    <Search size={17} />
+                    <span>Search Flights</span>
+                  </>
+                )}
               </button>
             </div>
           )}

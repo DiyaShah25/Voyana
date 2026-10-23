@@ -19,6 +19,7 @@ import { alertsRouter } from './routes/alerts.router.js';
 import { reviewsRouter } from './routes/reviews.router.js';
 import { destinationsRouter } from './routes/destinations.router.js';
 import { memoriesRouter } from './routes/memories.router.js';
+import { liveTravelRouter } from './routes/live-travel.router.js';
 import { runDataMigration } from './services/migration.service.js';
 
 export function createApp(): Express {
@@ -47,6 +48,8 @@ export function createApp(): Express {
   app.use('/api/packing', packingRouter);
   app.use('/api/alerts', alertsRouter);
   app.use('/api/reviews', reviewsRouter);
+  app.use('/api/live', liveTravelRouter);
+  app.use('/api/external', liveTravelRouter);
   app.use('/api/data', apiRouter);
 
   // Data migration / seeding trigger endpoint
