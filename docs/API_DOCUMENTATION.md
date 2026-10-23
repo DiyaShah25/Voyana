@@ -4,7 +4,7 @@
 
 **Content-Type:** `application/json`
 
-**Authentication:** Bearer JWT token in `Authorization` header. Most endpoints use `optionalAuth` (works with or without a token). Endpoints marked 🔒 require a valid token via `requireAuth`.
+**Authentication:** Bearer JWT token in `Authorization` header. Most endpoints use `optionalAuth` (works with or without a token). Endpoints marked require a valid token via `requireAuth`.
 
 ---
 
@@ -162,7 +162,7 @@ Sign in with email and password.
 
 ---
 
-### 🔒 GET /api/auth/me
+### GET /api/auth/me
 
 Get the currently authenticated user's profile.
 
@@ -185,7 +185,7 @@ Get the currently authenticated user's profile.
 
 ---
 
-### 🔒 PUT /api/auth/profile
+### PUT /api/auth/profile
 
 Update the authenticated user's profile fields.
 
