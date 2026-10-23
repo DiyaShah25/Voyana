@@ -23,6 +23,7 @@ import {
   type GuestDetails,
 } from '@/services/hotelService';
 import { PaymentView } from '@/components/Payment/PaymentModal';
+import { useCurrency } from '@/context/CurrencyContext';
 
 // ─── Step types ─────────────────────────────────────────────────────────────
 type Step = 'search' | 'results' | 'guest' | 'payment' | 'confirming' | 'success';
@@ -60,6 +61,7 @@ function HotelCard({
   guests: number;
   onSelect: (h: Hotel) => void;
 }) {
+  const { formatUSD } = useCurrency();
   const nightlyRate = hotel.roomRates[roomType] || hotel.baseNightlyRate;
   const totalPrice = nightlyRate * nights * rooms;
 
@@ -132,10 +134,10 @@ function HotelCard({
         <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
           <div>
             <p className="text-xs text-slate-500 font-medium">
-              <span className="text-slate-900 font-bold text-lg">${nightlyRate.toLocaleString()}</span> / night
+              <span className="text-slate-900 font-bold text-lg">{formatUSD(nightlyRate)}</span> / night
             </p>
             <p className="text-[11px] text-emerald-800 font-medium">
-              ${totalPrice.toLocaleString()} total for {nights} night{nights > 1 ? 's' : ''}, {rooms} room{rooms > 1 ? 's' : ''}
+              {formatUSD(totalPrice)} total for {nights} night{nights > 1 ? 's' : ''}, {rooms} room{rooms > 1 ? 's' : ''}
             </p>
           </div>
 
@@ -166,6 +168,7 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
   onClose,
   initialDestination,
 }) => {
+  const { currency, formatUSD } = useCurrency();
   const [step, setStep] = useState<Step>('search');
   const [location, setLocation] = useState(initialDestination || 'Paris');
   const [checkInDate, setCheckInDate] = useState('');
@@ -569,10 +572,10 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                 </div>
                 <div className="text-right">
                   <p className="text-lg font-bold text-slate-900">
-                    ${((selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate) * nights * rooms).toLocaleString()}
+                    {formatUSD((selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate) * nights * rooms)}
                   </p>
                   <span className="text-[11px] px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200 font-medium">
-                    ${(selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate).toLocaleString()} / night
+                    {formatUSD(selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate)} / night
                   </span>
                 </div>
               </div>
@@ -654,7 +657,7 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                 title={selectedHotel.name}
                 subtitle={`${roomType} · ${formatDateRange(checkInDate, checkOutDate)} (${nights} night${nights > 1 ? 's' : ''}, ${rooms} room${rooms > 1 ? 's' : ''})`}
                 amount={(selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate) * nights * rooms}
-                currency="USD"
+                currency={currency}
                 lineItems={[
                   {
                     label: `${roomType} (${nights} night${nights > 1 ? 's' : ''} × ${rooms} room${rooms > 1 ? 's' : ''})`,
@@ -761,7 +764,7 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                     <div className="text-right">
                       <p className="text-xs text-slate-500">Total Paid</p>
                       <p className="text-lg font-black text-emerald-800">
-                        ${((selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate) * nights * rooms).toLocaleString()}
+                        {formatUSD((selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate) * nights * rooms)}
                       </p>
                     </div>
                   </div>

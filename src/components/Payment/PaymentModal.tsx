@@ -30,6 +30,7 @@ import {
   type PaymentMethod,
   type CardDetails,
 } from '@/services/paymentService';
+import { useCurrency } from '@/context/CurrencyContext';
 
 export interface PaymentSummaryItem {
   label: string;
@@ -157,12 +158,16 @@ export const PaymentView: React.FC<PaymentProps> = ({
   title,
   subtitle,
   amount,
-  currency = 'USD',
+  currency,
   lineItems = [],
   onPaymentSuccess,
   onCancel,
   userId,
 }) => {
+  const { currency: globalCurrency, convertFromUSD, formatCurrency } = useCurrency();
+  const activeCurrency = currency || globalCurrency;
+  const chargedAmount = convertFromUSD(amount);
+
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('upi_qr');
   const [card, setCard] = useState<CardDetails>({
     cardNumber: '',
@@ -234,14 +239,15 @@ export const PaymentView: React.FC<PaymentProps> = ({
       // Step 1: Initiate Payment
       const initResult = await initiatePayment({
         bookingId,
-        amount,
-        currency,
+        amount: chargedAmount,
+        currency: activeCurrency,
         paymentMethod: selectedMethod,
         userId,
         metadata: {
           booking_reference: bookingReference,
           booking_type: bookingType,
           payment_channel: selectedMethod,
+          base_usd_amount: amount,
         },
       });
 
@@ -256,7 +262,7 @@ export const PaymentView: React.FC<PaymentProps> = ({
         bookingReference,
         bookingType,
         title: `${title} Payment Received`,
-        description: `Payment of $${amount.toLocaleString()} for ${bookingReference} successfully authorized via ${selectedMethod}.`,
+        description: `Payment of ${formatCurrency(chargedAmount, activeCurrency)} for ${bookingReference} successfully authorized via ${selectedMethod}.`,
         userId,
       });
 
@@ -296,7 +302,7 @@ export const PaymentView: React.FC<PaymentProps> = ({
           </div>
           <div className="text-right">
             <p className="text-xs text-slate-500 font-medium">Total Due</p>
-            <p className="text-xl font-black text-slate-900">${amount.toLocaleString()}</p>
+            <p className="text-xl font-black text-slate-900">{formatCurrency(chargedAmount, activeCurrency)}</p>
           </div>
         </div>
 
@@ -305,7 +311,7 @@ export const PaymentView: React.FC<PaymentProps> = ({
             {lineItems.map((item) => (
               <div key={item.label} className="flex justify-between text-slate-500">
                 <span>{item.label}</span>
-                <span className="text-slate-800 font-medium">${item.amount.toLocaleString()}</span>
+                <span className="text-slate-800 font-medium">{formatCurrency(convertFromUSD(item.amount), activeCurrency)}</span>
               </div>
             ))}
           </div>
@@ -344,7 +350,7 @@ export const PaymentView: React.FC<PaymentProps> = ({
           <div className="flex-shrink-0">
             <DynamicQRCode
               reference={bookingReference}
-              amount={amount}
+              amount={chargedAmount}
               method={selectedMethod}
             />
             <div className="mt-1.5 text-center">
@@ -361,7 +367,7 @@ export const PaymentView: React.FC<PaymentProps> = ({
               <div className="flex items-center gap-1.5">
                 <QrCode size={16} className="text-emerald-700" />
                 <h4 className="text-sm font-bold text-slate-900">
-                  Scan to Pay ${amount.toLocaleString()} {currency}
+                  Scan to Pay {formatCurrency(chargedAmount, activeCurrency)}
                 </h4>
               </div>
               <p className="text-xs text-slate-600 mt-1">
@@ -509,8 +515,8 @@ export const PaymentView: React.FC<PaymentProps> = ({
               <Lock size={15} />
               <span>
                 {selectedMethod === 'credit_card'
-                  ? `Pay $${amount.toLocaleString()} & Complete Booking`
-                  : `Verify & Approve $${amount.toLocaleString()} Payment`}
+                  ? `Pay ${formatCurrency(chargedAmount, activeCurrency)} & Complete Booking`
+                  : `Verify & Approve ${formatCurrency(chargedAmount, activeCurrency)} Payment`}
               </span>
             </>
           )}

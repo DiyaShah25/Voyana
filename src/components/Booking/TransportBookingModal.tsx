@@ -25,6 +25,7 @@ import {
   type TransportBookingDetails,
 } from '@/services/transportService';
 import { PaymentView } from '@/components/Payment/PaymentModal';
+import { useCurrency } from '@/context/CurrencyContext';
 
 // ─── Step types matching FlightBookingModal & HotelBookingModal ─────────────
 type Step = 'search' | 'results' | 'passenger' | 'payment' | 'confirming' | 'success';
@@ -56,6 +57,7 @@ function TransportCard({
   passengers: number;
   onSelect: (item: TransportItem) => void;
 }) {
+  const { formatUSD } = useCurrency();
   const totalPrice = item.basePrice * (item.transportType === 'train' || item.transportType === 'bus' ? passengers : 1);
 
   const getModeBadgeClass = (type: TransportType) => {
@@ -112,9 +114,9 @@ function TransportCard({
               </h3>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold text-slate-900">${totalPrice.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-slate-900">{formatUSD(totalPrice)}</p>
               <p className="text-[11px] text-slate-500">
-                {item.transportType === 'car_rental' ? 'per day' : (item.transportType === 'train' || item.transportType === 'bus' ? (passengers > 1 ? `$${item.basePrice}/pax` : 'total fare') : 'all-inclusive')}
+                {item.transportType === 'car_rental' ? 'per day' : (item.transportType === 'train' || item.transportType === 'bus' ? (passengers > 1 ? `${formatUSD(item.basePrice)}/pax` : 'total fare') : 'all-inclusive')}
               </p>
             </div>
           </div>
@@ -192,6 +194,7 @@ export default function TransportBookingModal({
   defaultDestination = '',
   userId,
 }: TransportBookingModalProps) {
+  const { currency, formatUSD } = useCurrency();
   // State
   const [step, setStep] = useState<Step>('search');
   const [origin, setOrigin] = useState(defaultOrigin);
@@ -553,7 +556,7 @@ export default function TransportBookingModal({
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-bold text-slate-900">${computedTotal.toLocaleString()}</p>
+                  <p className="text-lg font-bold text-slate-900">{formatUSD(computedTotal)}</p>
                   <p className="text-[11px] text-slate-500">{passengers} {passengers === 1 ? 'passenger' : 'passengers'}</p>
                 </div>
               </div>
@@ -633,7 +636,7 @@ export default function TransportBookingModal({
                     type="submit"
                     className="px-6 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-md shadow-emerald-700/20 flex items-center gap-2 transition-all"
                   >
-                    <span>Proceed to Payment (${computedTotal})</span>
+                    <span>Proceed to Payment ({formatUSD(computedTotal)})</span>
                     <ArrowRight size={14} />
                   </button>
                 </div>
@@ -658,6 +661,7 @@ export default function TransportBookingModal({
                 title={`Transport: ${selectedTransport.providerName}`}
                 subtitle={`${selectedTransport.originLocation} to ${selectedTransport.destinationLocation}`}
                 amount={computedTotal}
+                currency={currency}
                 lineItems={[
                   { label: `${getTransportTypeLabel(selectedTransport.transportType)} (${selectedTransport.vehicleClass})`, amount: selectedTransport.basePrice },
                   { label: `Passenger Surcharge (${passengers} pax)`, amount: computedTotal - selectedTransport.basePrice },

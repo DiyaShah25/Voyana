@@ -22,6 +22,7 @@ import {
   type BookingModificationInput,
 } from '@/services/bookingService';
 import { PaymentView } from '@/components/Payment/PaymentModal';
+import { formatCurrency } from '@/services/currencyService';
 
 export interface MyBookingsModalProps {
   isOpen: boolean;
@@ -479,7 +480,7 @@ export default function MyBookingsModal({
                 {/* Right Amount & Actions */}
                 <div className="flex md:flex-col items-center md:items-end justify-between gap-3 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100">
                   <div className="text-left md:text-right">
-                    <p className="text-lg font-bold text-slate-900">${b.totalAmount} {b.currency}</p>
+                    <p className="text-lg font-bold text-slate-900">{formatCurrency(b.totalAmount, b.currency)}</p>
                     <span className="text-[10px] text-emerald-700 capitalize font-medium">
                       ● {b.paymentStatus}
                     </span>
@@ -712,17 +713,17 @@ export default function MyBookingsModal({
                   <div>
                     <span className="text-xs text-slate-500 block">Pricing Impact</span>
                     <span className="text-xs font-bold text-slate-900">
-                      Original: ${modifyingBooking.totalAmount} → New: ${modifyingBooking.totalAmount + previewDiff}
+                      Original: {formatCurrency(modifyingBooking.totalAmount, modifyingBooking.currency)} → New: {formatCurrency(modifyingBooking.totalAmount + previewDiff, modifyingBooking.currency)}
                     </span>
                   </div>
                   <div className="text-right">
                     {previewDiff > 0 ? (
                       <span className="text-xs font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg">
-                        +${previewDiff} Upgrade Surcharge
+                        +{formatCurrency(previewDiff, modifyingBooking.currency)} Upgrade Surcharge
                       </span>
                     ) : previewDiff < 0 ? (
                       <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
-                        -${Math.abs(previewDiff)} Refund Credit
+                        -{formatCurrency(Math.abs(previewDiff), modifyingBooking.currency)} Refund Credit
                       </span>
                     ) : (
                       <span className="text-xs text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg font-medium">
@@ -809,7 +810,7 @@ export default function MyBookingsModal({
             </div>
             <h3 className="text-base font-bold text-slate-900">Cancel Reservation?</h3>
             <p className="text-xs text-slate-500 mt-1 mb-4">
-              Are you sure you want to cancel <span className="font-mono text-emerald-800 font-bold">{cancelTarget.bookingReference}</span>? A full refund of <span className="text-slate-900 font-bold">${cancelTarget.totalAmount}</span> will be credited.
+              Are you sure you want to cancel <span className="font-mono text-emerald-800 font-bold">{cancelTarget.bookingReference}</span>? A full refund of <span className="text-slate-900 font-bold">{formatCurrency(cancelTarget.totalAmount, cancelTarget.currency)}</span> will be credited.
             </p>
             <div className="flex items-center justify-center gap-3">
               <button
@@ -865,7 +866,7 @@ export default function MyBookingsModal({
               <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200 text-[11px]">
                 <div>
                   <span className="text-slate-400 block font-semibold uppercase">Total Amount</span>
-                  <span className="font-bold text-slate-900">${voucherTarget.totalAmount} {voucherTarget.currency}</span>
+                  <span className="font-bold text-slate-900">{formatCurrency(voucherTarget.totalAmount, voucherTarget.currency)}</span>
                 </div>
                 <div>
                   <span className="text-slate-400 block font-semibold uppercase">Payment</span>
