@@ -13,9 +13,10 @@ import TravelSearch from '@/components/Search/TravelSearch';
 import DestinationRail from '@/components/Destinations/DestinationRail';
 import DestinationGrid from '@/components/Destinations/DestinationGrid';
 import TravelSuiteHub from '@/components/Services/TravelSuiteHub';
-import FeaturedJourneys from '@/components/Journeys/FeaturedJourneys';
+import FeaturedJourneys, { type FeaturedJourney } from '@/components/Journeys/FeaturedJourneys';
 import DestinationDetailsModal from '@/components/Destinations/DestinationDetailsModal';
 import type { DestinationItem } from '@/components/Destinations/DestinationCard';
+import JourneyDetailsModal from '@/components/Journeys/JourneyDetailsModal';
 
 // Auth & Modals
 import { AuthProvider, useAuth } from '@/context/AuthContext';
@@ -121,6 +122,9 @@ function MainAppContent() {
   // Destination Details Full Explore Modal
   const [selectedDestinationForModal, setSelectedDestinationForModal] = useState<DestinationItem | null>(null);
 
+  // Expedition Multi-Stop Plan Modal
+  const [selectedJourneyForModal, setSelectedJourneyForModal] = useState<FeaturedJourney | null>(null);
+
   const globeRef = useRef<VoyanaGlobeHandle>(null);
 
   // Handle protected and action routes
@@ -155,23 +159,82 @@ function MainAppContent() {
     document.getElementById('top')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Launch Trip Workspace initialized for a destination
-  const handlePlanTripInWorkspace = (title: string, destination: string, description?: string) => {
+  // Launch Trip Workspace initialized for a destination/expedition
+  const handlePlanTripInWorkspace = (
+    title: string,
+    destination: string,
+    description?: string,
+    coverImage?: string,
+    stops?: string[],
+    travelStyle?: string
+  ) => {
+    const activities = stops && stops.length > 0
+      ? stops.flatMap((stop, idx) => [
+          {
+            id: `act-${Date.now()}-${idx * 2 + 1}`,
+            dayNumber: idx * 2 + 1,
+            timeSlot: 'morning' as const,
+            title: `Arrival & Exploration in ${stop}`,
+            description: `Orientation walk, check-in, and culinary dinner in ${stop}.`,
+            locationName: stop,
+            votes: [],
+            status: 'confirmed' as const,
+            category: 'sightseeing' as const,
+          },
+          {
+            id: `act-${Date.now()}-${idx * 2 + 2}`,
+            dayNumber: idx * 2 + 2,
+            timeSlot: 'afternoon' as const,
+            title: `Cultural Heritage & Scenic Highlights in ${stop}`,
+            description: `Guided tour of landmarks, local markets, and viewpoints in ${stop}.`,
+            locationName: stop,
+            votes: [],
+            status: 'proposed' as const,
+            category: 'sightseeing' as const,
+          },
+        ])
+      : [
+          {
+            id: `act-${Date.now()}-1`,
+            dayNumber: 1,
+            timeSlot: 'morning' as const,
+            title: `Arrival & Check-in at ${destination}`,
+            description: `Transfer from airport, hotel check-in, orientation walk and welcome dinner.`,
+            locationName: destination,
+            votes: [],
+            status: 'confirmed' as const,
+            category: 'sightseeing' as const,
+          },
+          {
+            id: `act-${Date.now()}-2`,
+            dayNumber: 2,
+            timeSlot: 'afternoon' as const,
+            title: `Cultural Highlights & Landmarks`,
+            description: `Guided exploration of historical quarters, local markets, and scenic viewpoints.`,
+            locationName: destination,
+            votes: [],
+            status: 'proposed' as const,
+            category: 'sightseeing' as const,
+          },
+        ];
+
     const newTrip: Trip = {
       id: `trip-plan-${Date.now()}`,
       title,
       destination,
-      country: 'Global Destination',
+      country: stops && stops.length > 1 ? 'Multi-Country Expedition' : 'Global Destination',
       startDate: new Date(Date.now() + 86400000 * 14).toISOString().split('T')[0],
-      endDate: new Date(Date.now() + 86400000 * 21).toISOString().split('T')[0],
+      endDate: new Date(Date.now() + 86400000 * 24).toISOString().split('T')[0],
       description: description || `Curated itinerary, logistics, and collaborative schedule for exploring ${destination}.`,
       coverImage:
+        coverImage ||
         selectedDestinationForModal?.image ||
+        selectedJourneyForModal?.image ||
         'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&h=650&w=940&q=80',
-      budgetTarget: 3500,
+      budgetTarget: 4500,
       currency: 'USD',
       visibility: 'shared',
-      travelStyle: 'Culture & Discovery',
+      travelStyle: travelStyle || selectedJourneyForModal?.style || 'Culture & Discovery',
       createdBy: activeUserContext.id,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -183,40 +246,19 @@ function MainAppContent() {
           role: 'owner',
         },
       ],
-      activities: [
-        {
-          id: `act-${Date.now()}-1`,
-          dayNumber: 1,
-          timeSlot: 'morning',
-          title: `Arrival & Check-in at ${destination}`,
-          description: `Transfer from airport, hotel check-in, orientation walk and welcome dinner.`,
-          locationName: destination,
-          votes: [],
-          status: 'confirmed',
-          category: 'sightseeing',
-        },
-        {
-          id: `act-${Date.now()}-2`,
-          dayNumber: 2,
-          timeSlot: 'afternoon',
-          title: `Cultural Highlights & Landmarks`,
-          description: `Guided exploration of historical quarters, local markets, and scenic viewpoints.`,
-          locationName: destination,
-          votes: [],
-          status: 'proposed',
-          category: 'sightseeing',
-        },
-      ],
+      activities,
       packingItems: [
-        { id: `pk-${Date.now()}-1`, name: 'Passport & Travel Docs', category: 'documents', packed: false },
-        { id: `pk-${Date.now()}-2`, name: 'Universal Power Adapter', category: 'electronics', packed: false },
-        { id: `pk-${Date.now()}-3`, name: 'Comfortable Walking Shoes', category: 'clothing', packed: false },
+        { id: `pk-${Date.now()}-1`, name: 'Passport & International Travel Visas', category: 'documents', packed: false },
+        { id: `pk-${Date.now()}-2`, name: 'Universal Worldwide Power Adapter', category: 'electronics', packed: false },
+        { id: `pk-${Date.now()}-3`, name: 'Comfortable Walking & Hiking Shoes', category: 'clothing', packed: false },
+        { id: `pk-${Date.now()}-4`, name: 'Emergency First Aid & Local Currency', category: 'medical', packed: false },
       ],
       expenses: [],
-      tags: ['Voyana Curated', destination],
+      tags: stops ? ['Expedition', ...stops] : ['Voyana Curated', destination],
     };
 
     setSelectedDestinationForModal(null);
+    setSelectedJourneyForModal(null);
     setActiveWorkspaceTrip(newTrip);
   };
 
@@ -359,6 +401,8 @@ function MainAppContent() {
       {/* 4. EXPEDITIONS & MULTI-STOP FLIGHT ARCS */}
       <FeaturedJourneys
         onSelectRoute={handleSelectRoute}
+        onOpenWorkspaceWithRoute={(title, destination) => handlePlanTripInWorkspace(title, destination)}
+        onOpenJourneyDetails={(journey) => setSelectedJourneyForModal(journey)}
       />
 
       {/* 5. EDITORIAL DESTINATIONS GRID */}
@@ -558,6 +602,29 @@ function MainAppContent() {
             });
             document.getElementById('top')?.scrollIntoView({ behavior: 'smooth' });
           }
+        }}
+      />
+
+      {/* Featured Journey Multi-Stop Expedition Details Modal */}
+      <JourneyDetailsModal
+        isOpen={!!selectedJourneyForModal}
+        onClose={() => setSelectedJourneyForModal(null)}
+        journey={selectedJourneyForModal}
+        onPlanInWorkspace={(j) => {
+          handlePlanTripInWorkspace(j.title, j.stops.join(' → '), j.description, j.image, j.stops, j.style);
+        }}
+        onBookBundle={() => {
+          setSelectedJourneyForModal(null);
+          setBundleBookingModalOpen(true);
+        }}
+        onAskAiPlanner={(_city, prompt) => {
+          setSelectedJourneyForModal(null);
+          setChatInitialPrompt(prompt);
+          setChatModalOpen(true);
+        }}
+        onPreviewOnGlobe={(routes, startLocation) => {
+          handleSelectRoute(routes, startLocation);
+          document.getElementById('top')?.scrollIntoView({ behavior: 'smooth' });
         }}
       />
     </div>
