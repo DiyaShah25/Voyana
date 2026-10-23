@@ -27,6 +27,7 @@ import {
 } from '@/services/flightService';
 import { PaymentView } from '@/components/Payment/PaymentModal';
 import { useCurrency } from '@/context/CurrencyContext';
+import { downloadFlightTicket } from '@/services/ticketService';
 
 // ─── Step types ─────────────────────────────────────────────────────────────
 type Step = 'search' | 'results' | 'passenger' | 'payment' | 'confirming' | 'success';
@@ -257,6 +258,31 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
   const handleProceedToPayment = () => {
     if (!selectedFlight || !validatePassenger()) return;
     setStep('payment');
+  };
+
+  const handleDownloadTicket = () => {
+    if (!selectedFlight) return;
+    downloadFlightTicket({
+      bookingRef: bookingRef || `VYN-FL${selectedFlight.flightNumber.replace(/\D/g, '').slice(-4) || '8841'}`,
+      airline: selectedFlight.airline,
+      flightNumber: selectedFlight.flightNumber,
+      aircraft: selectedFlight.aircraft,
+      originCity: selectedFlight.originAirport.city,
+      originCode: selectedFlight.originAirport.code,
+      destinationCity: selectedFlight.destinationAirport.city,
+      destinationCode: selectedFlight.destinationAirport.code,
+      departureTime: `${formatDate(selectedFlight.departureTime)} ${formatTime(selectedFlight.departureTime)}`,
+      arrivalTime: formatTime(selectedFlight.arrivalTime),
+      duration: formatDuration(selectedFlight.durationMinutes),
+      cabin: getCabinLabel(cabin),
+      passengerName: passenger.fullName || 'Lead Passenger',
+      passengerEmail: passenger.contactEmail || 'passenger@voyana.com',
+      seat: passengers > 1 ? `14A - 14${String.fromCharCode(64 + passengers)}` : '14A (Window)',
+      passengersCount: passengers,
+      totalAmount: selectedFlight.prices[cabin] * passengers,
+      currency: currency,
+      paymentMethod: 'Verified 2FA Payment Gateway',
+    });
   };
 
   const handleClose = () => {
@@ -703,7 +729,7 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
               <div className="flex gap-3">
                 <button
                   type="button"
-                  onClick={() => alert(`E-Ticket ${bookingRef} downloaded to your device!`)}
+                  onClick={handleDownloadTicket}
                   className="flex-1 py-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm transition flex items-center justify-center gap-2 shadow-md shadow-emerald-700/20"
                 >
                   <Sparkles size={15} />
