@@ -26,6 +26,7 @@ import {
 } from '@/services/transportService';
 import { PaymentView } from '@/components/Payment/PaymentModal';
 import { useCurrency } from '@/context/CurrencyContext';
+import { downloadTransportVoucher } from '@/services/ticketService';
 
 // ─── Step types matching FlightBookingModal & HotelBookingModal ─────────────
 type Step = 'search' | 'results' | 'passenger' | 'payment' | 'confirming' | 'success';
@@ -306,6 +307,28 @@ export default function TransportBookingModal({
       });
       setStep('success');
     }
+  };
+
+  const handleDownloadVoucher = () => {
+    if (!selectedTransport) return;
+    const pickupStr = selectedTransport.scheduledDeparture
+      ? new Date(selectedTransport.scheduledDeparture).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      : '10:00 AM';
+
+    downloadTransportVoucher({
+      bookingRef: bookingResult?.reference || `VYN-TRP-${Math.floor(100000 + Math.random() * 900000)}`,
+      providerName: selectedTransport.providerName,
+      transportType: getTransportTypeLabel(selectedTransport.transportType),
+      vehicleModel: selectedTransport.vehicleModel,
+      originLocation: selectedTransport.originLocation,
+      destinationLocation: selectedTransport.destinationLocation,
+      pickupTime: date ? `${date} ${pickupStr}` : `Today ${pickupStr}`,
+      passengerName: passengerDetails.passengerName || 'Lead Passenger',
+      passengerPhone: passengerDetails.contactPhone || '+91 98765 43210',
+      totalAmount: computedTotal,
+      currency: currency,
+      paymentMethod: 'Verified 2FA Payment Gateway',
+    });
   };
 
   const computedTotal = selectedTransport
@@ -730,6 +753,14 @@ export default function TransportBookingModal({
               </div>
 
               <div className="mt-6 flex items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleDownloadVoucher}
+                  className="px-5 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-semibold transition-all flex items-center gap-1.5 shadow-sm"
+                >
+                  <Sparkles size={14} />
+                  <span>Download Voucher</span>
+                </button>
                 <button
                   onClick={onClose}
                   className="px-6 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-md shadow-emerald-700/20 transition-all"

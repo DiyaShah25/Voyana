@@ -24,6 +24,7 @@ import {
 } from '@/services/hotelService';
 import { PaymentView } from '@/components/Payment/PaymentModal';
 import { useCurrency } from '@/context/CurrencyContext';
+import { downloadHotelVoucher } from '@/services/ticketService';
 
 // ─── Step types ─────────────────────────────────────────────────────────────
 type Step = 'search' | 'results' | 'guest' | 'payment' | 'confirming' | 'success';
@@ -252,6 +253,28 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
   const handleProceedToPayment = () => {
     if (!selectedHotel || !validateGuest()) return;
     setStep('payment');
+  };
+
+  const handleDownloadVoucher = () => {
+    if (!selectedHotel) return;
+    downloadHotelVoucher({
+      bookingRef: bookingRef || `VYN-HTL${Math.floor(1000 + Math.random() * 9000)}`,
+      hotelName: selectedHotel.name,
+      stars: Math.round(selectedHotel.starRating || 5),
+      address: selectedHotel.address,
+      city: selectedHotel.city,
+      checkInDate: checkInDate || '2026-10-14',
+      checkOutDate: checkOutDate || '2026-10-18',
+      nights: nights || 4,
+      rooms: rooms || 1,
+      roomType: roomType,
+      guestName: guest.fullName || 'Lead Guest',
+      guestEmail: guest.contactEmail || 'guest@voyana.com',
+      guestPhone: guest.contactPhone || '+91 98765 43210',
+      totalAmount: (selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate) * nights * rooms,
+      currency: currency,
+      paymentMethod: 'Verified 2FA Payment Gateway',
+    });
   };
 
   const handleClose = () => {
@@ -775,7 +798,7 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
               <div className="flex gap-3">
                 <button
                   type="button"
-                  onClick={() => alert(`Hotel Voucher ${bookingRef} downloaded to your device!`)}
+                  onClick={handleDownloadVoucher}
                   className="flex-1 py-3 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-semibold text-sm transition flex items-center justify-center gap-2"
                 >
                   <Sparkles size={15} />
