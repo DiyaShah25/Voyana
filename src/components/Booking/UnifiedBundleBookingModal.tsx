@@ -17,6 +17,7 @@ import {
   type UnifiedBundleBookingResult
 } from '@/services/bookingIntegrationService';
 import { getStoredTrips } from '@/services/tripService';
+import { useCurrency } from '@/context/CurrencyContext';
 
 export interface UnifiedBundleBookingModalProps {
   isOpen: boolean;
@@ -64,6 +65,7 @@ export default function UnifiedBundleBookingModal({
   currentUser = { id: 'usr-demo-01', name: 'Manav Vyas', email: 'manav.vyas@voyana.com' },
   onBookingConfirmed
 }: UnifiedBundleBookingModalProps) {
+  const { currency, formatUSD } = useCurrency();
   const [selectedItems, setSelectedItems] = useState<BundledBookingItem[]>(SAMPLE_BUNDLE_ITEMS);
   const [selectedTripId, setSelectedTripId] = useState<string>('trip-user-01');
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'upi' | 'wallet' | 'netbanking'>('card');
@@ -95,6 +97,7 @@ export default function UnifiedBundleBookingModal({
       items: selectedItems,
       tripId: selectedTripId || undefined,
       paymentMethod,
+      currency,
     });
 
     setIsProcessing(false);
@@ -160,11 +163,11 @@ export default function UnifiedBundleBookingModal({
                 </div>
                 <div className="flex items-center justify-between text-xs pb-2 border-b border-slate-200">
                   <span className="text-slate-500">Bundle Discount Saved</span>
-                  <span className="font-bold text-emerald-700">-${bookingSuccess.discountAmount} (15% OFF)</span>
+                  <span className="font-bold text-emerald-700">-{formatUSD(bookingSuccess.discountAmount)} (15% OFF)</span>
                 </div>
                 <div className="flex items-center justify-between text-sm pt-1 font-bold">
                   <span className="text-slate-900">Total Amount Paid</span>
-                  <span className="text-slate-900">${bookingSuccess.finalPaidAmount}</span>
+                  <span className="text-slate-900">{formatUSD(bookingSuccess.finalPaidAmount)}</span>
                 </div>
               </div>
 
@@ -211,7 +214,7 @@ export default function UnifiedBundleBookingModal({
                             <div className="p-2 rounded-xl bg-emerald-100/70 text-emerald-800 border border-emerald-200">
                               <Icon size={16} />
                             </div>
-                            <span className="text-xs font-bold text-slate-900">${item.price}</span>
+                            <span className="text-xs font-bold text-slate-900">{formatUSD(item.price)}</span>
                           </div>
                           <h5 className="text-xs font-bold text-slate-900">{item.title}</h5>
                           <p className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
@@ -291,22 +294,22 @@ export default function UnifiedBundleBookingModal({
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-3 shadow-sm">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-slate-500">Total Services Subtotal</span>
-                  <span className="font-bold text-slate-900">${pricing.subtotal}</span>
+                  <span className="font-bold text-slate-900">{formatUSD(pricing.subtotal)}</span>
                 </div>
                 {pricing.discountAmount > 0 && (
                   <div className="flex items-center justify-between text-xs text-emerald-700 font-semibold">
                     <span>Bundle Saver Discount ({pricing.discountPercentage}%)</span>
-                    <span>-${pricing.discountAmount}</span>
+                    <span>-{formatUSD(pricing.discountAmount)}</span>
                   </div>
                 )}
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-slate-500">Taxes & Service GST (5%)</span>
-                  <span className="font-bold text-slate-900">${pricing.taxAmount}</span>
+                  <span className="font-bold text-slate-900">{formatUSD(pricing.taxAmount)}</span>
                 </div>
                 <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
                   <div>
                     <span className="text-xs text-slate-500 block">Final Bundle Total</span>
-                    <span className="text-xl font-black text-slate-900">${pricing.totalAmount}</span>
+                    <span className="text-xl font-black text-slate-900">{formatUSD(pricing.totalAmount)}</span>
                   </div>
 
                   <button

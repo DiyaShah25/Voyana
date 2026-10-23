@@ -15,6 +15,7 @@ import { createAlert } from './alertService';
 import { addTripActivity, getStoredTrips } from './tripService';
 import { addTripExpense } from './collaborationService';
 import { initiatePayment, confirmPayment } from './paymentService';
+import { convertFromUSD, formatCurrency } from './currencyService';
 
 // ---------------------------------------------------------------------------
 // Supabase Client Initialization (Matching flightService & paymentService pattern)
@@ -50,6 +51,7 @@ export interface UnifiedBundleCheckoutRequest {
   tripId?: string; // If syncing with active Trip Workspace
   applyBundleDiscount?: boolean;
   paymentMethod: 'card' | 'upi' | 'wallet' | 'netbanking';
+  currency?: string;
 }
 
 export interface UnifiedBundleBookingResult {
@@ -218,6 +220,8 @@ export async function processUnifiedBundleCheckout(
 
   const pricing = calculateBundlePricing(req.items);
   const bundleReference = `VY-BDL-${Date.now().toString().substring(6)}`;
+  const activeCurrency = req.currency || 'USD';
+  const chargedAmount = convertFromUSD(pricing.totalAmount, activeCurrency);
 
   // 1. Process payment authorization via paymentService
   try {
@@ -231,14 +235,15 @@ export async function processUnifiedBundleCheckout(
 
     const payInit = await initiatePayment({
       bookingId: bundleReference,
-      amount: pricing.totalAmount,
-      currency: 'USD',
+      amount: chargedAmount,
+      currency: activeCurrency,
       paymentMethod: mappedPaymentMethod,
       userId: req.userId,
       metadata: {
         bundle_reference: bundleReference,
         item_count: req.items.length,
         items: req.items.map((i) => ({ type: i.type, id: i.id, ref: i.referenceCode })),
+        base_usd_amount: pricing.totalAmount,
       },
     });
 
@@ -247,7 +252,7 @@ export async function processUnifiedBundleCheckout(
         bookingReference: bundleReference,
         bookingType: 'package',
         title: `Unified Travel Bundle (${bundleReference})`,
-        description: `Payment of $${pricing.totalAmount.toLocaleString()} authorized for unified bundle.`,
+        description: `Payment of ${formatCurrency(chargedAmount, activeCurrency)} authorized for unified bundle.`,
         userId: req.userId,
       });
     }
@@ -263,14 +268,15 @@ export async function processUnifiedBundleCheckout(
         booking_reference: bundleReference,
         booking_type: 'package',
         status: 'confirmed',
-        total_amount: pricing.totalAmount,
-        currency: 'USD',
+        total_amount: chargedAmount,
+        currency: activeCurrency,
         payment_status: 'paid',
         contact_email: req.customerEmail,
         metadata: {
           items: req.items,
           customer_name: req.customerName,
           discount_amount: pricing.discountAmount,
+          base_usd_amount: pricing.totalAmount,
         },
       }]);
     } catch (dbErr) {
