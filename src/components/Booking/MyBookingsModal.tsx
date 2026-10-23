@@ -23,6 +23,11 @@ import {
 } from '@/services/bookingService';
 import { PaymentView } from '@/components/Payment/PaymentModal';
 import { formatCurrency } from '@/services/currencyService';
+import {
+  downloadFlightTicket,
+  downloadHotelVoucher,
+  downloadTransportVoucher,
+} from '@/services/ticketService';
 
 export interface MyBookingsModalProps {
   isOpen: boolean;
@@ -250,6 +255,72 @@ export default function MyBookingsModal({
     setIsProcessing(false);
     setCancelTarget(null);
     loadBookings();
+  };
+
+  // Download digital voucher PDF
+  const handleDownloadVoucherTarget = () => {
+    if (!voucherTarget) return;
+
+    if (voucherTarget.bookingType === 'flight') {
+      const fl = voucherTarget.flightDetails;
+      downloadFlightTicket({
+        bookingRef: voucherTarget.bookingReference,
+        airline: fl?.airline || 'Voyana Partner Airlines',
+        flightNumber: fl?.flightNumber || 'FL8841',
+        aircraft: 'Boeing 787-9 Dreamliner',
+        originCity: fl?.originCity || 'Departure City',
+        originCode: fl?.originAirport || 'DEP',
+        destinationCity: fl?.destinationCity || 'Destination City',
+        destinationCode: fl?.destinationAirport || 'ARR',
+        departureTime: fl?.departureTime || '10:00 AM',
+        arrivalTime: fl?.arrivalTime || '02:30 PM',
+        cabin: fl?.cabinClass || 'Economy',
+        passengerName: fl?.passengerName || voucherTarget.contactEmail.split('@')[0] || 'Lead Traveler',
+        passengerEmail: voucherTarget.contactEmail,
+        passengerPhone: voucherTarget.contactPhone,
+        totalAmount: voucherTarget.totalAmount,
+        currency: voucherTarget.currency || 'USD',
+        paymentMethod: 'Authorized 2FA Gateway',
+      });
+    } else if (voucherTarget.bookingType === 'hotel') {
+      const ht = voucherTarget.hotelDetails;
+      const inDate = ht?.checkInDate || '2026-10-15';
+      const outDate = ht?.checkOutDate || '2026-10-18';
+      const nights = Math.max(1, Math.round((new Date(outDate).getTime() - new Date(inDate).getTime()) / (1000 * 3600 * 24))) || 3;
+
+      downloadHotelVoucher({
+        bookingRef: voucherTarget.bookingReference,
+        hotelName: ht?.hotelName || 'Luxury Hotel & Spa',
+        address: ht?.address || 'City Center Plaza',
+        city: ht?.city || 'City Center',
+        checkInDate: inDate,
+        checkOutDate: outDate,
+        nights,
+        rooms: ht?.numberOfRooms || 1,
+        roomType: ht?.roomType || 'Deluxe King Room',
+        guestName: ht?.guestName || voucherTarget.contactEmail.split('@')[0] || 'Lead Guest',
+        guestEmail: voucherTarget.contactEmail,
+        guestPhone: voucherTarget.contactPhone,
+        totalAmount: voucherTarget.totalAmount,
+        currency: voucherTarget.currency || 'USD',
+        paymentMethod: 'Authorized 2FA Gateway',
+      });
+    } else {
+      const tr = voucherTarget.transportDetails;
+      downloadTransportVoucher({
+        bookingRef: voucherTarget.bookingReference,
+        providerName: tr?.providerName || 'Executive Ground Mobility',
+        transportType: tr?.transportType || 'Private Transfer',
+        originLocation: tr?.originLocation || 'Airport Terminal',
+        destinationLocation: tr?.destinationLocation || 'City Center',
+        pickupTime: '11:00 AM',
+        passengerName: voucherTarget.contactEmail.split('@')[0] || 'Lead Passenger',
+        passengerPhone: voucherTarget.contactPhone,
+        totalAmount: voucherTarget.totalAmount,
+        currency: voucherTarget.currency || 'USD',
+        paymentMethod: 'Authorized 2FA Gateway',
+      });
+    }
   };
 
   // Filter Bookings
@@ -875,8 +946,17 @@ export default function MyBookingsModal({
               </div>
             </div>
 
-            <div className="mt-5 flex justify-center">
+            <div className="mt-5 flex justify-center gap-3">
               <button
+                type="button"
+                onClick={handleDownloadVoucherTarget}
+                className="px-5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-1.5 transition shadow-sm"
+              >
+                <Sparkles size={14} />
+                <span>Download PDF Voucher</span>
+              </button>
+              <button
+                type="button"
                 onClick={() => setVoucherTarget(null)}
                 className="px-6 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-md shadow-emerald-700/20"
               >
