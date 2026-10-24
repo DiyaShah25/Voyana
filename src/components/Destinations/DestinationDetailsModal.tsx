@@ -5,11 +5,7 @@
  */
 
 import React, { useEffect } from 'react';
-import {
-  X, MapPin, Calendar, Compass, Plane, Building2,
-  Car, Star, Sparkles, CheckCircle2, DollarSign,
-  ShieldCheck, ArrowRight, Clock, Sun
-} from 'lucide-react';
+import { X, MapPin, Compass, Plane, Building2, Car, Star, Sparkles, CheckCircle2, IndianRupee, ShieldCheck, ArrowRight, Clock, Sun } from 'lucide-react';
 import type { DestinationItem } from './DestinationCard';
 import { getDestinationDetails, type RecommendedDestination } from '@/services/recommendationService';
 
@@ -173,10 +169,10 @@ export const DestinationDetailsModal: React.FC<DestinationDetailsModalProps> = (
 
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-amber-100/70 text-amber-800 flex items-center justify-center flex-shrink-0">
-                <DollarSign size={16} />
+                <IndianRupee size={16} />
               </div>
               <div>
-                <div className="text-xs font-bold text-slate-900">${dailyCost} / day</div>
+                <div className="text-xs font-bold text-slate-900">₹{(dailyCost*80).toLocaleString('en-IN')} / day</div>
                 <div className="text-[10px] text-slate-500">Tier: {budgetTier}</div>
               </div>
             </div>
@@ -272,8 +268,8 @@ export const DestinationDetailsModal: React.FC<DestinationDetailsModalProps> = (
                     <Compass size={16} />
                   </div>
                   <div>
-                    <div className="font-bold">Plan Itinerary in Workspace</div>
-                    <div className="text-[10px] text-emerald-100">Collaborative schedule & group voting</div>
+                    <div className="font-bold">Choose this destination</div>
+                    <div className="text-[10px] text-emerald-100">Select a reservation to start your trip</div>
                   </div>
                 </div>
                 <ArrowRight size={15} />
