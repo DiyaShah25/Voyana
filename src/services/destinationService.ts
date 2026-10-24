@@ -22,7 +22,7 @@ export async function getDestinations(fallbackList: DestinationItem[] = []): Pro
     if (res.ok && res.data?.destinations && res.data.destinations.length > 0) {
       try {
         localStorage.setItem(LOCAL_DESTINATIONS_KEY, JSON.stringify(res.data.destinations));
-      } catch {}
+      } catch { /* Retain local preview data when remote synchronization fails. */ }
       return res.data.destinations;
     }
   } catch (err) {
@@ -36,7 +36,7 @@ export async function getDestinations(fallbackList: DestinationItem[] = []): Pro
       const parsed = JSON.parse(cached);
       if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
-  } catch {}
+  } catch { /* Retain local preview data when remote synchronization fails. */ }
 
   return fallbackList;
 }

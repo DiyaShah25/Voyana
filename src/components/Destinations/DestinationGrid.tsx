@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Compass, Filter, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Compass, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { GlobeLocation } from '@/components/Globe/globe.types';
 import DestinationCard, { DestinationItem } from './DestinationCard';
 import { getDestinations } from '@/services/destinationService';
