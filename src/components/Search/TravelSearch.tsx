@@ -5,35 +5,42 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, ArrowRight, SlidersHorizontal, Check } from 'lucide-react';
+import { Search, MapPin, ArrowRight,  } from 'lucide-react';
 import type { GlobeLocation } from '@/components/Globe/globe.types';
-import { suggestDestinations, resolveLocation } from '@/services/locationService';
+import { suggestDestinations, resolveLocation, formatPlaceName } from '@/services/locationService';
 
 interface TravelSearchProps {
   onLocationSelect: (location: GlobeLocation) => void;
+  selectedLocation?: GlobeLocation;
   isLoading?: boolean;
 }
 
 export const TravelSearch: React.FC<TravelSearchProps> = ({
   onLocationSelect,
+  selectedLocation,
   isLoading = false,
 }) => {
   const [query, setQuery] = useState('');
+  const [error, setError] = useState('');
+  const [searching, setSearching] = useState(false);
+  const lastSelected = useRef('');
   const [suggestions, setSuggestions] = useState<GlobeLocation[]>([]);
-  const [showPreferences, setShowPreferences] = useState(false);
-  const [selectedSeason, setSelectedSeason] = useState('Anytime');
-  const [selectedStyle, setSelectedStyle] = useState('Cultural & Discovery');
 
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const text=selectedLocation?formatPlaceName(selectedLocation):'';
+    lastSelected.current=text;setQuery(text);setSuggestions([]);setError('');
+  },[selectedLocation]);
 
   // Autocomplete
   useEffect(() => {
     const controller = new AbortController();
     const fetchSuggestions = async () => {
-      if (query.trim().length > 0) {
+      if (query.trim().length > 0 && query !== lastSelected.current) {
         try {
           const results = await suggestDestinations(query, controller.signal);
-          setSuggestions(results);
+          if (!controller.signal.aborted && query !== lastSelected.current) setSuggestions(results);
         } catch (e) {
           if ((e as Error).name !== 'AbortError') console.error(e);
         }
@@ -60,22 +67,29 @@ export const TravelSearch: React.FC<TravelSearchProps> = ({
   }, []);
 
   const handleSelect = (loc: GlobeLocation) => {
-    setQuery(loc.name);
+    lastSelected.current = formatPlaceName(loc);
+    setError('');
+    setQuery(formatPlaceName(loc));
     setSuggestions([]);
     onLocationSelect(loc);
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    const term = query.trim() || 'Paris';
+    const term = query.trim();
+    if (!term) { setError('Enter a city to locate it on the globe.'); return; }
+    if(selectedLocation&&term===formatPlaceName(selectedLocation)){handleSelect(selectedLocation);return;}
+    setSearching(true);
+    setError('');
     try {
       const loc = await resolveLocation(term);
       if (loc) {
         handleSelect(loc);
-      }
+      } else { setError('No matching place found. Add a state or country and try again.'); }
     } catch (err) {
       console.error(err);
-    }
+      setError('Location search is unavailable. Try a suggested city.');
+    } finally { setSearching(false); }
   };
 
   return (
@@ -88,7 +102,11 @@ export const TravelSearch: React.FC<TravelSearchProps> = ({
             <input
               type="text"
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => { setQuery(e.target.value); setError(''); lastSelected.current = ''; }}
+              aria-label="Destination search"
+              aria-autocomplete="list"
+              aria-expanded={suggestions.length > 0}
+              onKeyDown={e => { if (e.key === 'Escape') setSuggestions([]); }}
               placeholder="Search a city, country, or region…"
               className="editorial-search-input"
             />
@@ -97,23 +115,12 @@ export const TravelSearch: React.FC<TravelSearchProps> = ({
 
         <div className="search-actions-group">
           <button
-            type="button"
-            className={`btn-pref-toggle ${showPreferences ? 'active' : ''}`}
-            onClick={() => setShowPreferences(!showPreferences)}
-            title="Refine season and travel style"
-            aria-label="Toggle travel preferences"
-          >
-            <SlidersHorizontal size={15} />
-            <span>Preferences</span>
-          </button>
-
-          <button
             type="submit"
             className="btn-editorial-explore"
-            disabled={isLoading}
+            disabled={isLoading || searching}
             aria-label="Explore Destination"
           >
-            <span>Explore</span>
+            <span>{searching ? 'Locating…' : 'Explore'}</span>
             <ArrowRight size={15} />
           </button>
         </div>
@@ -144,44 +151,7 @@ export const TravelSearch: React.FC<TravelSearchProps> = ({
         )}
       </form>
 
-      {/* Progressive refinement panel */}
-      {showPreferences && (
-        <div className="progressive-preferences-tray animate-fade-down">
-          <div className="pref-column">
-            <span className="pref-label">Travel Season</span>
-            <div className="pref-options-row">
-              {['Anytime', 'Spring (Mar–May)', 'Summer (Jun–Aug)', 'Autumn (Sep–Nov)', 'Winter (Dec–Feb)'].map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  className={`pref-pill-btn ${selectedSeason === s ? 'selected' : ''}`}
-                  onClick={() => setSelectedSeason(s)}
-                >
-                  {selectedSeason === s && <Check size={12} className="inline mr-1" />}
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="pref-column">
-            <span className="pref-label">Travel Style</span>
-            <div className="pref-options-row">
-              {['Cultural & Discovery', 'Island & Coastal', 'Alpine & Hiking', 'Epicurean & Wine'].map((st) => (
-                <button
-                  key={st}
-                  type="button"
-                  className={`pref-pill-btn ${selectedStyle === st ? 'selected' : ''}`}
-                  onClick={() => setSelectedStyle(st)}
-                >
-                  {selectedStyle === st && <Check size={12} className="inline mr-1" />}
-                  {st}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+      {error && <p role="alert" className="mt-2 text-sm text-rose-700">{error}</p>}
     </div>
   );
 };
