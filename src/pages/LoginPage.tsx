@@ -100,6 +100,9 @@ function LoginPage() {
         </p>
       </div>
 
+      <SocialAuth disabled={busy} onAuthSuccess={() => { window.location.hash = '/'; }} />
+      <div className="auth-divider-line"><span>or continue with email</span></div>
+
       {/* Demo Credentials Quick Switcher */}
       <div className="auth-demo-chips-box">
         <span className="auth-demo-chips-label">Instant Demo Login:</span>
@@ -236,13 +239,6 @@ function LoginPage() {
           )}
         </button>
       </form>
-
-      {/* Social Auth Divider */}
-      <div className="auth-divider-line">
-        <span>or continue with</span>
-      </div>
-
-      <SocialAuth disabled={busy} onAuthSuccess={() => { window.location.hash = '/'; }} />
 
       <div className="auth-switch-footer">
         <span>Don't have a Voyana account?</span>{' '}
