@@ -1,3 +1,4 @@
+import { reverseLocation } from '@/services/locationService';
 /**
  * Voyana 3D Interactive Globe Component
  * Renders an interactive Three.js Earth globe with location markers,
@@ -5,7 +6,7 @@
  * Exposes imperative handle for external control via React ref.
  */
 
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import * as THREE from 'three';
 import type { GlobeLocation, GlobeLocationType, GlobeRoute, VoyanaGlobeHandle, VoyanaGlobeProps } from './globe.types';
@@ -25,6 +26,8 @@ export interface KeyCity {
 }
 
 export const keyWorldCities: KeyCity[] = [
+  { name: 'Ahmedabad', country: 'India', latitude: 23.0225, longitude: 72.5714 },
+  { name: 'Mumbai', country: 'India', latitude: 19.076, longitude: 72.8777 },
   { name: 'Tokyo', country: 'Japan', latitude: 35.6762, longitude: 139.6503 },
   { name: 'Paris', country: 'France', latitude: 48.8566, longitude: 2.3522 },
   { name: 'New York', country: 'United States', latitude: 40.7128, longitude: -74.006 },
@@ -47,7 +50,7 @@ export interface VoyanaGlobeExtendedProps extends VoyanaGlobeProps {
 }
 
 const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(function VoyanaGlobe(
-  { selectedLocation, routes = [], autoRotate = true, onLocationSelect, onGlobeReady, metadata },
+  { selectedLocation, routes = [], autoRotate = true, onLocationSelect, onPlaceLookupChange, onGlobeReady, metadata },
   ref,
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -55,6 +58,23 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
   const onLocationSelectRef = useRef(onLocationSelect);
   const autoRotateRef = useRef(autoRotate);
   const apiRef = useRef<VoyanaGlobeHandle | null>(null);
+  const lookupAbort = useRef<AbortController | null>(null);
+  const [findingPlace, setFindingPlace] = useState(false);
+  const lookupChangeRef = useRef(onPlaceLookupChange);
+  lookupChangeRef.current = onPlaceLookupChange;
+  const findPlace = useCallback((latitude:number,longitude:number) => {
+    lookupAbort.current?.abort();
+    const controller=new AbortController();lookupAbort.current=controller;
+    setFindingPlace(true);lookupChangeRef.current?.(true);
+    void reverseLocation(latitude,longitude,controller.signal).then(location=>{
+      if(controller.signal.aborted)return;
+      setFindingPlace(false);lookupChangeRef.current?.(false);onLocationSelectRef.current?.(location);
+    }).catch(()=>{
+      if(controller.signal.aborted)return;
+      setFindingPlace(false);lookupChangeRef.current?.(false);
+      onLocationSelectRef.current?.({name:'Place name unavailable',latitude,longitude,type:'region',bookable:false});
+    });
+  },[]);
 
   // Floating label projected coordinates on 2D screen
   const [labelPos, setLabelPos] = useState<{ x: number; y: number; visible: boolean } | null>(null);
@@ -115,8 +135,8 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
     // Realistic Planetary Material: Specular oceans, relief terrain, natural light response
     const earthMaterial = new THREE.MeshPhongMaterial({
       color: 0xffffff,
-      shininess: 32,
-      specular: new THREE.Color(0x2d6898), // Realistic ocean blue glint
+      shininess: 10,
+      specular: new THREE.Color(0x222222),
     });
 
     const earthMesh = new THREE.Mesh(sphereGeometry, earthMaterial);
@@ -162,11 +182,11 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
     scene.add(atmosphereMesh);
 
     // 4. PLANETARY DIRECTIONAL SUNLIGHT (Creates distinct 3D daylight and terminator curvature)
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.42);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
     scene.add(ambientLight);
 
-    const sunLight = new THREE.DirectionalLight(0xfffdf4, 2.7);
-    sunLight.position.set(-6, 3.8, 5.0);
+    const sunLight = new THREE.DirectionalLight(0xfffdf4, 1.8);
+    sunLight.position.set(-3, 5, 6);
     scene.add(sunLight);
 
     const softFillLight = new THREE.DirectionalLight(0x38bdf8, 0.28);
@@ -211,23 +231,23 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
       const normal = latLngToVector3(location.latitude, location.longitude, 1).normalize();
 
       activeMarker = new THREE.Group();
-      activeMarker.position.copy(normal.clone().multiplyScalar(1.032));
+      activeMarker.position.copy(normal.clone().multiplyScalar(1.006));
 
       // Central emerald beacon dot
       const centerDot = new THREE.Mesh(
-        new THREE.SphereGeometry(0.028, 20, 20),
+        new THREE.SphereGeometry(0.009, 20, 20),
         new THREE.MeshBasicMaterial({ color: 0x10b981 })
       );
 
       // Inner white luminous core for pinpoint clarity
       const coreDot = new THREE.Mesh(
-        new THREE.SphereGeometry(0.014, 16, 16),
+        new THREE.SphereGeometry(0.004, 16, 16),
         new THREE.MeshBasicMaterial({ color: 0xffffff })
       );
 
       // Pulsing outer ring
       const ring = new THREE.Mesh(
-        new THREE.RingGeometry(0.046, 0.066, 36),
+        new THREE.RingGeometry(0.016, 0.021, 36),
         new THREE.MeshBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0.9, side: THREE.DoubleSide })
       );
       ring.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal);
@@ -333,6 +353,11 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
 
     apiRef.current = { focusOnLocation, reset, pauseRotation, resumeRotation, zoomIn, zoomOut, setMarker, setRoutes };
 
+    if (selectedRef.current) {
+      setMarker(selectedRef.current);
+      focusOnLocation(selectedRef.current.latitude, selectedRef.current.longitude, selectedRef.current.type);
+    }
+
     // 9. LOAD PHOTOREALISTIC NASA TEXTURES LOCALLY
     const loadTextures = async () => {
       try {
@@ -348,7 +373,7 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
 
         earthMaterial.map = earthTex;
         earthMaterial.normalMap = normalTex;
-        earthMaterial.normalScale.set(0.75, 0.75); // Enhanced relief elevation
+        earthMaterial.normalScale.set(0.15, 0.15);
         earthMaterial.specularMap = specTex;
         earthMaterial.needsUpdate = true;
 
@@ -400,6 +425,7 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
 
       dragVelocityX = dx * 0.0055;
       dragVelocityY = dy * 0.0035;
+      focusing = false;
       earthGroup.rotateY(dragVelocityX);
       earthGroup.rotateX(dragVelocityY);
       lastPointer = { x: e.clientX, y: e.clientY };
@@ -408,7 +434,7 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
 
     const handlePointerUp = (e: PointerEvent) => {
       pointerDown = false;
-      renderer.domElement.releasePointerCapture(e.pointerId);
+      if(renderer.domElement.hasPointerCapture(e.pointerId))renderer.domElement.releasePointerCapture(e.pointerId);
 
       // Click detection: raycast to find clicked coordinates on the 3D globe
       if (!movedSinceDown) {
@@ -422,30 +448,12 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
           const localHit = earthGroup.worldToLocal(hits[0].point.clone());
           const coords = vector3ToLatLng(localHit);
 
-          // Find nearest known city within ~5 degrees
-          let bestCity: KeyCity | null = null;
-          let bestDist = 5;
-          for (const city of keyWorldCities) {
-            const dLat = coords.latitude - city.latitude;
-            const dLon = coords.longitude - city.longitude;
-            const dist = Math.sqrt(dLat * dLat + dLon * dLon);
-            if (dist < bestDist) {
-              bestDist = dist;
-              bestCity = city;
-            }
-          }
-
-          onLocationSelectRef.current?.({
-            name: bestCity ? bestCity.name : `${coords.latitude.toFixed(2)}°, ${coords.longitude.toFixed(2)}°`,
-            city: bestCity?.name,
-            country: bestCity?.country,
-            latitude: bestCity ? bestCity.latitude : coords.latitude,
-            longitude: bestCity ? bestCity.longitude : coords.longitude,
-            type: bestCity ? 'city' : 'region',
-          });
+          findPlace(coords.latitude,coords.longitude);
         }
       }
     };
+
+    const handlePointerCancel = (e:PointerEvent) => { movedSinceDown=true; handlePointerUp(e); };
 
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
@@ -459,7 +467,7 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
     canvas.addEventListener('pointerdown', handlePointerDown);
     canvas.addEventListener('pointermove', handlePointerMove);
     canvas.addEventListener('pointerup', handlePointerUp);
-    canvas.addEventListener('pointercancel', handlePointerUp);
+    canvas.addEventListener('pointercancel', handlePointerCancel);
     canvas.addEventListener('wheel', handleWheel, { passive: false });
 
     // 12. ANIMATION LOOP & 2D PROJECTION
@@ -502,6 +510,7 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
 
       // Gentle independent cloud drift
       cloudMesh.rotation.y = elapsed * 0.014;
+      cloudMaterial.opacity = selectedRef.current ? 0.12 : 0.40;
 
       // Pulse active marker ring
       if (activeMarker) {
@@ -531,18 +540,27 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
       // Camera easing
       camera.position.z += (cameraDistance - camera.position.z) * 0.08;
       renderer.render(scene, camera);
+      if (selectedRef.current && !focusing) {
+        const point = latLngToVector3(selectedRef.current.latitude, selectedRef.current.longitude, 1).applyQuaternion(earthGroup.quaternion);
+        container.dataset.focusX = point.x.toFixed(4);
+        container.dataset.focusY = point.y.toFixed(4);
+        container.dataset.focusZ = point.z.toFixed(4);
+        container.dataset.focusLatitude = String(selectedRef.current.latitude);
+        container.dataset.focusLongitude = String(selectedRef.current.longitude);
+      }
     };
 
     animate();
     onGlobeReady?.();
 
     return () => {
+      lookupAbort.current?.abort();
       window.cancelAnimationFrame(animId);
       resizeObserver.disconnect();
       canvas.removeEventListener('pointerdown', handlePointerDown);
       canvas.removeEventListener('pointermove', handlePointerMove);
       canvas.removeEventListener('pointerup', handlePointerUp);
-      canvas.removeEventListener('pointercancel', handlePointerUp);
+      canvas.removeEventListener('pointercancel', handlePointerCancel);
       canvas.removeEventListener('wheel', handleWheel);
       sphereGeometry.dispose();
       earthMaterial.dispose();
@@ -553,7 +571,7 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
       if (container.contains(canvas)) container.removeChild(canvas);
       apiRef.current = null;
     };
-  }, [onGlobeReady]);
+  }, [onGlobeReady, findPlace]);
 
   useEffect(() => {
     apiRef.current?.setRoutes?.(routes);
@@ -561,12 +579,13 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
 
   useEffect(() => {
     if (selectedLocation) {
+      if(selectedLocation.name==='Finding place…'||selectedLocation.name.includes('°')){findPlace(selectedLocation.latitude,selectedLocation.longitude);}else{lookupAbort.current?.abort();lookupAbort.current=null;setFindingPlace(false);lookupChangeRef.current?.(false);}
       apiRef.current?.focusOnLocation(selectedLocation.latitude, selectedLocation.longitude, selectedLocation.type);
       apiRef.current?.setMarker(selectedLocation);
     } else {
       apiRef.current?.setMarker(undefined);
     }
-  }, [selectedLocation]);
+  }, [selectedLocation, findPlace]);
 
   return (
     <div className="voyana-globe-circular-container">
@@ -574,10 +593,11 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
       <div className="globe-circular-aura" aria-hidden="true" />
 
       {/* WebGL Canvas mount */}
-      <div ref={containerRef} className="globe-canvas-mount" aria-label="Interactive 3D Earth Globe" />
+      <div ref={containerRef} className="globe-canvas-mount" aria-label="Interactive 3D Earth Globe" data-latitude={selectedLocation?.latitude} data-longitude={selectedLocation?.longitude} />
 
+      {findingPlace && <p className="globe-place-status" role="status">Finding city, state and country…</p>}
       {/* Projected Editorial 2D Location Pin Label */}
-      {labelPos && labelPos.visible && selectedLocation && (
+      {labelPos && labelPos.visible && selectedLocation && !findingPlace && !selectedLocation.name.includes('°') && (
         <div
           className="editorial-globe-label animate-fade-in"
           style={{
@@ -588,10 +608,9 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
           <div className="label-stem" />
           <div className="label-content">
             <div className="label-city">{selectedLocation.name}</div>
-            <div className="label-country">{selectedLocation.country || 'Global Destination'}</div>
-            <div className="label-coords">
-              {Math.abs(selectedLocation.latitude).toFixed(4)}° {selectedLocation.latitude >= 0 ? 'N' : 'S'} · {Math.abs(selectedLocation.longitude).toFixed(4)}° {selectedLocation.longitude >= 0 ? 'E' : 'W'}
-            </div>
+            <div className="label-country">{selectedLocation.country || 'No country assigned'}</div>
+            {selectedLocation.city && selectedLocation.city!==selectedLocation.name && <div className="label-state">{selectedLocation.city}</div>}
+            {selectedLocation.state && <div className="label-state">{selectedLocation.state}</div>}
             {metadata?.temperature && (
               <div className="label-meta">
                 <span>{metadata.temperature}</span>
