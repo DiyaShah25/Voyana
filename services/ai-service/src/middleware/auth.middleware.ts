@@ -38,7 +38,7 @@ export function requireAuth(req: AuthenticatedRequest, res: Response, next: Next
 
   try {
     // Verify using configured secret
-    const decoded = jwt.verify(token, config.jwtSecret) as any;
+    const decoded = jwt.verify(token, config.jwtSecret) as jwt.JwtPayload;
     req.user = {
       id: decoded.sub || decoded.id,
       email: decoded.email,
@@ -46,27 +46,7 @@ export function requireAuth(req: AuthenticatedRequest, res: Response, next: Next
       name: decoded.name || '',
     };
     next();
-  } catch (_err) {
-    // Check if token is a base64 mock token from frontend preview fallback
-    try {
-      const parts = token.split('.');
-      if (parts.length === 3) {
-        const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
-        if (payload.sub) {
-          req.user = {
-            id: payload.sub,
-            email: payload.email || 'traveler@voyana.com',
-            role: payload.role || 'traveler',
-            name: payload.name || 'Voyana Traveler',
-          };
-          next();
-          return;
-        }
-      }
-    } catch {
-      // Ignore fallback decode errors
-    }
-
+  } catch {
     res.status(401).json({
       error: 'Unauthorized',
       message: 'Invalid or expired authentication session. Please sign in again.',
@@ -86,7 +66,7 @@ export function optionalAuth(req: AuthenticatedRequest, _res: Response, next: Ne
 
   const token = authHeader.split(' ')[1];
   try {
-    const decoded = jwt.verify(token, config.jwtSecret) as any;
+    const decoded = jwt.verify(token, config.jwtSecret) as jwt.JwtPayload;
     req.user = {
       id: decoded.sub || decoded.id,
       email: decoded.email,

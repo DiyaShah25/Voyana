@@ -20,7 +20,6 @@ import {
   Users,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import type { UserRole } from '@/types/auth.types';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -53,7 +52,7 @@ const TRAVEL_STYLES = [
 ];
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
-  const { user, updateProfile, switchRole } = useAuth();
+  const { user, updateProfile } = useAuth();
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -118,11 +117,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
     }
   };
 
-  const handleRoleChange = async (newRole: UserRole) => {
-    await switchRole(newRole);
-    setSavedSuccess(true);
-    window.setTimeout(() => setSavedSuccess(false), 2000);
-  };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
@@ -208,25 +202,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
               </div>
             </div>
 
-            {/* Role Switcher (for immediate testing) */}
-            <div className="sm:border-l sm:border-slate-200 sm:pl-4 space-y-1.5 text-center sm:text-left">
-              <span className="text-xs font-semibold text-slate-700 block">Switch Active Role:</span>
-              <div className="flex flex-row sm:flex-col gap-1.5">
-                {(['traveler', 'organizer', 'admin'] as UserRole[]).map((r) => (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => handleRoleChange(r)}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors text-left flex items-center gap-1.5 ${
-                      user.role === r
-                        ? 'bg-emerald-700 text-white font-bold'
-                        : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
-                    }`}
-                  >
-                    <span>{r.charAt(0).toUpperCase() + r.slice(1)}</span>
-                  </button>
-                ))}
-              </div>
+            <div className="text-sm text-slate-600 max-w-xs">
+              <p className="font-semibold text-slate-900">Role: {user.role}</p>
+              <p>Your role belongs to your account. Sign out to sign in with a different account; profile edits cannot change access.</p>
             </div>
           </div>
 
