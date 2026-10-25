@@ -102,6 +102,9 @@ function SignupPage() {
         </p>
       </div>
 
+      <SocialAuth disabled={busy} onAuthSuccess={() => { window.location.hash = '/'; }} />
+      <div className="auth-divider-line"><span>or continue with email</span></div>
+
       {formError && (
         <div className="auth-alert-box error animate-fade-in" role="alert">
           <AlertCircle size={16} />
@@ -291,13 +294,6 @@ function SignupPage() {
           )}
         </button>
       </form>
-
-      {/* Social Auth Divider */}
-      <div className="auth-divider-line">
-        <span>or sign up with</span>
-      </div>
-
-      <SocialAuth disabled={busy} onAuthSuccess={() => { window.location.hash = '/'; }} />
 
       <div className="auth-switch-footer">
         <span>Already have a Voyana account?</span>{' '}
