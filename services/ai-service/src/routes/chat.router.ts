@@ -1,3 +1,4 @@
+import { toError } from '../utils/errors.js';
 /**
  * Chat API Router
  * Defines the POST /chat endpoint for AI travel assistant queries.
@@ -17,7 +18,8 @@ chatRouter.post('/chat', async (req: Request, res: Response, next: NextFunction)
     const validatedRequest = ChatRequestSchema.parse(req.body);
     const response = await chatService.processChat(validatedRequest);
     res.status(200).json(response);
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     if (err instanceof ZodError) {
       res.status(400).json({
         error: 'Invalid request payload',

@@ -1,3 +1,5 @@
+import { requireBookedTrip, requireTripMember } from '../middleware/booked-trip.middleware.js';
+import { toError } from '../utils/errors.js';
 /**
  * Trip Collaboration Router
  * Provides REST endpoints for real-time collaborative features:
@@ -15,6 +17,8 @@ import {
 import { optionalAuth, AuthenticatedRequest } from '../middleware/auth.middleware.js';
 
 export const collaborationRouter = Router();
+collaborationRouter.use('/:tripId', requireTripMember);
+collaborationRouter.use('/:tripId/memories', requireBookedTrip);
 
 // ===========================================================================
 // Group Chat Endpoints
@@ -24,7 +28,8 @@ collaborationRouter.get('/:tripId/chat', optionalAuth, async (req: Authenticated
     const { tripId } = req.params;
     const messages = await ChatMessageModel.find({ tripId }).sort({ createdAt: 1 }).limit(200);
     res.status(200).json({ ok: true, count: messages.length, messages });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to fetch messages.', error: err?.message });
   }
 });
@@ -52,7 +57,8 @@ collaborationRouter.post('/:tripId/chat', optionalAuth, async (req: Authenticate
     await chatMsg.save();
 
     res.status(201).json({ ok: true, message: chatMsg });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to send message.', error: err?.message });
   }
 });
@@ -65,7 +71,8 @@ collaborationRouter.get('/:tripId/tasks', optionalAuth, async (req: Authenticate
     const { tripId } = req.params;
     const tasks = await TaskModel.find({ tripId }).sort({ createdAt: -1 });
     res.status(200).json({ ok: true, count: tasks.length, tasks });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to fetch tasks.', error: err?.message });
   }
 });
@@ -94,7 +101,8 @@ collaborationRouter.post('/:tripId/tasks', optionalAuth, async (req: Authenticat
 
     await task.save();
     res.status(201).json({ ok: true, message: 'Task created.', task });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to create task.', error: err?.message });
   }
 });
@@ -117,7 +125,8 @@ collaborationRouter.put('/:tripId/tasks/:taskId', optionalAuth, async (req: Auth
     }
 
     res.status(200).json({ ok: true, message: 'Task updated.', task });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to update task.', error: err?.message });
   }
 });
@@ -127,7 +136,8 @@ collaborationRouter.delete('/:tripId/tasks/:taskId', optionalAuth, async (req: A
     const { taskId } = req.params;
     await TaskModel.findOneAndDelete({ id: taskId });
     res.status(200).json({ ok: true, message: 'Task deleted.' });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to delete task.', error: err?.message });
   }
 });
@@ -140,7 +150,8 @@ collaborationRouter.get('/:tripId/polls', optionalAuth, async (req: Authenticate
     const { tripId } = req.params;
     const polls = await PollModel.find({ tripId }).sort({ createdAt: -1 });
     res.status(200).json({ ok: true, count: polls.length, polls });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to fetch polls.', error: err?.message });
   }
 });
@@ -159,7 +170,7 @@ collaborationRouter.post('/:tripId/polls', optionalAuth, async (req: Authenticat
       id: `poll-${randomUUID().slice(0, 6)}`,
       tripId,
       question: question.trim(),
-      options: options.map((opt: any, idx: number) => ({
+      options: options.map((opt: string | { text: string }, idx: number) => ({
         id: idx + 1,
         text: typeof opt === 'string' ? opt : opt.text,
         votes: 0,
@@ -171,7 +182,8 @@ collaborationRouter.post('/:tripId/polls', optionalAuth, async (req: Authenticat
 
     await poll.save();
     res.status(201).json({ ok: true, message: 'Poll created.', poll });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to create poll.', error: err?.message });
   }
 });
@@ -194,17 +206,23 @@ collaborationRouter.post('/:tripId/polls/:pollId/vote', optionalAuth, async (req
       return;
     }
 
-    // Increment vote and record voter
-    if (!option.voterNames.includes(voter)) {
-      option.votes += 1;
-      option.voterNames.push(voter);
-      poll.totalVotes += 1;
-      poll.markModified('options');
-      await poll.save();
+    if (poll.isClosed) {
+      res.status(400).json({ ok: false, message: 'This poll is closed.' });
+      return;
     }
+    for (const entry of poll.options) {
+      entry.voterNames = entry.voterNames.filter(name => name !== voter);
+      entry.votes = entry.voterNames.length;
+    }
+    option.voterNames.push(voter);
+    option.votes = option.voterNames.length;
+    poll.totalVotes = poll.options.reduce((sum, entry) => sum + entry.votes, 0);
+    poll.markModified('options');
+    await poll.save();
 
     res.status(200).json({ ok: true, message: 'Vote recorded.', poll });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to record vote.', error: err?.message });
   }
 });
@@ -217,7 +235,8 @@ collaborationRouter.get('/:tripId/memories', optionalAuth, async (req: Authentic
     const { tripId } = req.params;
     const memories = await MemoryModel.find({ tripId }).sort({ createdAt: -1 });
     res.status(200).json({ ok: true, count: memories.length, memories });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to fetch memories.', error: err?.message });
   }
 });
@@ -247,7 +266,8 @@ collaborationRouter.post('/:tripId/memories', optionalAuth, async (req: Authenti
 
     await memory.save();
     res.status(201).json({ ok: true, message: 'Memory saved.', memory });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to save memory.', error: err?.message });
   }
 });
@@ -280,7 +300,8 @@ collaborationRouter.post('/:tripId/memories/:memoryId/like', optionalAuth, async
     await memory.save();
 
     res.status(200).json({ ok: true, likes: memory.likes, isLiked });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to update like.', error: err?.message });
   }
 });
@@ -298,7 +319,8 @@ collaborationRouter.delete('/:tripId/memories/:memoryId', optionalAuth, async (r
     }
 
     res.status(200).json({ ok: true, message: 'Memory deleted.' });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to delete memory.', error: err?.message });
   }
 });

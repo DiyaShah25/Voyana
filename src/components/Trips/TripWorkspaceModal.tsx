@@ -1,3 +1,5 @@
+import JourneyControlPanel, { type JourneyBookingService } from './JourneyControlPanel';
+import { formatMoney } from '@/services/money';
 /**
  * Trip Workspace & Interactive Itinerary Creation Modal
  * Supports multi-day schedule creation, activity builder, drag/drop reordering,
@@ -5,15 +7,8 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Calendar, MessageSquare, CheckSquare, BarChart3,
-  DollarSign, FileText, Users, Plus, X, ArrowRight,
-  MapPin, Clock, Send, Check, Sparkles, Share2,
-  Trash2, Copy, AlertCircle, ShieldCheck, ChevronRight,
-  CheckCircle2, Circle, ArrowUpRight, Tag, SlidersHorizontal,
-  Heart, Camera, Image as ImageIcon, ZoomIn, Download, Printer
-} from 'lucide-react';
-import type { Trip, TripActivity, TripMember } from '@/services/tripService';
+import { Calendar, MessageSquare, CheckSquare, BarChart3, IndianRupee, FileText, Users, Plus, X, MapPin, Clock, Send, Check, Sparkles, Share2, Trash2, CheckCircle2, Circle, Heart, Camera, ZoomIn, Download, Printer } from 'lucide-react';
+import type { Trip, TripActivity } from '@/services/tripService';
 import {
   addTripMember,
   addTripActivity,
@@ -27,52 +22,34 @@ import {
   generateAiTripSchedule,
   type GeneratedItineraryResult,
 } from '@/services/itineraryService';
-import {
-  getTripChatMessages,
-  sendTripChatMessage,
-  getTripTasks,
-  createTripTask,
-  updateTripTaskStatus,
-  getTripPolls,
-  createTripPoll,
-  voteTripPoll,
-  getTripExpenses,
-  addTripExpense,
-  calculateDebtSettlement,
-  getTripDocuments,
-  uploadTripDocument,
-  getTripMemories,
-  uploadTripMemory,
-  likeTripMemory,
-  deleteTripMemory,
-  downloadTripTransactionsCSV,
-  generateAiJournalStory,
-  type TripChatMessage,
-  type TripTask,
-  type TripPoll,
-  type TripExpense,
-  type TripDocument,
-  type TripMemory,
-  type TaskStatus,
-} from '@/services/collaborationService';
+import { getTripChatMessages, sendTripChatMessage, getTripTasks, createTripTask, updateTripTaskStatus, getTripPolls, createTripPoll, voteTripPoll, getTripExpenses, addTripExpense, calculateDebtSettlement, getTripDocuments, getTripMemories, uploadTripMemory, likeTripMemory, deleteTripMemory, downloadTripTransactionsCSV, generateAiJournalStory, type TripChatMessage, type TripTask, type TripPoll, type TripExpense, type TripDocument, type TripMemory, type TaskStatus } from '@/services/collaborationService';
 
 export interface TripWorkspaceModalProps {
   isOpen: boolean;
+  bookingConfirmed?: boolean;
+  onBook?: (service: JourneyBookingService) => void;
   onClose: () => void;
   trip: Trip | null;
-  currentUser?: { name: string; email: string };
+  onTripChange?: (trip: Trip) => void;
+  currentUser?: { id?: string; name: string; email: string };
 }
 
-type WorkspaceTab = 'itinerary' | 'chat' | 'tasks' | 'polls' | 'expenses' | 'documents' | 'memories';
+type WorkspaceTab = 'journey' | 'itinerary' | 'chat' | 'tasks' | 'polls' | 'expenses' | 'documents' | 'memories';
 
 export default function TripWorkspaceModal({
   isOpen,
+  bookingConfirmed = true,
+  onBook,
   onClose,
   trip,
+  onTripChange,
   currentUser = { name: 'Megha Lalwani', email: 'megha@voyana.com' },
 }: TripWorkspaceModalProps) {
+  const membership = trip?.members?.find(member => member.email === currentUser.email);
+  const readOnly = membership?.role === 'viewer';
+  const canManageMembers = membership?.role === 'owner';
   // Navigation
-  const [activeTab, setActiveTab] = useState<WorkspaceTab>('itinerary');
+  const [activeTab, setActiveTab] = useState<WorkspaceTab>('journey');
 
   // Collaboration State
   const [chatMessages, setChatMessages] = useState<TripChatMessage[]>([]);
@@ -84,7 +61,8 @@ export default function TripWorkspaceModal({
 
   // Input states
   const [newChatMessage, setNewChatMessage] = useState('');
-  const [copiedLink, setCopiedLink] = useState(false);
+  const [chatError, setChatError] = useState('');
+  const [sendingChat, setSendingChat] = useState(false);
 
   // New Activity Form & Filters
   const [selectedDayFilter, setSelectedDayFilter] = useState<number>(0); // 0 = All Days
@@ -102,8 +80,8 @@ export default function TripWorkspaceModal({
   const [showAddTask, setShowAddTask] = useState(false);
   const [taskTitle, setTaskTitle] = useState('');
   const [taskAssignee, setTaskAssignee] = useState(currentUser.name);
-  const [taskDueDate, setTaskDueDate] = useState('');
-  const [taskCategory, setTaskCategory] = useState('General');
+  const [taskDueDate] = useState('');
+  const [taskCategory] = useState('General');
 
   // New Poll Form
   const [showAddPoll, setShowAddPoll] = useState(false);
@@ -115,7 +93,7 @@ export default function TripWorkspaceModal({
   const [expTitle, setExpTitle] = useState('');
   const [expAmount, setExpAmount] = useState(50);
   const [expPaidBy, setExpPaidBy] = useState(currentUser.name);
-  const [expCategory, setExpCategory] = useState('Dining');
+  const [expCategory] = useState('Dining');
 
   // Invite Member / Share / Export Modal
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -142,7 +120,6 @@ export default function TripWorkspaceModal({
   const [aiItineraryResult, setAiItineraryResult] = useState<GeneratedItineraryResult | null>(null);
   const [isApplyingItinerary, setIsApplyingItinerary] = useState(false);
 
-  const tripId = trip?.id || 'trip-user-01';
 
   const loadWorkspaceData = useCallback(async () => {
     if (!trip) return;
@@ -150,17 +127,18 @@ export default function TripWorkspaceModal({
       getTripChatMessages(trip.id),
       getTripTasks(trip.id),
       getTripPolls(trip.id),
-      getTripExpenses(trip.id),
-      getTripDocuments(trip.id),
-      getTripMemories(trip.id),
+      bookingConfirmed ? getTripExpenses(trip.id) : Promise.resolve([]),
+      bookingConfirmed ? getTripDocuments(trip.id) : Promise.resolve([]),
+      bookingConfirmed ? getTripMemories(trip.id) : Promise.resolve([]),
     ]);
-    setChatMessages(c);
+    setChatMessages(previous => [...new Map([...c, ...previous].map(message => [message.id, message])).values()]);
     setTasks(t);
     setPolls(p);
     setExpenses(e);
     setDocuments(d);
     setMemories(m);
-  }, [trip]);
+
+  }, [trip, bookingConfirmed]);
 
   useEffect(() => {
     if (isOpen && trip) {
@@ -168,15 +146,28 @@ export default function TripWorkspaceModal({
     }
   }, [isOpen, trip, loadWorkspaceData]);
 
+  useEffect(() => {
+    if (!isOpen || !trip) return;
+    let active = true;
+    const timer = window.setInterval(() => {
+      void getTripChatMessages(trip.id).then(messages => { if (active) setChatMessages(messages); });
+    }, 5000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [isOpen, trip]);
+
   if (!isOpen || !trip) return null;
 
   // 1. Send Chat
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newChatMessage.trim()) return;
-    const sent = await sendTripChatMessage(trip.id, newChatMessage, currentUser.name);
-    setChatMessages((prev) => [...prev, sent]);
-    setNewChatMessage('');
+    if (!newChatMessage.trim() || readOnly || sendingChat) return;
+    setChatError(''); setSendingChat(true);
+    try {
+      const sent = await sendTripChatMessage(trip.id, newChatMessage, currentUser.name);
+      setChatMessages(prev => [...prev.filter(message => message.id !== sent.id), sent]);
+      setNewChatMessage('');
+    } catch (error) { setChatError(error instanceof Error ? error.message : 'Message could not be sent.'); }
+    finally { setSendingChat(false); }
   };
 
   // 2. Add Activity
@@ -217,7 +208,7 @@ export default function TripWorkspaceModal({
     // Broadcast message in chat
     sendTripChatMessage(
       trip.id,
-      `added a new activity for Day ${actDay}: "${actTitle}"${actCost > 0 ? ` ($${actCost})` : ''}`,
+      `added a new activity for Day ${actDay}: "${actTitle}"${actCost > 0 ? ` (₹${actCost})` : ''}`,
       currentUser.name,
       'activity_log'
     );
@@ -249,7 +240,7 @@ export default function TripWorkspaceModal({
     });
     sendTripChatMessage(
       trip.id,
-      `converted activity "${act.title}" ($${act.cost}) into a shared group expense!`,
+      `converted activity "${act.title}" (₹${act.cost}) into a shared group expense!`,
       currentUser.name,
       'activity_log'
     );
@@ -307,7 +298,7 @@ export default function TripWorkspaceModal({
     await addTripExpense(trip.id, {
       title: expTitle,
       amount: expAmount,
-      currency: 'USD',
+      currency: trip.currency,
       paidBy: expPaidBy,
       splitAmong: membersList,
       category: expCategory,
@@ -322,7 +313,8 @@ export default function TripWorkspaceModal({
   const handleInviteMember = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inviteEmail.trim()) return;
-    await addTripMember(trip.id, inviteEmail, inviteRole);
+    const result = await addTripMember(trip.id, inviteEmail, inviteRole);
+    if (!result.success) { window.alert(result.error || 'Invitation could not be saved.'); return; }
     setShowInviteModal(false);
     setInviteEmail('');
     sendTripChatMessage(trip.id, `invited ${inviteEmail} to the trip workspace as ${inviteRole}.`, currentUser.name, 'activity_log');
@@ -382,15 +374,15 @@ export default function TripWorkspaceModal({
 
   return (
     <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 sm:p-6 md:p-8 bg-slate-900/65 backdrop-blur-md animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-6xl bg-white border border-slate-200/90 rounded-3xl shadow-2xl shadow-slate-950/20 overflow-hidden my-auto flex flex-col max-h-[88vh]">
+      <div className="relative w-full max-w-6xl bg-white border border-slate-200/90 rounded-3xl shadow-2xl shadow-slate-950/20 overflow-hidden my-auto flex flex-col max-h-[88dvh] text-slate-900">
         {/* Workspace Top Header */}
-        <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/90 via-white to-slate-50/90 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+        <div className="shrink-0 px-4 sm:px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/90 via-white to-slate-50/90 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0 w-full sm:w-auto">
             <div className="w-11 h-11 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 shadow-sm flex-shrink-0">
               <MapPin size={22} />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 min-w-0 break-words">
                 <h2 className="text-lg font-bold text-slate-900">{trip.title}</h2>
                 <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
                   {trip.destination}
@@ -407,7 +399,7 @@ export default function TripWorkspaceModal({
           </div>
 
           {/* Members Roster & Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             <div className="flex items-center -space-x-2">
               {trip.members?.slice(0, 5).map((m) => (
                 <div
@@ -421,6 +413,7 @@ export default function TripWorkspaceModal({
             </div>
 
             <button
+              disabled={!canManageMembers}
               onClick={() => setShowShareModal(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-semibold transition-all hover:scale-105 active:scale-95 shadow-sm"
             >
@@ -438,6 +431,7 @@ export default function TripWorkspaceModal({
             </button>
 
             <button
+              disabled={!canManageMembers}
               onClick={() => setShowShareModal(true)}
               className="p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-colors"
               title="Share trip & manage permissions"
@@ -455,22 +449,23 @@ export default function TripWorkspaceModal({
         </div>
 
         {/* Feature Tabs Navigation */}
-        <div className="px-6 py-3 border-b border-slate-200 bg-slate-50/50 flex flex-wrap items-center gap-2 overflow-x-auto">
+        <div className="shrink-0 px-4 sm:px-6 py-3 border-b border-slate-200 bg-slate-50/50 flex flex-nowrap items-center gap-2 overflow-x-auto">
           {[
+            { id: 'journey', label: 'Trip dashboard', icon: MapPin },
             { id: 'itinerary', label: 'Itinerary & Calendar', icon: Calendar },
             { id: 'chat', label: `Group Chat (${chatMessages.length})`, icon: MessageSquare },
             { id: 'tasks', label: `Task Board (${tasks.filter((t) => t.status !== 'completed').length} active)`, icon: CheckSquare },
             { id: 'polls', label: `Voting & Polls (${polls.length})`, icon: BarChart3 },
-            { id: 'expenses', label: `Expense Splitter ($${debtSummary.totalSpent})`, icon: DollarSign },
+            { id: 'expenses', label: `Expense Splitter (₹${debtSummary.totalSpent})`, icon: IndianRupee },
             { id: 'documents', label: `Documents Vault (${documents.length})`, icon: FileText },
             { id: 'memories', label: `Memories & Journal (${memories.length})`, icon: Camera },
-          ].map((tab) => {
+          ].filter(tab => !['memories','expenses'].includes(tab.id)).filter(tab => trip.travelMode !== 'solo' || !['chat','tasks','polls'].includes(tab.id)).filter(tab => bookingConfirmed || ['journey', 'chat', 'tasks', 'polls'].includes(tab.id)).map((tab) => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as WorkspaceTab)}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                className={`shrink-0 flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                   activeTab === tab.id
                     ? 'bg-emerald-700 text-white shadow-sm'
                     : 'bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200'
@@ -483,9 +478,11 @@ export default function TripWorkspaceModal({
           })}
         </div>
 
+        {readOnly && <p className="px-6 py-2 bg-amber-50 text-amber-900 text-xs">Viewer access: you can read this trip. Editing and sending messages require editor access from the owner.</p>}
         {/* Tab View Container */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <fieldset disabled={readOnly} className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 min-w-0">
           {/* 1. ITINERARY & CALENDAR TAB */}
+          {activeTab === 'journey' && <JourneyControlPanel trip={trip} user={currentUser} onChange={updated => onTripChange?.(updated)} onBook={onBook} />}
           {activeTab === 'itinerary' && (
             <div className="space-y-6">
               {/* Dynamic Budget Sync & Meter */}
@@ -493,7 +490,7 @@ export default function TripWorkspaceModal({
                 <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
                   <div className="flex items-center gap-2.5">
                     <div className="p-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      <DollarSign size={18} />
+                      <IndianRupee size={18} />
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
@@ -507,9 +504,9 @@ export default function TripWorkspaceModal({
                         </span>
                       </h4>
                       <p className="text-xs text-slate-500">
-                        Target: <strong className="text-slate-900">${budgetSummary.budgetTarget.toLocaleString()}</strong> ·
-                        Activities Planned: <strong className="text-emerald-700">${budgetSummary.totalActivitiesCost.toLocaleString()}</strong> ·
-                        Split Bills Logged: <strong className="text-purple-700">${debtSummary.totalSpent.toLocaleString()}</strong>
+                        Target: <strong className="text-slate-900">₹{budgetSummary.budgetTarget.toLocaleString()}</strong> ·
+                        Activities Planned: <strong className="text-emerald-700">₹{budgetSummary.totalActivitiesCost.toLocaleString()}</strong> ·
+                        Split Bills Logged: <strong className="text-purple-700">₹{debtSummary.totalSpent.toLocaleString()}</strong>
                       </p>
                     </div>
                   </div>
@@ -517,7 +514,7 @@ export default function TripWorkspaceModal({
                   <div className="text-right">
                     <span className="text-xs text-slate-500 block">Remaining Balance</span>
                     <span className={`text-lg font-black ${budgetSummary.remainingBudget >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
-                      ${budgetSummary.remainingBudget.toLocaleString()}
+                      {formatMoney(budgetSummary.remainingBudget,trip.currency)}
                     </span>
                   </div>
                 </div>
@@ -699,7 +696,7 @@ export default function TripWorkspaceModal({
                                         </span>
                                         {act.cost ? (
                                           <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                                            ${act.cost}
+                                            {formatMoney(act.cost, trip.currency)}
                                           </span>
                                         ) : null}
                                       </div>
@@ -731,7 +728,7 @@ export default function TripWorkspaceModal({
                                         className="flex items-center gap-1 text-emerald-700 hover:text-emerald-800 transition-colors font-medium"
                                         title="Split this activity cost with group members"
                                       >
-                                        <DollarSign size={11} />
+                                        <IndianRupee size={11} />
                                         <span>Split as Bill</span>
                                       </button>
                                     ) : (
@@ -799,12 +796,15 @@ export default function TripWorkspaceModal({
                 })}
               </div>
 
+              {chatError && <p role="alert" className="text-red-700 px-4 py-2">{chatError}</p>}
               {/* Chat Composer */}
               <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-200 bg-white flex items-center gap-2">
                 <input
                   type="text"
                   value={newChatMessage}
                   onChange={(e) => setNewChatMessage(e.target.value)}
+                  disabled={readOnly || sendingChat}
+                  aria-label="Group message"
                   placeholder={`Message your trip group as ${currentUser.name}...`}
                   className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 shadow-sm"
                 />
@@ -812,7 +812,7 @@ export default function TripWorkspaceModal({
                   type="submit"
                   className="p-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm shadow-emerald-700/20 flex items-center justify-center transition-all hover:scale-105 active:scale-95"
                 >
-                  <Send size={15} />
+                  <Send size={15} aria-label="Send group message" />
                 </button>
               </form>
             </div>
@@ -957,7 +957,7 @@ export default function TripWorkspaceModal({
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-base font-bold text-slate-900">Group Expense Splitter</h3>
-                  <p className="text-xs text-slate-500">Total Group Spend: ${debtSummary.totalSpent} USD</p>
+                  <p className="text-xs text-slate-500">Total Group Spend: {formatMoney(debtSummary.totalSpent,trip.currency)} USD</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -996,7 +996,7 @@ export default function TripWorkspaceModal({
                           <span className="text-slate-400 mx-1">owes</span>
                           <span className="text-emerald-700 font-semibold">{s.to}</span>
                         </div>
-                        <span className="font-bold text-slate-900">${s.amount}</span>
+                        <span className="font-bold text-slate-900">₹{s.amount}</span>
                       </div>
                     ))}
                   </div>
@@ -1015,8 +1015,8 @@ export default function TripWorkspaceModal({
                       </p>
                     </div>
                     <div className="text-right">
-                      <span className="text-sm font-bold text-slate-900">${exp.amount}</span>
-                      <span className="text-[10px] text-slate-500 block">${(exp.amount / exp.splitAmong.length).toFixed(1)} / pax</span>
+                      <span className="text-sm font-bold text-slate-900">₹{exp.amount}</span>
+                      <span className="text-[10px] text-slate-500 block">₹{(exp.amount / exp.splitAmong.length).toFixed(1)} / pax</span>
                     </div>
                   </div>
                 ))}
@@ -1234,7 +1234,7 @@ export default function TripWorkspaceModal({
               )}
             </div>
           )}
-        </div>
+        </fieldset>
       </div>
 
       {/* ─── ADD ACTIVITY MODAL ───────────────────────────────────────────── */}
@@ -1300,7 +1300,7 @@ export default function TripWorkspaceModal({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Estimated Cost ($)</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Estimated Cost (₹)</label>
                   <input
                     type="number"
                     min="0"
@@ -1465,7 +1465,7 @@ export default function TripWorkspaceModal({
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Amount ($ USD) *</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Amount (INR) *</label>
                   <input
                     type="number"
                     min={1}
@@ -1518,7 +1518,7 @@ export default function TripWorkspaceModal({
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Role Permission</label>
                 <select
                   value={inviteRole}
-                  onChange={(e) => setInviteRole(e.target.value as any)}
+                  onChange={(e) => setInviteRole(e.target.value as typeof inviteRole)}
                   className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 shadow-sm"
                 >
                   <option value="editor">Editor (Can add/edit itinerary, polls & tasks)</option>
@@ -1828,7 +1828,7 @@ export default function TripWorkspaceModal({
                   <select
                     value={aiPace}
                     onChange={(e) => {
-                      const p = e.target.value as any;
+                      const p = e.target.value as typeof aiPace;
                       setAiPace(p);
                       const res = generateAiTripSchedule({
                         destination: trip.destination,
@@ -1890,7 +1890,7 @@ export default function TripWorkspaceModal({
                       Generated Schedule Preview ({aiItineraryResult.allActivities.length} Activities)
                     </h4>
                     <span className="text-xs text-slate-500">
-                      Est. Activities Cost: <strong className="text-emerald-700">${aiItineraryResult.estimatedTotalCost}</strong>
+                      Est. Activities Cost: <strong className="text-emerald-700">₹{aiItineraryResult.estimatedTotalCost}</strong>
                     </span>
                   </div>
 
@@ -1917,7 +1917,7 @@ export default function TripWorkspaceModal({
                                 <div className="text-[11px] text-slate-500">{a.locationName} · <span className="text-slate-400">{a.description}</span></div>
                               </div>
                               <span className="font-bold text-slate-700 shrink-0 ml-2">
-                                {a.cost && a.cost > 0 ? `$${a.cost}` : 'Free'}
+                                {a.cost && a.cost > 0 ? `₹{formatMoney(a.cost,trip.currency)}` : 'Free'}
                               </span>
                             </div>
                           ))}
