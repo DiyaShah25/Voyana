@@ -1,3 +1,7 @@
+import { toError } from '../utils/errors.js';
+import { TripModel } from '../db/models/trip.model.js';
+import { BudgetModel } from '../db/models/budget.model.js';
+import { getMongoStatus } from '../db/mongo.js';
 /**
  * Chat Processing Service
  * Core AI chat logic: builds system prompts, manages conversation
@@ -72,7 +76,23 @@ export class ChatService {
 
   public async processChat(chatRequest: ChatRequest): Promise<ChatResponse> {
     const startTime = Date.now();
-    const trip = this.tripFixture;
+    let trip = this.tripFixture;
+    if (chatRequest.tripId !== trip.id) {
+      trip = { id: chatRequest.tripId, title: 'Travel planning', destination: chatRequest.destination || 'Your destination', startDate: '', endDate: '', totalBudget: 0, currency: 'USD', members: [], itineraryDays: [] };
+      if (getMongoStatus() === 'connected') {
+        const saved = await TripModel.findOne({ id: chatRequest.tripId });
+        const budget = await BudgetModel.findOne({ tripId: chatRequest.tripId });
+        if (saved) {
+          const dayNumbers = [...new Set(saved.activities.map(activity => activity.dayNumber))];
+          trip = {
+            id: saved.id, title: saved.title, destination: saved.destination, startDate: saved.startDate, endDate: saved.endDate,
+            totalBudget: budget?.totalBudget ?? saved.budgetTarget, currency: saved.currency,
+            members: saved.members.map(member => ({ id: member.id, name: member.name, role: member.role === 'owner' ? 'creator' : member.role })),
+            itineraryDays: dayNumbers.map(day => ({ day, title: `Day ${day}`, activities: saved.activities.filter(activity => activity.dayNumber === day).map(activity => ({ title: activity.title, time: activity.timeSlot, category: activity.category, estimatedCost: activity.cost })) })),
+          };
+        }
+      }
+    }
 
     // Detect if user is asking about a specific destination
     let targetDest = chatRequest.destination;
@@ -85,7 +105,7 @@ export class ChatService {
       }
     }
 
-    const systemPrompt = this.renderSystemPrompt(trip, targetDest);
+    const systemPrompt = this.renderSystemPrompt(trip, targetDest) + `\nACTIVE_TRIP_JSON: ${JSON.stringify(trip)}`;
 
     const messages: LlmMessage[] = [
       { role: 'system', content: systemPrompt },
@@ -105,10 +125,10 @@ export class ChatService {
         temperature: 0.3,
       });
 
-      let parsedJson: any;
+      let parsedJson: unknown;
       try {
         parsedJson = JSON.parse(llmResponse.content);
-      } catch (parseErr) {
+      } catch {
         throw new Error(`LLM returned invalid JSON: ${llmResponse.content.substring(0, 100)}...`);
       }
 
@@ -128,7 +148,8 @@ export class ChatService {
       });
 
       return validatedResponse;
-    } catch (err: any) {
+    } catch (caught) {
+      const err = toError(caught);
       const latencyMs = Date.now() - startTime;
       const errorMessage = err?.message || 'Unknown error occurred in AI Chat';
 
@@ -150,7 +171,7 @@ export class ChatService {
         throw err;
       }
 
-      const wrappedError: any = new Error(errorMessage);
+      const wrappedError: Error & { statusCode?: number } = new Error(errorMessage);
       wrappedError.statusCode = err?.statusCode || 500;
       throw wrappedError;
     }

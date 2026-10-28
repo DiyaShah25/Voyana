@@ -5,39 +5,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import {
-  Briefcase,
-  CheckCircle2,
-  Circle,
-  Plus,
-  Trash2,
-  Sparkles,
-  Filter,
-  Users,
-  SunMedium,
-  CheckSquare,
-  Square,
-  X,
-  ArrowRight,
-  ShieldCheck,
-  Tag,
-} from 'lucide-react';
-import {
-  getPackingList,
-  fetchPackingList,
-  toggleItemPacked,
-  addPackingItem,
-  deletePackingItem,
-  markAllItems,
-  generateAiChecklist,
-  assignPackingItem,
-  distributeTasksEqually,
-  getMemberTaskStats,
-  type PackingListState,
-  type PackingItem,
-  type PackingCategory,
-  type PackingPriority,
-} from '@/services/packingService';
+import { Briefcase, CheckCircle2, Circle, Plus, Trash2, Sparkles, Filter, Users, SunMedium, CheckSquare, Square, X, ArrowRight } from 'lucide-react';
+import { getPackingList, fetchPackingList, toggleItemPacked, addPackingItem, deletePackingItem, markAllItems, generateAiChecklist, assignPackingItem, distributeTasksEqually, getMemberTaskStats, type PackingListState, type PackingCategory, type PackingPriority } from '@/services/packingService';
 
 interface PackingChecklistModalProps {
   isOpen: boolean;
@@ -85,7 +54,7 @@ export const PackingChecklistModal: React.FC<PackingChecklistModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setPackingState(getPackingList());
-      fetchPackingList(destination || 'trip-paris-01')
+      fetchPackingList()
         .then((live) => setPackingState(live))
         .catch(() => {});
     }
