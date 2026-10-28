@@ -1,3 +1,4 @@
+import { formatMoney } from '@/services/money';
 /**
  * Trip Export Modal
  * Exports trip itinerary and details to PDF, calendar (ICS),
@@ -5,11 +6,7 @@
  */
 
 import React, { useState } from 'react';
-import {
-  Printer, Download, Copy, Check, X, MapPin,
-  Calendar, Users, DollarSign, Clock, ShieldCheck,
-  FileText, Sparkles, Plane, Compass
-} from 'lucide-react';
+import { Printer, Download, Copy, Check, X, MapPin, ShieldCheck, FileText } from 'lucide-react';
 import type { Trip } from '@/services/tripService';
 import { downloadTripTransactionsCSV, type DebtSettlement, type TripExpense } from '@/services/collaborationService';
 
@@ -46,7 +43,7 @@ export default function TripExportModal({
     summary += `Dates: ${trip.startDate} to ${trip.endDate}\n`;
     summary += `Reference: ${voucherRefCode}\n`;
     summary += `Travelers (${trip.members?.length || 1}): ${trip.members?.map((m) => m.name).join(', ') || 'Megha Lalwani'}\n`;
-    summary += `Budget: $${trip.budgetTarget.toLocaleString()} ${trip.currency}\n\n`;
+    summary += `Budget: ${formatMoney(trip.budgetTarget,trip.currency)}\n\n`;
 
     summary += `📅 SCHEDULE & ACTIVITIES:\n`;
     for (let day = 1; day <= 7; day++) {
@@ -54,7 +51,7 @@ export default function TripExportModal({
       if (dayActs.length > 0) {
         summary += `\nDay ${day}:\n`;
         dayActs.forEach((act) => {
-          summary += `  • ${act.timeSlot || 'Anytime'}: ${act.title}${act.locationName ? ` (@ ${act.locationName})` : ''}${act.cost ? ` [$${act.cost}]` : ''}\n`;
+          summary += `  • ${act.timeSlot || 'Anytime'}: ${act.title}${act.locationName ? ` (@ ${act.locationName})` : ''}${act.cost ? ` [${formatMoney(act.cost,trip.currency)}]` : ''}\n`;
         });
       }
     }
@@ -62,7 +59,7 @@ export default function TripExportModal({
     if (debtSummary && debtSummary.settlements.length > 0) {
       summary += `\n💰 DEBT SETTLEMENT SUMMARY:\n`;
       debtSummary.settlements.forEach((s) => {
-        summary += `  • ${s.from} owes ${s.to} $${s.amount}\n`;
+        summary += `  • ${s.from} owes ${s.to} ${formatMoney(s.amount,trip.currency)}\n`;
       });
     }
 
@@ -190,7 +187,7 @@ export default function TripExportModal({
             <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm print:border-slate-300">
               <span className="text-[10px] text-slate-400 block uppercase font-semibold">Budget Goal</span>
               <p className="text-xs font-bold text-emerald-700 mt-0.5 print:text-black">
-                ${trip.budgetTarget.toLocaleString()} {trip.currency}
+                {formatMoney(trip.budgetTarget,trip.currency)}
               </p>
               <p className="text-[10px] text-slate-500">Target allocation</p>
             </div>
@@ -257,7 +254,7 @@ export default function TripExportModal({
 
                           {act.cost ? (
                             <span className="font-bold text-emerald-700 print:text-black whitespace-nowrap">
-                              ${act.cost}
+                              {formatMoney(act.cost,trip.currency)}
                             </span>
                           ) : null}
                         </div>
@@ -279,7 +276,7 @@ export default function TripExportModal({
                 {debtSummary.settlements.map((s, idx) => (
                   <div key={idx} className="flex items-center justify-between bg-white border border-emerald-100 p-2 rounded-lg shadow-sm print:border print:border-slate-200">
                     <span className="text-slate-700 print:text-black">{s.from} → {s.to}</span>
-                    <span className="font-bold text-emerald-700 print:text-black">${s.amount}</span>
+                    <span className="font-bold text-emerald-700 print:text-black">{formatMoney(s.amount,trip.currency)}</span>
                   </div>
                 ))}
               </div>

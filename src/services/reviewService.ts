@@ -4,7 +4,7 @@
  * verified traveler reviews, photo attachments, and community helpfulness voting.
  */
 
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+
 import { createAlert } from './alertService';
 import { apiRequest } from './apiClient';
 
@@ -298,7 +298,7 @@ function getStoredReviews(): TravelReview[] {
 function saveStoredReviews(list: TravelReview[]): void {
   try {
     localStorage.setItem(REVIEWS_KEY, JSON.stringify(list));
-  } catch {}
+  } catch { /* Retain local preview data when remote synchronization fails. */ }
 }
 
 // ---------------------------------------------------------------------------
@@ -325,7 +325,7 @@ export async function getReviews(
     if (apiRes.ok && apiRes.data?.reviews && apiRes.data.reviews.length > 0) {
       return apiRes.data.reviews;
     }
-  } catch {}
+  } catch { /* Retain local preview data when remote synchronization fails. */ }
 
   const all = getStoredReviews();
   let filtered = all;

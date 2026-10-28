@@ -37,7 +37,7 @@ const ChatMessageSchema = new Schema<IChatMessage>(
   {
     timestamps: { createdAt: true, updatedAt: false },
     toJSON: {
-      transform(_doc, ret: Record<string, any>) {
+      transform(_doc, ret: Record<string, unknown>) {
         delete ret._id;
         delete ret.__v;
         return ret;
@@ -86,7 +86,7 @@ const TaskSchema = new Schema<ITask>(
   {
     timestamps: true,
     toJSON: {
-      transform(_doc, ret: Record<string, any>) {
+      transform(_doc, ret: Record<string, unknown>) {
         delete ret._id;
         delete ret.__v;
         return ret;
@@ -141,7 +141,7 @@ const PollSchema = new Schema<IPoll>(
   {
     timestamps: true,
     toJSON: {
-      transform(_doc, ret: Record<string, any>) {
+      transform(_doc, ret: Record<string, unknown>) {
         delete ret._id;
         delete ret.__v;
         return ret;
@@ -186,7 +186,7 @@ const MemorySchema = new Schema<IMemory>(
   {
     timestamps: { createdAt: true, updatedAt: false },
     toJSON: {
-      transform(_doc, ret: Record<string, any>) {
+      transform(_doc, ret: Record<string, unknown>) {
         delete ret._id;
         delete ret.__v;
         return ret;

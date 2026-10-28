@@ -1,3 +1,11 @@
+import { UserModel } from '../db/models/user.model.js';
+import { deliverInvitation } from '../services/invitation-mail.service.js';
+import { notifyTrip } from '../services/trip-notifications.service.js';
+import { requireTripMember } from '../middleware/booked-trip.middleware.js';
+import { BookingModel } from '../db/models/booking.model.js';
+import { BudgetModel } from '../db/models/budget.model.js';
+import type { FilterQuery } from 'mongoose';
+import { toError } from '../utils/errors.js';
 /**
  * Trip & Itinerary Management Router
  * Provides REST endpoints for creating, retrieving, updating, and deleting trips,
@@ -7,9 +15,10 @@
 import { Router, Response } from 'express';
 import { randomUUID } from 'crypto';
 import { TripModel, ITripActivity, ITripMember } from '../db/models/trip.model.js';
-import { optionalAuth, requireAuth, AuthenticatedRequest } from '../middleware/auth.middleware.js';
+import { optionalAuth, AuthenticatedRequest } from '../middleware/auth.middleware.js';
 
 export const tripsRouter = Router();
+tripsRouter.use('/:id', requireTripMember);
 
 // ---------------------------------------------------------------------------
 // GET /api/trips - List trips with search, filters, and visibility checks
@@ -19,17 +28,16 @@ tripsRouter.get('/', optionalAuth, async (req: AuthenticatedRequest, res: Respon
     const { destination, search, templateOnly, ownerId } = req.query;
     const currentUserId = req.user?.id;
 
-    const filter: any = {};
+    const filter: FilterQuery<Record<string, unknown>> = {};
 
     if (templateOnly === 'true') {
       filter.isTemplate = true;
-    } else if (ownerId) {
+    } else if (ownerId && (ownerId === currentUserId || req.user?.role === 'admin')) {
       filter.ownerId = ownerId;
     } else if (currentUserId) {
       // Show templates, public/shared trips, and any trip where user is owner or member
       filter.$or = [
         { isTemplate: true },
-        { visibility: { $in: ['public', 'shared'] } },
         { ownerId: currentUserId },
         { 'members.userId': currentUserId },
         { 'members.email': req.user?.email },
@@ -60,8 +68,12 @@ tripsRouter.get('/', optionalAuth, async (req: AuthenticatedRequest, res: Respon
     }
 
     const trips = await TripModel.find(filter).sort({ createdAt: -1 }).limit(100);
-    res.status(200).json({ ok: true, count: trips.length, trips });
-  } catch (err: any) {
+    const confirmedBookings = await BookingModel.find({ tripId: { $in: trips.map(trip => trip.id) }, status: 'confirmed', paymentStatus: 'paid' }).select('tripId');
+    const bookedTripIds = new Set(confirmedBookings.map(booking => booking.tripId));
+    const visibleTrips = trips.map(trip => ({ ...trip.toObject(), hasConfirmedBooking: bookedTripIds.has(trip.id) }));
+    res.status(200).json({ ok: true, count: visibleTrips.length, trips: visibleTrips });
+  } catch (caught) {
+      const err = toError(caught);
     console.error('[Trips API] List error:', err);
     res.status(500).json({ ok: false, message: 'Failed to retrieve trips.', error: err?.message });
   }
@@ -77,8 +89,13 @@ tripsRouter.get('/:id', optionalAuth, async (req: AuthenticatedRequest, res: Res
       res.status(404).json({ ok: false, message: 'Trip not found.' });
       return;
     }
-    res.status(200).json({ ok: true, trip });
-  } catch (err: any) {
+    if (trip.visibility === 'private' && req.user?.id !== trip.ownerId && !trip.members.some(member => member.userId === req.user?.id || (req.user?.email && member.email === req.user.email))) {
+      res.status(404).json({ ok: false, message: 'Trip not found.' });
+      return;
+    }
+    res.status(200).json({ ok: true, trip: { ...trip.toObject(), hasConfirmedBooking: Boolean(await BookingModel.exists({ tripId: trip.id, userId: trip.ownerId, status: 'confirmed', paymentStatus: 'paid' })) } });
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to fetch trip details.', error: err?.message });
   }
 });
@@ -101,11 +118,10 @@ tripsRouter.post('/', optionalAuth, async (req: AuthenticatedRequest, res: Respo
       return;
     }
 
+
     const tripId = body.id || `trip-${randomUUID().slice(0, 8)}`;
 
-    const initialMembers: ITripMember[] = body.members?.length
-      ? body.members
-      : [
+    const initialMembers: ITripMember[] = [
           {
             id: `m-${randomUUID().slice(0, 6)}`,
             userId: ownerId,
@@ -117,7 +133,7 @@ tripsRouter.post('/', optionalAuth, async (req: AuthenticatedRequest, res: Respo
         ];
 
     // If invited emails supplied, add them as invited members
-    if (Array.isArray(body.invitedEmails)) {
+    if (body.travelMode !== 'solo' && Array.isArray(body.invitedEmails)) {
       for (const email of body.invitedEmails) {
         if (email && typeof email === 'string' && email.includes('@')) {
           initialMembers.push({
@@ -134,6 +150,8 @@ tripsRouter.post('/', optionalAuth, async (req: AuthenticatedRequest, res: Respo
     const trip = new TripModel({
       id: tripId,
       ownerId,
+      travelMode: body.travelMode === 'solo' ? 'solo' : 'group',
+      lifecycle: 'planning',
       title: body.title.trim(),
       destination: body.destination.trim(),
       country: body.country || '',
@@ -143,21 +161,24 @@ tripsRouter.post('/', optionalAuth, async (req: AuthenticatedRequest, res: Respo
       coverImage: body.coverImage || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=80',
       visibility: body.visibility || 'shared',
       budgetTarget: Number(body.budgetTarget) || 0,
-      currency: body.currency || 'USD',
+      currency: body.currency || 'INR',
       tags: Array.isArray(body.tags) ? body.tags : ['Vacation', 'Exploration'],
-      isTemplate: Boolean(body.isTemplate),
+      isTemplate: false,
       members: initialMembers,
       activities: Array.isArray(body.activities) ? body.activities : [],
     });
 
     await trip.save();
+    if(trip.travelMode==='group') for(const member of trip.members) if(member.email!==ownerEmail) await deliverInvitation(trip.id,member.email,trip.title);
+    await notifyTrip(trip.id,'Trip created',`${ownerName} created ${trip.title}.`);
 
     res.status(201).json({
       ok: true,
       message: 'Trip created successfully in shared MongoDB Atlas.',
       trip,
     });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     console.error('[Trips API] Create error:', err);
     res.status(500).json({ ok: false, message: 'Failed to create trip.', error: err?.message });
   }
@@ -171,7 +192,12 @@ tripsRouter.put('/:id', optionalAuth, async (req: AuthenticatedRequest, res: Res
     const { id } = req.params;
     const updates = { ...req.body };
     delete updates._id;
+    delete updates.ownerId;
     delete updates.id;
+    delete updates.destination;
+    delete updates.currency;
+    delete updates.isTemplate;
+    for (const field of ['travelMode','lifecycle','photoCount','albumStatus','albumStory','albumError','albumStartedAt']) delete updates[field];
 
     const trip = await TripModel.findOneAndUpdate(
       { id },
@@ -189,7 +215,8 @@ tripsRouter.put('/:id', optionalAuth, async (req: AuthenticatedRequest, res: Res
       message: 'Trip updated successfully in shared MongoDB Atlas.',
       trip,
     });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to update trip.', error: err?.message });
   }
 });
@@ -211,7 +238,8 @@ tripsRouter.delete('/:id', optionalAuth, async (req: AuthenticatedRequest, res: 
       ok: true,
       message: `Trip "${result.title}" deleted from shared MongoDB Atlas.`,
     });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to delete trip.', error: err?.message });
   }
 });
@@ -256,7 +284,8 @@ tripsRouter.post('/:id/activities', optionalAuth, async (req: AuthenticatedReque
       activity: newActivity,
       trip,
     });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to add activity.', error: err?.message });
   }
 });
@@ -291,7 +320,8 @@ tripsRouter.put('/:id/activities/:activityId', optionalAuth, async (req: Authent
       activity: trip.activities[activityIndex],
       trip,
     });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to update activity.', error: err?.message });
   }
 });
@@ -315,7 +345,8 @@ tripsRouter.delete('/:id/activities/:activityId', optionalAuth, async (req: Auth
     }
 
     res.status(200).json({ ok: true, message: 'Activity removed.', trip });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to remove activity.', error: err?.message });
   }
 });
@@ -327,15 +358,19 @@ tripsRouter.post('/:id/members', optionalAuth, async (req: AuthenticatedRequest,
   try {
     const { id } = req.params;
     const { name, email, role = 'editor' } = req.body;
+    const currentTrip = await TripModel.findOne({id});
+    if(currentTrip?.travelMode === 'solo'){res.status(403).json({message:'Solo trips cannot have group invitations.'});return;}
 
     if (!email || !email.includes('@')) {
       res.status(400).json({ ok: false, message: 'Valid email is required.' });
       return;
     }
 
+    const account = await UserModel.findOne({email:email.trim().toLowerCase()});
     const newMember: ITripMember = {
       id: `m-${randomUUID().slice(0, 6)}`,
-      name: name || email.split('@')[0],
+      name: account?.name || name || email.split('@')[0],
+      userId: account?.id,
       email: email.trim().toLowerCase(),
       role: ['owner', 'editor', 'viewer'].includes(role) ? role : 'editor',
       joinedAt: new Date().toISOString(),
@@ -352,8 +387,12 @@ tripsRouter.post('/:id/members', optionalAuth, async (req: AuthenticatedRequest,
       return;
     }
 
-    res.status(201).json({ ok: true, message: 'Collaborator added to trip.', member: newMember, trip });
-  } catch (err: any) {
+    await BudgetModel.updateOne({ id: trip.id }, { $addToSet: { members: newMember.name } });
+    const delivery = await deliverInvitation(trip.id, newMember.email, trip.title);
+    await notifyTrip(trip.id,'Group member invited',`${req.user!.name} invited ${newMember.email}.`);
+    res.status(201).json({ ok: true, message: 'Collaborator added to trip.', member: newMember, trip, delivery });
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to add collaborator.', error: err?.message });
   }
 });

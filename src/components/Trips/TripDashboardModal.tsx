@@ -1,3 +1,4 @@
+import { formatMoney } from '@/services/money';
 /**
  * Trip Dashboard Modal
  * Overview dashboard for all user trips showing active, upcoming,
@@ -5,11 +6,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Compass, Plus, Calendar, MapPin, Users, Sparkles,
-  ArrowRight, X, Copy, Check, Search, Filter, ShieldCheck,
-  TrendingUp, Clock, Globe2, Trash2, Eye, Lock
-} from 'lucide-react';
+import { Compass, Plus, Calendar, MapPin, Sparkles, ArrowRight, X, Copy, Search, Trash2 } from 'lucide-react';
 import {
   getUserTrips,
   getTripTemplates,
@@ -37,7 +34,7 @@ export default function TripDashboardModal({
   const [activeTab, setActiveTab] = useState<'my_trips' | 'templates'>('my_trips');
   const [userTrips, setUserTrips] = useState<Trip[]>([]);
   const [templates, setTemplates] = useState<Trip[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Create Trip Modal Wizard
@@ -55,14 +52,14 @@ export default function TripDashboardModal({
     d.setDate(d.getDate() + 20);
     return d.toISOString().split('T')[0];
   });
-  const [newDescription, setNewDescription] = useState('');
+  const [newDescription] = useState('');
   const [newBudget, setNewBudget] = useState(2500);
   const [newCurrency, setNewCurrency] = useState('USD');
   const [newTravelStyle, setNewTravelStyle] = useState('Friends Getaway');
   const [newInvitedEmails, setNewInvitedEmails] = useState('');
   const [newCoverImage, setNewCoverImage] = useState('');
   const [newAutoSchedule, setNewAutoSchedule] = useState(true);
-  const [newVisibility, setNewVisibility] = useState<'shared' | 'private' | 'public'>('shared');
+  const [newVisibility] = useState<'shared' | 'private' | 'public'>('shared');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const loadData = useCallback(async () => {
@@ -346,7 +343,7 @@ export default function TripDashboardModal({
 
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-semibold text-slate-700">
-                              ${trip.budgetTarget} Budget
+                              {formatMoney(trip.budgetTarget,trip.currency)} Budget
                             </span>
                             <span className="p-1 rounded-lg bg-emerald-50 text-emerald-700 group-hover:bg-emerald-700 group-hover:text-white transition-colors">
                               <ArrowRight size={14} />
@@ -389,7 +386,7 @@ export default function TripDashboardModal({
                     </div>
 
                     <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-900">${tpl.budgetTarget} Est.</span>
+                      <span className="text-xs font-bold text-slate-900">{formatMoney(tpl.budgetTarget,tpl.currency)} Est.</span>
                       <button
                         onClick={() => handleClone(tpl.id)}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-md shadow-emerald-700/20 transition-all hover:scale-105 active:scale-95"

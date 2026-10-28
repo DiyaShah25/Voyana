@@ -1,0 +1,32 @@
+import assert from 'node:assert/strict';
+import { chromium } from '@playwright/test';
+const browser = await chromium.launch({channel:'msedge',headless:true});
+const page = await browser.newPage({viewport:{width:1440,height:1000}});
+page.setDefaultTimeout(30000);
+const base = process.env.VOYANA_URL || 'http://localhost:5173';
+try {
+  const result = await page.request.post('http://localhost:3001/api/auth/signup',{data:{name:'Planning Browser',email:`planning-ui-${Date.now()}@voyana.test`,password:'Password123!',role:'traveler'}});
+  assert.equal(result.status(),201);
+  const {session} = await result.json();
+  await page.goto(base,{waitUntil:'domcontentloaded',timeout:60000});
+  await page.evaluate(session=>localStorage.setItem('voyana.active_session',JSON.stringify(session)),session);
+  await page.reload({waitUntil:'domcontentloaded'});
+  const nav=page.getByRole('navigation',{name:'Main navigation'});
+  await page.locator('.arch-brand-tagline').filter({hasText:'trip pe aana'}).waitFor();
+  await nav.getByRole('button',{name:'Workspace',exact:true}).click();
+  await page.getByRole('textbox',{name:'Workspace name'}).fill('Friends deciding our next trip');
+  await page.getByRole('button',{name:'Create planning workspace',exact:true}).click();
+  const message=page.getByRole('textbox',{name:'Group message'});
+  await message.waitFor();
+  assert.equal(await page.getByRole('button',{name:/Expense Splitter/}).count(),0);
+  assert.equal(await page.getByText('I have confirmed our high-speed Eurostar transport',{exact:false}).count(),0);
+  await message.fill('Should we visit Bali or Ahmedabad?');
+  await message.press('Enter');
+  await page.getByText('Should we visit Bali or Ahmedabad?',{exact:true}).waitFor();
+  await page.screenshot({path:'.artifacts/planning-workspace.png',fullPage:true});
+  await page.reload({waitUntil:'domcontentloaded'});
+  await nav.getByRole('button',{name:'Workspace',exact:true}).click();
+  await page.getByRole('button').filter({hasText:'Friends deciding our next trip'}).click();
+  await page.getByText('Should we visit Bali or Ahmedabad?',{exact:true}).waitFor();
+  console.log('PASS: workspace without destination or booking, persistent group chat, no seeded messages, expenses hidden, tagline');
+} finally {await browser.close();}
