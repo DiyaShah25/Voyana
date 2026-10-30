@@ -48,7 +48,7 @@ const AlertSchema = new Schema<IAlert>(
   {
     timestamps: { createdAt: 'created_at', updatedAt: false },
     toJSON: {
-      transform(_doc, ret: Record<string, any>) {
+      transform(_doc, ret: Record<string, unknown>) {
         delete ret._id;
         delete ret.__v;
         return ret;

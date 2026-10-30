@@ -45,7 +45,7 @@ export function useBookingAlerts(userId?: string) {
   // Subscribe to real-time push alerts
   useEffect(() => {
     const unsubscribe = subscribeToAlerts(userId, (newAlert) => {
-      setAlerts((prev) => [newAlert, ...prev]);
+      setAlerts((prev) => [newAlert, ...prev.filter(alert => alert.id !== newAlert.id)]);
 
       // Create a temporary toast notification
       const toastItem: ToastNotification = {

@@ -1,3 +1,4 @@
+import { useAuth } from '@/context/AuthContext';
 /**
  * Alerts Panel Component
  * Displays real-time booking alerts with severity indicators,
@@ -89,7 +90,7 @@ export const AlertsPanel: React.FC = () => {
     markAllAsRead,
     dismissToast,
     simulateStatusChange,
-  } = useBookingAlerts();
+  } = useBookingAlerts(useAuth().user?.id);
 
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
