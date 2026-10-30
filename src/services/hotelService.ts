@@ -644,6 +644,14 @@ export function generateMockHotels(params: HotelSearchParams): Hotel[] {
   return rawList.map((h, idx) => ({
     id: `ht-${matchedKey?.toLowerCase().replace(/\s+/g, '-') || 'city'}-${idx + 1}`,
     ...h,
+    baseNightlyRate: Math.round(h.baseNightlyRate * 85),
+    roomRates: {
+      Standard: Math.round(h.roomRates.Standard * 85),
+      Deluxe: Math.round(h.roomRates.Deluxe * 85),
+      'Executive Suite': Math.round(h.roomRates['Executive Suite'] * 85),
+      'Presidential Suite': Math.round(h.roomRates['Presidential Suite'] * 85),
+    },
+    currency: 'INR',
   }));
 }
 

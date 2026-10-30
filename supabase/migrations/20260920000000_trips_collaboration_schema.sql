@@ -161,6 +161,11 @@ ALTER TABLE public.trip_tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.trip_polls ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.trip_documents ENABLE ROW LEVEL SECURITY;
 
+-- Policies are dropped and recreated so this migration can be re-run safely.
+DROP POLICY IF EXISTS "Users can view trips they own or belong to" ON public.trips;
+DROP POLICY IF EXISTS "Users can create their own trips" ON public.trips;
+DROP POLICY IF EXISTS "Owners and editors can update trips" ON public.trips;
+
 CREATE POLICY "Users can view trips they own or belong to"
     ON public.trips FOR SELECT
     USING (
@@ -181,41 +186,58 @@ CREATE POLICY "Owners and editors can update trips"
     );
 
 -- 12. SEED CURATED TRIP TEMPLATES
-INSERT INTO public.trips (
-    owner_id, title, destination, country, start_date, end_date,
-    description, cover_image, visibility, budget_target, tags, is_template
-) VALUES
-(
-    '00000000-0000-0000-0000-000000000000',
-    'Parisian Dream: 5 Days in Lights & Art',
-    'Paris', 'France',
-    CURRENT_DATE + INTERVAL '14 days', CURRENT_DATE + INTERVAL '19 days',
-    'Experience the Louvre, Eiffel Tower sunset champagne, Montmartre art walks, and Seine River gourmet dinner.',
-    'https://images.pexels.com/photos/14681748/pexels-photo-14681748.jpeg?auto=compress&cs=tinysrgb&w=800',
-    'public', 2400.00,
-    ARRAY['Romantic', 'Art & Culture', 'Gastronomy', 'Classic'],
-    TRUE
-),
-(
-    '00000000-0000-0000-0000-000000000000',
-    'Tokyo Neon & Tradition: 7-Day Sakura Trail',
-    'Tokyo', 'Japan',
-    CURRENT_DATE + INTERVAL '30 days', CURRENT_DATE + INTERVAL '37 days',
-    'From Shibuya scramble and Akihabara tech culture to Senso-ji Temple and Shinkansen day trip to Kyoto.',
-    'https://images.pexels.com/photos/2506923/pexels-photo-2506923.jpeg?auto=compress&cs=tinysrgb&w=800',
-    'public', 3200.00,
-    ARRAY['Nightlife', 'Anime & Tech', 'Heritage', 'Culinary'],
-    TRUE
-),
-(
-    '00000000-0000-0000-0000-000000000000',
-    'Dubai Luxury Oasis & Desert Safari: 4 Days',
-    'Dubai', 'United Arab Emirates',
-    CURRENT_DATE + INTERVAL '45 days', CURRENT_DATE + INTERVAL '49 days',
-    'Burj Khalifa observatory, Palm Jumeirah luxury yacht cruise, and sunset dune bashing with Bedouin feast.',
-    'https://images.pexels.com/photos/1470502/pexels-photo-1470502.jpeg?auto=compress&cs=tinysrgb&w=800',
-    'public', 1950.00,
-    ARRAY['Luxury', 'Adventure', 'Shopping', 'Architecture'],
-    TRUE
-)
-ON CONFLICT DO NOTHING;
+-- owner_id has a foreign key to auth.users, so templates are attributed to the
+-- earliest existing user. Seeding is skipped when templates already exist or
+-- when no user has signed up yet (safe to re-run after the first signup).
+DO $$
+DECLARE
+    template_owner UUID;
+BEGIN
+    IF EXISTS (SELECT 1 FROM public.trips WHERE is_template) THEN
+        RETURN;
+    END IF;
+
+    SELECT id INTO template_owner FROM auth.users ORDER BY created_at LIMIT 1;
+    IF template_owner IS NULL THEN
+        RAISE NOTICE 'Skipping trip template seed: auth.users is empty. Re-run this file after creating a user.';
+        RETURN;
+    END IF;
+
+    INSERT INTO public.trips (
+        owner_id, title, destination, country, start_date, end_date,
+        description, cover_image, visibility, budget_target, tags, is_template
+    ) VALUES
+    (
+        template_owner,
+        'Parisian Dream: 5 Days in Lights & Art',
+        'Paris', 'France',
+        CURRENT_DATE + 14, CURRENT_DATE + 19,
+        'Experience the Louvre, Eiffel Tower sunset champagne, Montmartre art walks, and Seine River gourmet dinner.',
+        'https://images.pexels.com/photos/14681748/pexels-photo-14681748.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'public', 2400.00,
+        ARRAY['Romantic', 'Art & Culture', 'Gastronomy', 'Classic'],
+        TRUE
+    ),
+    (
+        template_owner,
+        'Tokyo Neon & Tradition: 7-Day Sakura Trail',
+        'Tokyo', 'Japan',
+        CURRENT_DATE + 30, CURRENT_DATE + 37,
+        'From Shibuya scramble and Akihabara tech culture to Senso-ji Temple and Shinkansen day trip to Kyoto.',
+        'https://images.pexels.com/photos/2506923/pexels-photo-2506923.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'public', 3200.00,
+        ARRAY['Nightlife', 'Anime & Tech', 'Heritage', 'Culinary'],
+        TRUE
+    ),
+    (
+        template_owner,
+        'Dubai Luxury Oasis & Desert Safari: 4 Days',
+        'Dubai', 'United Arab Emirates',
+        CURRENT_DATE + 45, CURRENT_DATE + 49,
+        'Burj Khalifa observatory, Palm Jumeirah luxury yacht cruise, and sunset dune bashing with Bedouin feast.',
+        'https://images.pexels.com/photos/1470502/pexels-photo-1470502.jpeg?auto=compress&cs=tinysrgb&w=800',
+        'public', 1950.00,
+        ARRAY['Luxury', 'Adventure', 'Shopping', 'Architecture'],
+        TRUE
+    );
+END $$;

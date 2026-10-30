@@ -246,7 +246,7 @@ export function generateMockFlights(params: FlightSearchParams): Flight[] {
     'AMD-BOM': 90, 'BOM-AMD': 85, 'DEL-DXB': 250, 'DXB-DEL': 245,
   };
 
-  const baseEconomy = (basePriceMap[key] || 450) * (passengers || 1);
+  const baseEconomy = Math.round((basePriceMap[key] || 450) * 85 * (passengers || 1));
   const depDate = new Date(departureDate);
 
   // Generate 4–6 flight options
@@ -288,7 +288,7 @@ export function generateMockFlights(params: FlightSearchParams): Flight[] {
       stops,
       aircraft,
       prices: generateFlightPrice(baseEconomy, seed + 8),
-      currency: 'USD',
+      currency: 'INR',
       seatsAvailable: {
         economy: Math.floor(seededRandom(seed + 9) * 120 + 10),
         premium_economy: Math.floor(seededRandom(seed + 10) * 30 + 5),
