@@ -1,10 +1,11 @@
+import { formatMoney } from './money';
 /**
  * Trip Budget Planner & Expense Recording Service
  * Manages category allocations, multi-member expense tracking,
  * AI budget planning, transaction ledger, and debt settlement.
  */
 
-import { apiRequest } from './apiClient';
+import { createTripStore } from './tripStore';
 
 export type ExpenseCategory =
   | 'Flights'
@@ -188,23 +189,17 @@ const INITIAL_BUDGET: TripBudget = {
   ],
 };
 
-export function getTripBudget(): TripBudget {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return JSON.parse(saved);
-  } catch (e) {
-    console.error('Error loading budget from localStorage', e);
-  }
-  return INITIAL_BUDGET;
-}
+const budgetStore = createTripStore<TripBudget>(STORAGE_KEY, '/api/budget', 'budget', context => ({
+  ...INITIAL_BUDGET, id: context.id, destination: context.destination,
+  totalBudget: context.budgetTarget, currency: context.currency, members: context.members,
+  expenses: [], allocations: INITIAL_BUDGET.allocations.map(allocation => ({
+    ...allocation, allocated: Math.round(allocation.allocated * context.budgetTarget / INITIAL_BUDGET.totalBudget),
+  })),
+}));
 
-export function saveTripBudget(budget: TripBudget): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(budget));
-  } catch (e) {
-    console.error('Error saving budget to localStorage', e);
-  }
-}
+export const getTripBudget = budgetStore.read;
+export const fetchTripBudget = budgetStore.load;
+export const saveTripBudget = budgetStore.save;
 
 export function addExpense(expense: Omit<TripExpense, 'id' | 'createdAt'>): TripBudget {
   const current = getTripBudget();
@@ -221,13 +216,6 @@ export function addExpense(expense: Omit<TripExpense, 'id' | 'createdAt'>): Trip
 
   saveTripBudget(updated);
 
-  // Sync to shared MongoDB Atlas backend
-  try {
-    apiRequest(`/api/budget/${encodeURIComponent(current.id || 'trip-paris-01')}/expenses`, {
-      method: 'POST',
-      body: JSON.stringify(newExpense),
-    });
-  } catch { }
 
   return updated;
 }
@@ -240,12 +228,6 @@ export function deleteExpense(expenseId: string): TripBudget {
   };
   saveTripBudget(updated);
 
-  // Sync to shared MongoDB Atlas backend
-  try {
-    apiRequest(`/api/budget/${encodeURIComponent(current.id || 'trip-paris-01')}/expenses/${encodeURIComponent(expenseId)}`, {
-      method: 'DELETE',
-    });
-  } catch { }
 
   return updated;
 }
@@ -447,7 +429,7 @@ export function generateAiBudgetPlan(options: GenerateBudgetPlanOptions): {
     travelersCount = 3,
     durationDays = 5,
     style = 'moderate',
-    currency = 'USD',
+    currency = 'INR',
   } = options;
 
   // Base daily per-person rates by style & destination tier
@@ -456,6 +438,7 @@ export function generateAiBudgetPlan(options: GenerateBudgetPlanOptions): {
   );
 
   let dailyBase = style === 'budget' ? 80 : style === 'luxury' ? 380 : 170;
+  if(currency === 'INR') dailyBase *= 80; // Native INR sample estimates, not a live exchange-rate quote.
   if (isTier1) dailyBase = Math.round(dailyBase * 1.25);
 
   const calculatedTotal = options.totalBudget && options.totalBudget > 0
@@ -534,9 +517,9 @@ export function generateAiBudgetPlan(options: GenerateBudgetPlanOptions): {
   const dailyPerPerson = Math.round(calculatedTotal / (durationDays * travelersCount));
 
   const insights = [
-    `Recommended target: $${calculatedTotal.toLocaleString()} for ${travelersCount} travelers over ${durationDays} days (~$${dailyPerPerson}/person/day).`,
+    `Recommended target: ${formatMoney(calculatedTotal,currency)} for ${travelersCount} travelers over ${durationDays} days (~${formatMoney(dailyPerPerson,currency)}/person/day).`,
     `Largest allocation: Accommodations & Flights account for ${Math.round((ratios.Flights + ratios.Accommodations) * 100)}% of the total budget.`,
-    `Dining & Activities buffer: $${(allocations.find((a) => a.category === 'Food & Dining')?.allocated || 0) + (allocations.find((a) => a.category === 'Activities')?.allocated || 0)} reserved for local experiences.`,
+    `Dining & Activities buffer: ${formatMoney((allocations.find((a) => a.category === 'Food & Dining')?.allocated || 0) + (allocations.find((a) => a.category === 'Activities')?.allocated || 0),currency)} reserved for local experiences.`,
   ];
 
   return {

@@ -5,37 +5,10 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import {
-  DollarSign,
-  Plus,
-  Trash2,
-  PieChart,
-  Users,
-  Sparkles,
-  TrendingUp,
-  AlertCircle,
-  X,
-  CreditCard,
-  CheckCircle2,
-  ArrowRight,
-  Filter,
-  Calendar,
-  Receipt,
-  Wallet,
-  Download,
-  Sliders,
-  Check,
-  Plane,
-  Building2,
-  Utensils,
-  Compass,
-  Car,
-  ShoppingBag,
-  Layers,
-  type LucideIcon,
-} from 'lucide-react';
+import { Plus, Trash2, PieChart, Users, Sparkles, TrendingUp, X, CreditCard, CheckCircle2, ArrowRight, Filter, Calendar, Receipt, Wallet, Download, Check, Plane, Building2, Utensils, Compass, Car, ShoppingBag, Layers, type LucideIcon } from 'lucide-react';
 import {
   getTripBudget,
+  fetchTripBudget,
   addExpense,
   deleteExpense,
   updateBudgetTotal,
@@ -142,8 +115,17 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
       setNewTotalInput(String(current.totalBudget));
       setExpensePaidBy(current.members[0] || 'Diya Shah');
       setExpenseSplitAmong(current.members);
+      let cancelled = false;
+      void fetchTripBudget().then(live => {
+        if (cancelled) return;
+        setBudget(live);
+        setNewTotalInput(String(live.totalBudget));
+        setExpensePaidBy(live.members[0] || 'Me');
+        setExpenseSplitAmong(live.members);
+      });
+      return () => { cancelled = true; };
     }
-  }, [isOpen]);
+  }, [isOpen, destination]);
 
   if (!isOpen) return null;
 
@@ -986,13 +968,13 @@ export const BudgetPlannerModal: React.FC<BudgetPlannerModalProps> = ({
                     <select
                       value={wizardStyle}
                       onChange={(e) => {
-                        setWizardStyle(e.target.value as any);
+                        setWizardStyle(e.target.value as typeof wizardStyle);
                       }}
                       className="sub-select"
                     >
-                      <option value="budget">Backpacker ($)</option>
-                      <option value="moderate">Moderate ($$)</option>
-                      <option value="luxury">Luxury ($$$)</option>
+                      <option value="budget">Backpacker (₹)</option>
+                      <option value="moderate">Moderate (₹₹)</option>
+                      <option value="luxury">Luxury (₹₹₹)</option>
                     </select>
                   </div>
                 </div>
