@@ -6,22 +6,8 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Camera, X, Heart, MapPin, Calendar, Tag, Search,
-  ZoomIn, Download, Trash2, Plus, Clock, Grid3X3,
-  Image as ImageIcon, Filter, Sparkles, ChevronDown,
-  Upload, CheckCircle2, Database,
-} from 'lucide-react';
-import {
-  getAllMemories,
-  getTripMemories,
-  uploadTripMemory,
-  likeTripMemory,
-  deleteTripMemory,
-  updateTripMemory,
-  generateAiJournalStory,
-  type TripMemory,
-} from '@/services/collaborationService';
+import { Camera, X, Heart, MapPin, Calendar, Tag, Search, ZoomIn, Download, Trash2, Plus, Clock, Grid3X3, Image as ImageIcon, Sparkles, ChevronDown, Upload, CheckCircle2 } from 'lucide-react';
+import { getAllMemories, uploadTripMemory, likeTripMemory, deleteTripMemory, generateAiJournalStory, type TripMemory } from '@/services/collaborationService';
 import { getUserTrips, type Trip } from '@/services/tripService';
 
 export interface TravelMemoriesModalProps {
@@ -71,22 +57,18 @@ export default function TravelMemoriesModal({
     try {
       const [trips, mems] = await Promise.all([
         getUserTrips(),
-        getAllMemories(),
+        getAllMemories({ tripId: initialTripId }),
       ]);
-      setUserTrips(trips);
-
-      if (mems && mems.length > 0) {
-        setAllMemories(mems);
-      } else {
-        const defaultMems = await getTripMemories('trip-user-01');
-        setAllMemories(defaultMems);
-      }
+      setUserTrips(trips.filter(trip => trip.id === initialTripId));
+      setUploadTripTarget(initialTripId || '');
+      setSelectedTripId(initialTripId || 'all');
+      setAllMemories(mems);
     } catch (err) {
       console.error('[TravelMemoriesModal] Error loading memories from Atlas:', err);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [initialTripId]);
 
   useEffect(() => {
     if (isOpen) {
@@ -423,7 +405,7 @@ export default function TravelMemoriesModal({
           <div className="relative">
             <select
               value={sortMode}
-              onChange={(e) => setSortMode(e.target.value as any)}
+              onChange={(e) => setSortMode(e.target.value as typeof sortMode)}
               className="bg-white border border-slate-200 rounded-xl px-3 pr-8 py-1.5 text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-600 shadow-sm cursor-pointer appearance-none"
             >
               <option value="newest">Newest First</option>

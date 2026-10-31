@@ -4,22 +4,29 @@
  * for packing, budget calculations, dietary options, and activity proposals.
  */
 
-import { LlmClient, LlmMessage, LlmOptions, LlmResponse } from './types.js';
+import { LlmClient, LlmMessage, LlmResponse } from './types.js';
 
 export class MockLlmClient implements LlmClient {
   public readonly providerName = 'mock';
 
   // Generate Mock Completion Based on User Query Keywords
-  async generate(messages: LlmMessage[], options?: LlmOptions): Promise<LlmResponse> {
+  async generate(messages: LlmMessage[], ): Promise<LlmResponse> {
     const startTime = Date.now();
-    const userMessage = messages.find((m) => m.role === 'user')?.content.toLowerCase() || '';
+    const userMessage = messages.filter((m) => m.role === 'user').at(-1)?.content.toLowerCase() || '';
 
     let content: string;
     let days: number[] = [1];
     let proposedChanges: Array<{ day: number; activity: string; rationale: string }> = [];
 
-    // Context-sensitive query matching
-    if (userMessage.includes('pack') || userMessage.includes('hiking') || userMessage.includes('batur') || userMessage.includes('day 4')) {
+    const contextText = messages.find(message => message.role === 'system')?.content.split('ACTIVE_TRIP_JSON: ')[1];
+    const trip = contextText ? JSON.parse(contextText) : null;
+    // Keep the deterministic fixture for its regression tests only.
+    if (trip && trip.id !== 'trip-bali-001') {
+      days = trip.itineraryDays.map((day: { day: number }) => day.day);
+      content = userMessage.includes('budget') || userMessage.includes('cost')
+        ? `The saved budget for ${trip.destination} is ${trip.totalBudget} ${trip.currency} for ${trip.members.length} travelers.`
+        : `Planning ${trip.destination}: ${trip.itineraryDays.length} scheduled days. ${trip.itineraryDays.flatMap((day: { activities: { title: string }[] }) => day.activities.map(activity => activity.title)).join('; ') || 'Add activities to your workspace to build a personalized itinerary.'}`;
+    } else if (userMessage.includes('pack') || userMessage.includes('hiking') || userMessage.includes('batur') || userMessage.includes('day 4')) {
       days = [4];
       content =
         'For Day 4 (Mount Batur Sunrise Trek), we recommend packing warm layers (temperatures drop to ~12°C at 03:00), sturdy hiking shoes with grip, headlamps, swimwear/towels for the Batur Natural Hot Spring recovery afterwards, and plenty of water.';

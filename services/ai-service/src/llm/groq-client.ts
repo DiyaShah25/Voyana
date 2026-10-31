@@ -1,3 +1,4 @@
+import { toError } from '../utils/errors.js';
 /**
  * Groq Cloud LLM Client Implementation
  * Connects to Groq cloud API utilizing high-speed Llama models,
@@ -33,7 +34,7 @@ export class GroqLlmClient implements LlmClient {
 
     const apiCallPromise = this.client.chat.completions.create({
       model,
-      messages: groqMessages as any,
+      messages: groqMessages,
       temperature: options?.temperature ?? 0.3,
       max_completion_tokens: options?.maxTokens ?? 4096,
       response_format: { type: 'json_object' },
@@ -69,12 +70,13 @@ export class GroqLlmClient implements LlmClient {
         provider: this.providerName,
         model,
       };
-    } catch (err: any) {
+    } catch (caught) {
+      const err = toError(caught);
       const latencyMs = Date.now() - startTime;
       const isTimeout = err?.message?.includes('timed out');
       const isRateLimit = err?.status === 429 || err?.message?.includes('rate limit');
 
-      const customError: any = new Error(
+      const customError: Error & { statusCode?: number; latencyMs?: number } = new Error(
         isTimeout
           ? `Groq LLM call timed out after ${timeoutMs}ms`
           : isRateLimit
