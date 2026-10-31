@@ -69,3 +69,14 @@ describe('POST /ai/chat', () => {
     expect(response.body).toHaveProperty('details');
   });
 });
+
+
+describe('Selected destination context', () => {
+  it('does not reuse Bali fixture facts for a different destination', async () => {
+    const result = await request(createApp()).post('/ai/chat').send({ message: 'Summarize my itinerary', tripId: 'draft-tokyo', destination: 'Tokyo' });
+    expect(result.status).toBe(200);
+    expect(result.body.content).toContain('Tokyo');
+    expect(result.body.content).not.toContain('Bali');
+    expect(result.body.content).not.toContain('Mount Batur');
+  });
+});
