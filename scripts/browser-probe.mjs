@@ -1,0 +1,12 @@
+import { chromium } from '@playwright/test';
+const browser = await chromium.launch({ channel: process.env.PLAYWRIGHT_CHANNEL || (process.platform === 'win32' ? 'msedge' : undefined), headless: true });
+const page = await browser.newPage();
+const errors = [];
+page.on('pageerror', error => errors.push(error.message));
+await page.goto('http://127.0.0.1:5173');
+await page.waitForTimeout(2500);
+await page.goto(`${process.env.VOYANA_URL || 'http://127.0.0.1:5173'}/#/login`);
+console.log((await page.locator('body').innerText()).slice(0, 6000));
+console.log('INPUTS', await page.locator('input').evaluateAll(inputs => inputs.map(i => ({type:i.type, placeholder:i.placeholder, name:i.name}))));
+console.log('PAGE ERRORS', JSON.stringify(errors));
+await browser.close();

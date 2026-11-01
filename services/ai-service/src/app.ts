@@ -1,3 +1,8 @@
+import { placesRouter } from './routes/places.router.js';
+import { ZodError } from 'zod';
+import { journeysRouter } from './routes/journeys.router.js';
+import { toError } from './utils/errors.js';
+import { requireAuth, type AuthenticatedRequest } from './middleware/auth.middleware.js';
 /**
  * Express Application Setup for Voyana Backend
  * Configures CORS, JSON parsing, routes mounting (AI chat, health, auth, trips,
@@ -8,8 +13,8 @@ import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { healthRouter } from './routes/health.router.js';
 import { chatRouter } from './routes/chat.router.js';
-import { apiRouter } from './routes/api.router.js';
 import { authRouter } from './routes/auth.router.js';
+import { paymentsRouter } from './routes/payments.router.js';
 import { tripsRouter } from './routes/trips.router.js';
 import { bookingsRouter } from './routes/bookings.router.js';
 import { budgetRouter } from './routes/budget.router.js';
@@ -19,7 +24,6 @@ import { alertsRouter } from './routes/alerts.router.js';
 import { reviewsRouter } from './routes/reviews.router.js';
 import { destinationsRouter } from './routes/destinations.router.js';
 import { memoriesRouter } from './routes/memories.router.js';
-import { liveTravelRouter } from './routes/live-travel.router.js';
 import { runDataMigration } from './services/migration.service.js';
 
 export function createApp(): Express {
@@ -39,25 +43,27 @@ export function createApp(): Express {
 
   // MongoDB Atlas REST API Routes
   app.use('/api/auth', authRouter);
-  app.use('/api/trips', tripsRouter);
+  app.use('/api/payments', paymentsRouter);
+  app.use('/api/trips', requireAuth, tripsRouter);
+  app.use('/api/journeys', requireAuth, journeysRouter);
   app.use('/api/destinations', destinationsRouter);
+  app.use('/api/places', placesRouter);
   app.use('/api/bookings', bookingsRouter);
-  app.use('/api/budget', budgetRouter);
-  app.use('/api/collaboration', collaborationRouter);
-  app.use('/api/memories', memoriesRouter);
-  app.use('/api/packing', packingRouter);
-  app.use('/api/alerts', alertsRouter);
+  app.use('/api/budget', requireAuth, budgetRouter);
+  app.use('/api/collaboration', requireAuth, collaborationRouter);
+  app.use('/api/memories', requireAuth, memoriesRouter);
+  app.use('/api/packing', requireAuth, packingRouter);
+  app.use('/api/alerts', requireAuth, alertsRouter);
   app.use('/api/reviews', reviewsRouter);
-  app.use('/api/live', liveTravelRouter);
-  app.use('/api/external', liveTravelRouter);
-  app.use('/api/data', apiRouter);
 
   // Data migration / seeding trigger endpoint
-  app.post('/api/migrate', async (_req: Request, res: Response) => {
+  app.post('/api/migrate', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    if (req.user?.role !== 'admin') { res.status(403).json({ ok: false, message: 'Administrator access required.' }); return; }
     try {
       const summary = await runDataMigration();
       res.status(200).json({ ok: true, message: 'Migration completed successfully.', summary });
-    } catch (err: any) {
+    } catch (caught) {
+      const err = toError(caught);
       res.status(500).json({ ok: false, message: 'Migration failed.', error: err?.message });
     }
   });
@@ -71,9 +77,11 @@ export function createApp(): Express {
   });
 
   // Global Error Handler
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  app.use((caught: unknown, _req: Request, res: Response, _next: NextFunction) => {
+    void _next; // Express identifies error middleware by its four-argument signature.
+    const err = toError(caught);
     console.error('[Voyana Backend Error]', err);
-    const status = err?.statusCode || 500;
+    const status = caught instanceof ZodError ? 400 : err?.statusCode || 500;
     res.status(status).json({
       error: status === 503 ? 'Service Unavailable' : 'Internal Server Error',
       message: err?.message || 'An unexpected error occurred.',

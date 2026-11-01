@@ -32,3 +32,8 @@ dist-ssr
 
 powershell.cmd
 
+
+# Local verification reports
+.artifacts/
+playwright-report/
+test-results/
