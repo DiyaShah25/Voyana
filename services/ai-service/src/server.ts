@@ -1,3 +1,4 @@
+import { toError } from './utils/errors.js';
 /**
  * Server Entry Point
  * Bootstraps the Express app, connects to MongoDB Atlas, executes idempotent
@@ -12,10 +13,11 @@ import { runDataMigration } from './services/migration.service.js';
 async function bootstrap() {
   // Connect to database (gracefully falls back to in-memory if offline)
   const connected = await connectMongo();
-  if (connected) {
+  if (connected && config.seedOnStart) {
     try {
       await runDataMigration();
-    } catch (migErr: any) {
+    } catch (caught) {
+      const migErr = toError(caught);
       console.warn('[Voyana Backend] Data migration notice:', migErr?.message || migErr);
     }
   }
