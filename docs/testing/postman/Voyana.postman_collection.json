@@ -1,0 +1,517 @@
+{
+  "info": {
+    "name": "Voyana API",
+    "description": "Complete API test collection for Voyana — collaborative AI-assisted travel platform.\nCovers every route group mounted in app.ts.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:4000" },
+    { "key": "token", "value": "" },
+    { "key": "tripId", "value": "" },
+    { "key": "bookingId", "value": "" },
+    { "key": "reviewId", "value": "" },
+    { "key": "memoryId", "value": "" },
+    { "key": "alertId", "value": "" },
+    { "key": "pollId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('status 200', ()=> pm.response.to.have.status(200));","pm.test('has status field', ()=> pm.expect(pm.response.json().status).to.exist);"] } }]
+        },
+        {
+          "name": "GET /api/health",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/health", "host": ["{{baseUrl}}"], "path": ["api","health"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "POST /api/auth/signup",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/auth/signup", "host": ["{{baseUrl}}"], "path": ["api","auth","signup"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"name\":\"Postman Tester\",\"email\":\"postman@voyana.test\",\"password\":\"Test@1234\",\"role\":\"user\"}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('status 201', ()=> pm.response.to.have.status(201));"] } }]
+        },
+        {
+          "name": "POST /api/auth/login",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api","auth","login"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"email\":\"postman@voyana.test\",\"password\":\"Test@1234\"}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('status 200', ()=> pm.response.to.have.status(200));","const t=pm.response.json().token; if(t) pm.collectionVariables.set('token',t);"] } }]
+        },
+        {
+          "name": "POST /api/auth/login — wrong password",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api","auth","login"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"email\":\"postman@voyana.test\",\"password\":\"WrongPass\"}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('status 401', ()=> pm.response.to.have.status(401));"] } }]
+        },
+        {
+          "name": "GET /api/auth/me",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/auth/me", "host": ["{{baseUrl}}"], "path": ["api","auth","me"] },
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('status 200', ()=> pm.response.to.have.status(200));","pm.test('has user', ()=> pm.expect(pm.response.json().user).to.exist);"] } }]
+        },
+        {
+          "name": "GET /api/auth/me — no token (401)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/auth/me", "host": ["{{baseUrl}}"], "path": ["api","auth","me"] }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('status 401', ()=> pm.response.to.have.status(401));"] } }]
+        }
+      ]
+    },
+    {
+      "name": "Destinations",
+      "item": [
+        {
+          "name": "GET /api/destinations",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/destinations", "host": ["{{baseUrl}}"], "path": ["api","destinations"] }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('status 200', ()=> pm.response.to.have.status(200));","pm.test('is array', ()=> pm.expect(Array.isArray(pm.response.json().destinations || pm.response.json())).to.be.true);"] } }]
+        },
+        {
+          "name": "GET /api/destinations?region=Europe",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/destinations?region=Europe", "host": ["{{baseUrl}}"], "path": ["api","destinations"], "query": [{"key":"region","value":"Europe"}] }
+          }
+        },
+        {
+          "name": "GET /api/destinations/:id",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/destinations/dst-test-paris", "host": ["{{baseUrl}}"], "path": ["api","destinations","dst-test-paris"] }
+          }
+        },
+        {
+          "name": "GET /api/destinations/:id — 404",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/destinations/nonexistent-id", "host": ["{{baseUrl}}"], "path": ["api","destinations","nonexistent-id"] }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('status 404', ()=> pm.response.to.have.status(404));"] } }]
+        },
+        {
+          "name": "POST /api/destinations",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/destinations", "host": ["{{baseUrl}}"], "path": ["api","destinations"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\"name\":\"Postman City\",\"country\":\"Testland\",\"region\":\"Test\",\"image\":\"https://via.placeholder.com/300\",\"bestSeason\":\"Summer\",\"highlight\":\"Unit Testing\",\"style\":\"Modern\",\"coordinates\":{\"latitude\":0,\"longitude\":0}}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Trips",
+      "item": [
+        {
+          "name": "POST /api/trips",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/trips", "host": ["{{baseUrl}}"], "path": ["api","trips"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\"title\":\"Postman Euro Trip\",\"destination\":\"Paris\",\"startDate\":\"2026-12-01\",\"endDate\":\"2026-12-10\",\"status\":\"planning\"}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('status 201', ()=> pm.response.to.have.status(201));","const d=pm.response.json(); const id=d.trip?.id||d.id; if(id) pm.collectionVariables.set('tripId',id);"] } }]
+        },
+        {
+          "name": "GET /api/trips",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/trips", "host": ["{{baseUrl}}"], "path": ["api","trips"] },
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "GET /api/trips/:id",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/trips/{{tripId}}", "host": ["{{baseUrl}}"], "path": ["api","trips","{{tripId}}"] },
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "GET /api/trips/:id — 404",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/trips/nonexistent", "host": ["{{baseUrl}}"], "path": ["api","trips","nonexistent"] },
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('status 404', ()=> pm.response.to.have.status(404));"] } }]
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "POST /api/bookings",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/bookings", "host": ["{{baseUrl}}"], "path": ["api","bookings"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\"type\":\"flight\",\"status\":\"pending\",\"totalAmount\":450,\"currency\":\"USD\",\"contactEmail\":\"postman@voyana.test\",\"details\":{\"airline\":\"Air France\",\"flightNumber\":\"AF 123\",\"origin\":\"JFK\",\"destination\":\"CDG\",\"departureDate\":\"2026-12-01\",\"passengers\":1}}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('status 201', ()=> pm.response.to.have.status(201));","const d=pm.response.json(); const id=d.booking?.id||d.id; if(id) pm.collectionVariables.set('bookingId',id);"] } }]
+        },
+        {
+          "name": "GET /api/bookings",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/bookings", "host": ["{{baseUrl}}"], "path": ["api","bookings"] },
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "GET /api/bookings/:id",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/bookings/{{bookingId}}", "host": ["{{baseUrl}}"], "path": ["api","bookings","{{bookingId}}"] },
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "PUT /api/bookings/:id",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/api/bookings/{{bookingId}}", "host": ["{{baseUrl}}"], "path": ["api","bookings","{{bookingId}}"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\"status\":\"confirmed\",\"paymentStatus\":\"paid\"}" }
+          }
+        },
+        {
+          "name": "POST /api/bookings/:id/cancel",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/bookings/{{bookingId}}/cancel", "host": ["{{baseUrl}}"], "path": ["api","bookings","{{bookingId}}","cancel"] },
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Budget",
+      "item": [
+        {
+          "name": "GET /api/budget/:tripId",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/budget/{{tripId}}", "host": ["{{baseUrl}}"], "path": ["api","budget","{{tripId}}"] },
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('status 200', ()=> pm.response.to.have.status(200));","pm.test('budget object', ()=> pm.expect(pm.response.json().budget).to.exist);"] } }]
+        },
+        {
+          "name": "PUT /api/budget/:tripId",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/api/budget/{{tripId}}", "host": ["{{baseUrl}}"], "path": ["api","budget","{{tripId}}"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\"totalBudget\":5000}" }
+          }
+        },
+        {
+          "name": "POST /api/budget/:tripId/expenses",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/budget/{{tripId}}/expenses", "host": ["{{baseUrl}}"], "path": ["api","budget","{{tripId}}","expenses"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\"title\":\"Team Lunch\",\"amount\":45,\"paidBy\":\"Bhavika Sainani\",\"category\":\"Food & Dining\",\"splitAmong\":[\"Bhavika Sainani\",\"Diya Shah\"]}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('status 201', ()=> pm.response.to.have.status(201));"] } }]
+        },
+        {
+          "name": "DELETE /api/budget/:tripId/expenses/:expenseId",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/budget/{{tripId}}/expenses/exp-sample", "host": ["{{baseUrl}}"], "path": ["api","budget","{{tripId}}","expenses","exp-sample"] },
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Collaboration",
+      "item": [
+        {
+          "name": "GET /api/collaboration/:tripId",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/collaboration/{{tripId}}", "host": ["{{baseUrl}}"], "path": ["api","collaboration","{{tripId}}"] },
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "POST /api/collaboration/:tripId/tasks",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/collaboration/{{tripId}}/tasks", "host": ["{{baseUrl}}"], "path": ["api","collaboration","{{tripId}}","tasks"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\"title\":\"Book restaurant\",\"assignedTo\":\"Diya Shah\",\"priority\":\"high\",\"dueDate\":\"2026-12-05\"}" }
+          }
+        },
+        {
+          "name": "POST /api/collaboration/:tripId/polls",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/collaboration/{{tripId}}/polls", "host": ["{{baseUrl}}"], "path": ["api","collaboration","{{tripId}}","polls"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\"question\":\"Where to eat tonight?\",\"options\":[\"Italian\",\"Japanese\",\"Indian\"],\"createdBy\":\"Postman Tester\"}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('status 201', ()=> pm.response.to.have.status(201));","const d=pm.response.json(); const id=d.poll?.id||d.id; if(id) pm.collectionVariables.set('pollId',id);"] } }]
+        },
+        {
+          "name": "POST /api/collaboration/:tripId/polls/:pollId/vote",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/collaboration/{{tripId}}/polls/{{pollId}}/vote", "host": ["{{baseUrl}}"], "path": ["api","collaboration","{{tripId}}","polls","{{pollId}}","vote"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\"optionId\":1,\"voterName\":\"Postman Tester\"}" }
+          }
+        },
+        {
+          "name": "POST /api/collaboration/:tripId/expenses",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/collaboration/{{tripId}}/expenses", "host": ["{{baseUrl}}"], "path": ["api","collaboration","{{tripId}}","expenses"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\"title\":\"Group dinner\",\"amount\":120,\"paidBy\":\"Bhavika Sainani\",\"splitAmong\":[\"Bhavika Sainani\",\"Nigam Sanghvi\",\"Tirth Gandhi\"]}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Memories",
+      "item": [
+        {
+          "name": "POST /api/memories",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/memories", "host": ["{{baseUrl}}"], "path": ["api","memories"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\"tripId\":\"{{tripId}}\",\"caption\":\"Beautiful sunset over Paris\",\"mediaUrl\":\"https://via.placeholder.com/600\",\"mediaType\":\"photo\",\"location\":\"Eiffel Tower\",\"userName\":\"Postman Tester\"}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('status 201', ()=> pm.response.to.have.status(201));","const d=pm.response.json(); const id=d.memory?.id||d.id; if(id) pm.collectionVariables.set('memoryId',id);"] } }]
+        },
+        {
+          "name": "GET /api/memories",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/memories", "host": ["{{baseUrl}}"], "path": ["api","memories"] },
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "POST /api/memories/:id/like",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/memories/{{memoryId}}/like", "host": ["{{baseUrl}}"], "path": ["api","memories","{{memoryId}}","like"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\"userName\":\"Postman Tester\"}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Packing",
+      "item": [
+        {
+          "name": "GET /api/packing/:tripId",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/packing/{{tripId}}", "host": ["{{baseUrl}}"], "path": ["api","packing","{{tripId}}"] },
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "POST /api/packing/:tripId/items",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/packing/{{tripId}}/items", "host": ["{{baseUrl}}"], "path": ["api","packing","{{tripId}}","items"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\"name\":\"Travel pillow\",\"category\":\"Comfort\",\"quantity\":1,\"assignedTo\":\"Postman Tester\"}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alerts",
+      "item": [
+        {
+          "name": "POST /api/alerts",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/alerts", "host": ["{{baseUrl}}"], "path": ["api","alerts"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\"type\":\"Booking Confirmation\",\"title\":\"Flight Confirmed\",\"message\":\"Your Air France flight AF 123 is confirmed.\",\"severity\":\"info\",\"tripId\":\"{{tripId}}\"}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('status 201', ()=> pm.response.to.have.status(201));","const d=pm.response.json(); const id=d.alert?.id||d.id; if(id) pm.collectionVariables.set('alertId',id);"] } }]
+        },
+        {
+          "name": "GET /api/alerts",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/alerts", "host": ["{{baseUrl}}"], "path": ["api","alerts"] },
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "PUT /api/alerts/:id/read",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/api/alerts/{{alertId}}/read", "host": ["{{baseUrl}}"], "path": ["api","alerts","{{alertId}}","read"] },
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "POST /api/reviews",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/reviews", "host": ["{{baseUrl}}"], "path": ["api","reviews"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\"destinationId\":\"dst-test-paris\",\"targetTitle\":\"Paris\",\"rating\":5,\"title\":\"Magnificent!\",\"content\":\"The City of Light exceeded all expectations.\",\"travelerType\":\"Solo\",\"visitDate\":\"2026-06-15\",\"categoryRatings\":{\"food\":5,\"culture\":5,\"nightlife\":4,\"transport\":4,\"safety\":5,\"value\":4},\"userName\":\"Postman Tester\"}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('status 201', ()=> pm.response.to.have.status(201));","const d=pm.response.json(); const id=d.review?.id||d.id; if(id) pm.collectionVariables.set('reviewId',id);"] } }]
+        },
+        {
+          "name": "GET /api/reviews",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/reviews", "host": ["{{baseUrl}}"], "path": ["api","reviews"] }
+          }
+        },
+        {
+          "name": "POST /api/reviews/:id/vote",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/reviews/{{reviewId}}/vote", "host": ["{{baseUrl}}"], "path": ["api","reviews","{{reviewId}}","vote"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\"userName\":\"Bhavika Sainani\"}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI Chat",
+      "item": [
+        {
+          "name": "POST /ai/chat — success",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/ai/chat", "host": ["{{baseUrl}}"], "path": ["ai","chat"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"message\":\"Suggest a 3-day itinerary for Paris\",\"destination\":\"Paris\"}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('status 200', ()=> pm.response.to.have.status(200));","pm.test('has response', ()=> pm.expect(pm.response.json().response || pm.response.json().message).to.exist);"] } }]
+        },
+        {
+          "name": "POST /ai/chat — invalid body (400)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/ai/chat", "host": ["{{baseUrl}}"], "path": ["ai","chat"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('status 400', ()=> pm.response.to.have.status(400));"] } }]
+        }
+      ]
+    },
+    {
+      "name": "Live & External",
+      "item": [
+        {
+          "name": "GET /api/live/weather — no API key (401)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/live/weather?city=Paris", "host": ["{{baseUrl}}"], "path": ["api","live","weather"], "query": [{"key":"city","value":"Paris"}] }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('status 401', ()=> pm.response.to.have.status(401));"] } }]
+        },
+        {
+          "name": "GET /api/live/weather — with API key",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/live/weather?city=Paris", "host": ["{{baseUrl}}"], "path": ["api","live","weather"], "query": [{"key":"city","value":"Paris"}] },
+            "header": [{ "key": "X-API-Key", "value": "test-api-key-12345" }]
+          }
+        },
+        {
+          "name": "GET /api/external/rates",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/external/rates?base=USD&symbols=EUR,GBP,INR", "host": ["{{baseUrl}}"], "path": ["api","external","rates"], "query": [{"key":"base","value":"USD"},{"key":"symbols","value":"EUR,GBP,INR"}] },
+            "header": [{ "key": "X-API-Key", "value": "test-api-key-12345" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Data API",
+      "item": [
+        {
+          "name": "GET /api/data/status",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/data/status", "host": ["{{baseUrl}}"], "path": ["api","data","status"] }
+          }
+        },
+        {
+          "name": "GET /api/data/trips",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/data/trips", "host": ["{{baseUrl}}"], "path": ["api","data","trips"] }
+          }
+        },
+        {
+          "name": "GET /api/data/bookings",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/data/bookings", "host": ["{{baseUrl}}"], "path": ["api","data","bookings"] }
+          }
+        },
+        {
+          "name": "POST /api/migrate",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/migrate", "host": ["{{baseUrl}}"], "path": ["api","migrate"] }
+          }
+        }
+      ]
+    }
+  ]
+}
