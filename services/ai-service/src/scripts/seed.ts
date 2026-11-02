@@ -178,7 +178,7 @@ export async function seedDatabase(options: { reset?: boolean } = {}): Promise<a
     console.log(`[Seed] In-memory database initialized: ${memUri} (${TARGET_DB})`);
   }
 
-  if (options.reset) {
+  if (options.reset && mongoose.connection.db) {
     console.log('[Seed Reset] Dropping existing test data collections...');
     const collections = await mongoose.connection.db.collections();
     for (const col of collections) {

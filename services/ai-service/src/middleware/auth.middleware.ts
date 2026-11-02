@@ -22,7 +22,7 @@ export interface AuthenticatedRequest extends Request {
 
 /**
  * Require valid authentication token.
- * Rejects requests with 401 if missing or invalid.
+ * Rejects requests with 401 if missing, expired, or tampered.
  */
 export function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
   const authHeader = req.headers.authorization;
@@ -46,25 +46,39 @@ export function requireAuth(req: AuthenticatedRequest, res: Response, next: Next
       name: decoded.name || '',
     };
     next();
-  } catch (_err) {
-    // Check if token is a base64 mock token from frontend preview fallback
-    try {
-      const parts = token.split('.');
-      if (parts.length === 3) {
-        const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
-        if (payload.sub) {
-          req.user = {
-            id: payload.sub,
-            email: payload.email || 'traveler@voyana.com',
-            role: payload.role || 'traveler',
-            name: payload.name || 'Voyana Traveler',
-          };
-          next();
-          return;
+  } catch (err: any) {
+    // Explicitly reject expired tokens
+    if (err?.name === 'TokenExpiredError') {
+      res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Authentication session has expired. Please sign in again.',
+      });
+      return;
+    }
+
+    // Check if token is an explicit dev-preview mock token from frontend preview fallback
+    // (Only permitted in non-production, and ONLY for mock tokens with iss: 'voyana.travel')
+    if (config.nodeEnv !== 'production') {
+      try {
+        const parts = token.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
+          // Reject tampered tokens attempting real authentication without mock signature
+          const isDevMockToken = payload.iss === 'voyana.travel' || payload.isMock === true;
+          if (isDevMockToken && payload.sub) {
+            req.user = {
+              id: payload.sub,
+              email: payload.email || 'traveler@voyana.com',
+              role: payload.role || 'traveler',
+              name: payload.name || 'Voyana Traveler',
+            };
+            next();
+            return;
+          }
         }
+      } catch {
+        // Ignore fallback decode errors
       }
-    } catch {
-      // Ignore fallback decode errors
     }
 
     res.status(401).json({
