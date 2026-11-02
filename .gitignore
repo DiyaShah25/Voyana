@@ -33,3 +33,6 @@ dist-ssr
 powershell.cmd
 Voyana_Screenshots_*.pdf
 
+
+coverage/
+test-results/

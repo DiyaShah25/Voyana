@@ -1,0 +1,18 @@
+=================================================================
+VOYANA API LOAD & PERFORMANCE BENCHMARK (NATIVE CONCURRENT SUITE)
+Target Endpoint: GET /health
+Hardware / Environment: Local Development (Windows 11, Node.js v22.19.0)
+Concurrency: 10 parallel connections
+Test Duration: 4.01s
+=================================================================
+Requests Total:       4510
+Successful (2xx):     4510
+Failed / Errored:     0
+Average Req/Sec:      1125.8 req/s
+Throughput:           0.23 MB/s
+Latency Min:          5.99 ms
+Latency p50 (Median): 8.08 ms
+Latency p95:          12.69 ms
+Latency p99:          16.97 ms
+Latency Max:          61.07 ms
+=================================================================
