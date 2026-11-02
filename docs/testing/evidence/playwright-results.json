@@ -211,12 +211,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 6805,
+                      "duration": 4390,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-02T17:27:51.412Z",
+                      "startTime": "2026-11-02T17:43:10.851Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -251,12 +251,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4029,
+                      "duration": 4086,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-02T17:27:58.362Z",
+                      "startTime": "2026-11-02T17:43:15.367Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -291,12 +291,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5500,
+                      "duration": 5138,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-02T17:28:02.412Z",
+                      "startTime": "2026-11-02T17:43:19.475Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -331,12 +331,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3186,
+                      "duration": 4087,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-02T17:28:07.932Z",
+                      "startTime": "2026-11-02T17:43:24.629Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -371,12 +371,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3685,
+                      "duration": 7372,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-11-02T17:28:11.137Z",
+                      "startTime": "2026-11-02T17:43:28.744Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -392,7 +392,7 @@
               ],
               "id": "cf359e573b2edbc80dc3-865f06b9c0f9497dc93e",
               "file": "voyana-flows.spec.ts",
-              "line": 68,
+              "line": 76,
               "column": 3
             }
           ]
@@ -402,8 +402,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-11-02T17:27:49.636Z",
-    "duration": 25588.294,
+    "startTime": "2026-11-02T17:43:09.171Z",
+    "duration": 27337.775,
     "expected": 5,
     "skipped": 0,
     "unexpected": 0,

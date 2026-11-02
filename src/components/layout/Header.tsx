@@ -34,7 +34,7 @@ export function Header(props: HeaderProps) {
         {props.hasBookings && <button onClick={() => act(props.onOpenMyBookings)}>My bookings</button>}
         <button onClick={() => act(props.onOpenTrips)}>Workspace</button>
         {props.canCollaborate && <><button onClick={() => act(props.onOpenBudget)}>Split expenses</button><button onClick={() => act(props.onOpenPacking)}>Packing</button><button onClick={() => act(props.onOpenMemories)}>Memories</button></>}
-        {props.destination && <button onClick={() => act(props.onOpenChat)} aria-label="Open AI Travel Assistant"><Sparkles size={15} /> VoyaBot</button>}
+        <button onClick={() => act(props.onOpenChat)} aria-label="Open AI Travel Assistant"><Sparkles size={15} /> VoyaBot</button>
         {isAdmin && <button onClick={() => act(props.onOpenAdmin)}><Shield size={15} /> Admin</button>}
         {isAuthenticated ? <><AlertsPanel /><button onClick={() => act(props.onOpenProfile)}><User size={15} />{user?.name.split(' ')[0]}<span className="workflow-role">{user?.role}</span></button><button aria-label="Sign out" title="Sign out" onClick={() => act(signOut)}><LogOut size={16} /></button></> : <a className="workflow-signin" href="#/login">Sign in</a>}
       </nav>

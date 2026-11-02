@@ -50,15 +50,23 @@ test.describe('Voyana Core User Experience & NFR UI Suite', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    // Focus on interactive navigation element to demonstrate keyboard focus ring
-    const focusTarget = page.locator('a.arch-brand-lockup, header nav a, button').first();
-    await focusTarget.focus();
+    // Tab through 3-4 interactive navigation elements to demonstrate sequential keyboard focus
+    await page.keyboard.press('Tab'); // Brand logo
+    await page.waitForTimeout(200);
+    await page.keyboard.press('Tab'); // Explore link
+    await page.waitForTimeout(200);
+    await page.keyboard.press('Tab'); // Workspace button
+    await page.waitForTimeout(200);
+    await page.keyboard.press('Tab'); // VoyaBot AI button
+    await page.waitForTimeout(200);
+
+    // Apply distinct accessible outline to the active focused element
     await page.evaluate(() => {
       const el = document.activeElement as HTMLElement;
       if (el) {
         el.style.outline = '3px solid #2563eb';
         el.style.outlineOffset = '3px';
-        el.style.boxShadow = '0 0 0 5px rgba(37, 99, 235, 0.3)';
+        el.style.boxShadow = '0 0 0 5px rgba(37, 99, 235, 0.35)';
       }
     });
 
@@ -69,37 +77,27 @@ test.describe('Voyana Core User Experience & NFR UI Suite', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    // Click on destination card explore to open destination details
-    const exploreBtn = page.locator('.btn-card-explore').first();
-    if (await exploreBtn.isVisible()) {
-      await exploreBtn.click();
-      await page.waitForTimeout(500);
+    // Click the VoyaBot button directly in the header navigation
+    const voyaBotBtn = page.locator('header button:has-text("VoyaBot"), button[aria-label="Open AI Travel Assistant"]').first();
+    await expect(voyaBotBtn).toBeVisible({ timeout: 5000 });
+    await voyaBotBtn.click();
 
-      // Trigger Ask AI Guide inside the destination modal
-      const askAiBtn = page.locator('button:has-text("Ask AI Guide"), button:has-text("Ask AI Planner")').first();
-      if (await askAiBtn.isVisible()) {
-        await askAiBtn.click();
-        await page.waitForTimeout(800);
-      }
-    } else {
-      const chatTrigger = page.locator('button:has-text("Ask VoyaBot"), button:has-text("AI"), [aria-label*="chat" i]').first();
-      if (await chatTrigger.isVisible()) {
-        await chatTrigger.click();
-        await page.waitForTimeout(800);
-      }
-    }
+    // Verify VoyaBot chat assistant dialog is open
+    const chatDialog = page.locator('div[role="dialog"][aria-label="VoyaBot Travel Assistant"]').first();
+    await expect(chatDialog).toBeVisible({ timeout: 5000 });
 
-    // Interact with chat if input is visible
-    const chatInput = page.locator('textarea, input[placeholder*="Ask" i]').first();
-    if (await chatInput.isVisible()) {
-      await chatInput.fill('What is the best 3-day itinerary for Paris?');
-      const sendBtn = page.locator('button:has(svg.lucide-send), button:has-text("Send")').first();
-      if (await sendBtn.isVisible()) {
-        await sendBtn.click();
-        await page.waitForTimeout(1500);
-      }
-    }
+    // Send a real travel query to demonstrate interactive co-pilot
+    const chatInput = page.locator('textarea.chat-textarea').first();
+    await expect(chatInput).toBeVisible({ timeout: 5000 });
+    await chatInput.fill('Can you suggest a 3-day cultural itinerary with museum timings?');
 
+    const sendBtn = page.locator('button.chat-send-btn').first();
+    await sendBtn.click({ force: true });
+
+    // Wait for response bubble to render
+    await page.waitForTimeout(2500);
+
+    // Capture the interactive VoyaBot assistant drawer with user question and reply
     await page.screenshot({ path: path.join(screenshotDir, '05_ai_assistant_view.png') });
   });
 });
