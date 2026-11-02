@@ -181,3 +181,4 @@ async function generateWorkbook() {
 }
 
 generateWorkbook().catch(console.error);
+

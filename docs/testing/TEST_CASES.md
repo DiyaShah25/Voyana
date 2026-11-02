@@ -118,3 +118,4 @@
 | **NFR-02** | VPM-16 | Offline Resilience & Fallback | `authService.ts`, `aiChatService.ts` | `authService.test.ts`, `aiChatService.test.ts` | TC-AUTH-07, TC-AI-04 | **Verified (Pass)** |
 | **NFR-03** | VPM-16 | Security & JWT Verification | `auth.middleware.ts`, `env.ts` | `auth-middleware.test.ts` | TC-AUTH-05, TC-AUTH-06 | **Verified (Pass)** |
 | **NFR-04** | VPM-16 | Responsive UI & Accessibility | Tailwind CSS, React Components | `voyana-flows.spec.ts` | TC-NFR-UI-01, TC-NFR-A11Y-01| **Verified (Pass)** |
+

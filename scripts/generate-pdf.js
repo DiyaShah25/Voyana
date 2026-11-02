@@ -408,3 +408,4 @@ The seed script enforces a strict regex guard refusing execution if the connecti
 }
 
 generatePdf().catch(console.error);
+

@@ -95,3 +95,4 @@ The primary objective of this Test Plan is to validate the correctness, security
 - **High (P2)**: Core functional feature broken with no immediate workaround (e.g., booking payment fails, JWT validation failure).
 - **Medium (P3)**: Non-critical feature broken or degraded performance, but a functional fallback exists.
 - **Low (P4)**: Cosmetic UI imperfection, minor typo, or documentation mismatch.
+
