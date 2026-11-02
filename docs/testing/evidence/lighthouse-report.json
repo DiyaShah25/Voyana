@@ -2,23 +2,23 @@
   "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36",
   "environment": "Localhost Production Preview (Vite 5)",
   "scores": {
-    "performance": 92,
-    "accessibility": 88,
-    "bestPractices": 95,
-    "seo": 90
+    "performance": "Not measured",
+    "accessibility": "Not measured",
+    "bestPractices": "Not measured",
+    "seo": "Not measured"
   },
   "metrics": {
     "fetchTime": "2026-11-02T16:13:51.878Z",
     "url": "http://localhost:5173/",
     "navigation": {
-      "dnsLookupMs": 2.299999952316284,
-      "tcpConnectMs": 1.399999976158142,
-      "ttfbMs": 17.299999952316284,
-      "domInteractiveMs": 41.10000002384186,
-      "domContentLoadedMs": 297.60000002384186,
-      "loadCompleteMs": 304
+      "dnsLookupMs": 2.3,
+      "tcpConnectMs": 1.4,
+      "ttfbMs": 17.3,
+      "domInteractiveMs": 41.1,
+      "domContentLoadedMs": 297.6,
+      "loadCompleteMs": 304.0
     },
-    "firstContentfulPaintMs": 756,
+    "firstContentfulPaintMs": 756.0,
     "resourcesCount": 27
   }
 }
