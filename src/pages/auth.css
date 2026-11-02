@@ -696,3 +696,15 @@
     padding: 32px 20px;
   }
 }
+/* Google entry uses the official Google control in a prominent Voyana card. */
+.auth-google-panel { position:relative; padding:22px; border:1px solid #cfe2d7; border-radius:22px; background:linear-gradient(135deg,#f0f8f1 0%,#fbfdf9 55%,#f9f4e9 100%); box-shadow:0 8px 26px #174e3610; margin:22px 0 8px; overflow:hidden; }
+.auth-google-panel-top {display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;}
+.auth-google-eyebrow {display:flex;align-items:center;gap:6px;color:#176045;font-size:9px;letter-spacing:.12em;font-weight:700;}
+.auth-google-quick {font-size:9px;white-space:nowrap;color:#4e695c;background:#ffffffb3;border:1px solid #dce9df;padding:4px 8px;border-radius:20px;}
+.auth-google-panel h2 {font-family:Georgia,serif;font-size:23px;line-height:1.2;color:#173d2d;letter-spacing:-.04em;margin:0 0 7px;}
+.auth-google-description {color:#607368;font-size:12px;line-height:1.6;margin-bottom:17px;}
+.auth-google-button-shell {background:white;border-radius:30px;padding:4px;border:1px solid #e2e9e2;box-shadow:0 4px 12px #174e3608;display:flex;justify-content:center;}
+.auth-google-button-shell > div {width:100%;display:flex;justify-content:center;}
+.auth-google-privacy {display:flex;align-items:center;justify-content:center;gap:6px;margin:12px 0 0;color:#5d7567;font-size:10px;}
+.auth-google-status {font-size:12px;line-height:1.5;color:#775824;padding:8px 0 0;}
+@media(max-width:440px){.auth-google-panel{padding:17px;}.auth-google-panel h2{font-size:21px;}.auth-google-quick{display:none;}.auth-google-eyebrow{font-size:8px;}}

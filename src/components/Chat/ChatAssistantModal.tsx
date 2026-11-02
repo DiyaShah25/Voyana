@@ -14,7 +14,7 @@ import {
   CheckCircle2,
   RefreshCw,
   Compass,
-  DollarSign,
+  IndianRupee,
   Briefcase,
   ChevronDown,
   ArrowRight,
@@ -315,9 +315,9 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
                   className="chat-filter-select"
                 >
                   <option value="all">All Budgets</option>
-                  <option value="$">Budget ($)</option>
-                  <option value="$$">Moderate ($$)</option>
-                  <option value="$$$">Luxury ($$$)</option>
+                  <option value="$">Budget (₹)</option>
+                  <option value="$$">Moderate (₹₹)</option>
+                  <option value="$$$">Luxury (₹₹₹)</option>
                 </select>
               </div>
 
@@ -342,7 +342,7 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
 
                     <div className="chat-recommend-footer">
                       <div className="chat-dest-meta-tags">
-                        <span>~${dest.estimatedDailyCostUsd}/day</span>
+                        <span>~₹{(dest.estimatedDailyCostUsd*80).toLocaleString('en-IN')}/day</span>
                         <span>·</span>
                         <span>{dest.recommendedDays} Days</span>
                       </div>
@@ -428,7 +428,7 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
                                   onClose();
                                 }}
                               >
-                                <DollarSign size={12} /> View Budget
+                                <IndianRupee size={12} /> View Budget
                               </button>
                             )}
                             {change.type === 'recommendation' && (
@@ -534,7 +534,7 @@ export const ChatAssistantModal: React.FC<ChatAssistantModalProps> = ({
                     }}
                     title="Open Budget Planner"
                   >
-                    <DollarSign size={13} /> Budget
+                    <IndianRupee size={13} /> Budget
                   </button>
                 )}
                 {onOpenPacking && (

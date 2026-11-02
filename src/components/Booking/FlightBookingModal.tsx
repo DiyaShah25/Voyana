@@ -1,3 +1,5 @@
+import BookingImage from './BookingImage';
+import { getPlanningContext } from '@/services/planningContext';
 /**
  * Flight Booking Modal
  * Full-screen modal for searching, filtering, and booking flights.
@@ -85,6 +87,7 @@ function FlightCard({
       onClick={() => onSelect(flight)}
       className="group relative bg-white hover:bg-slate-50 border border-slate-200 hover:border-emerald-500/50 rounded-2xl p-4 cursor-pointer transition-all duration-200 hover:shadow-lg hover:shadow-emerald-950/5"
     >
+      <BookingImage kind="flight" className="w-full h-24 rounded-xl mb-4" />
       {/* Airline info */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -188,7 +191,7 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState(initialDestination || '');
   const [departureDate, setDepartureDate] = useState('');
-  const [passengers, setPassengers] = useState(1);
+  const [passengers, setPassengers] = useState(() => getPlanningContext().trip?.travelMode === 'group' ? Math.min(20, Math.max(1, getPlanningContext().members.length)) : 1);
   const [cabin, setCabin] = useState<CabinClass>('economy');
   const [flights, setFlights] = useState<Flight[]>([]);
   const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
@@ -208,14 +211,15 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
   // Pre-fill destination when initialDestination changes
   useEffect(() => {
     if (initialDestination) {
-      const code = resolveAirportCode(initialDestination) || initialDestination.toUpperCase().slice(0, 3);
+      const code = resolveAirportCode(initialDestination) || '';
       setDestination(code);
     }
   }, [initialDestination]);
 
   const handleSearch = useCallback(() => {
     const resolvedOrigin = resolveAirportCode(origin) || origin.toUpperCase().slice(0, 3);
-    const resolvedDest = resolveAirportCode(destination) || destination.toUpperCase().slice(0, 3);
+    const resolvedDest = resolveAirportCode(initialDestination || '') || '';
+    if (!resolvedOrigin || !resolvedDest || resolvedOrigin === resolvedDest) return;
 
     if (!AIRPORTS[resolvedOrigin] || !AIRPORTS[resolvedDest]) return;
     if (!departureDate) return;
@@ -229,7 +233,7 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
     });
     setFlights(results);
     setStep('results');
-  }, [origin, destination, departureDate, passengers, cabin]);
+  }, [origin, initialDestination, departureDate, passengers, cabin]);
 
   const sortedFlights = [...flights]
     .filter(f => filterStops === 'any' || f.stops === 0)
@@ -380,7 +384,8 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                   </label>
                   <input
                     value={destination}
-                    onChange={e => setDestination(e.target.value)}
+                    readOnly
+                    aria-label="Selected destination airport"
                     placeholder="City or Airport code"
                     list="destination-list"
                     className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-600 focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition"
@@ -414,7 +419,7 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                   <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 gap-4">
                     <button onClick={() => setPassengers(p => Math.max(1, p - 1))} className="text-slate-500 hover:text-slate-900 text-lg w-7 h-7 rounded-lg hover:bg-slate-200 transition flex items-center justify-center font-bold">−</button>
                     <span className="flex-1 text-center text-sm font-bold text-slate-900">{passengers}</span>
-                    <button onClick={() => setPassengers(p => Math.min(9, p + 1))} className="text-slate-500 hover:text-slate-900 text-lg w-7 h-7 rounded-lg hover:bg-slate-200 transition flex items-center justify-center font-bold">+</button>
+                    <button onClick={() => setPassengers(p => Math.min(20, p + 1))} className="text-slate-500 hover:text-slate-900 text-lg w-7 h-7 rounded-lg hover:bg-slate-200 transition flex items-center justify-center font-bold">+</button>
                   </div>
                 </div>
               </div>
@@ -462,7 +467,7 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
               {/* Search Button */}
               <button
                 onClick={handleSearch}
-                disabled={!origin || !destination || !departureDate}
+                disabled={!origin || !destination || !departureDate || origin === destination}
                 className="w-full py-3.5 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm tracking-wide transition-all shadow-lg shadow-emerald-700/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 <Search size={17} />
@@ -616,8 +621,10 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                   { label: 'Airport Taxes & Passenger Facility Charges', amount: 0 },
                 ]}
                 onCancel={() => setStep('passenger')}
-                onPaymentSuccess={({ transactionReference }) => {
-                  setBookingRef(transactionReference.replace('TXN', 'VYN'));
+                onPaymentSuccess={async () => {
+                  const result = await createFlightBooking(selectedFlight, passenger, cabin, passengers);
+                  if (!result.success || !result.bookingReference) throw new Error(result.error || 'Could not save reservation.');
+                  setBookingRef(result.bookingReference);
                   setStep('success');
                 }}
               />
@@ -738,6 +745,7 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                 <button
                   type="button"
                   onClick={handleClose}
+              aria-label="Close flight booking"
                   className="flex-1 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 font-bold text-sm transition"
                 >
                   Done

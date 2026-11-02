@@ -1,3 +1,4 @@
+import { toError } from '../utils/errors.js';
 /**
  * AI Request Logging Service
  * Persists AI chat request/response records to MongoDB
@@ -37,7 +38,8 @@ export class AiRequestService {
           this.inMemoryLog.shift();
         }
       }
-    } catch (err: any) {
+    } catch (caught) {
+      const err = toError(caught);
       console.warn(`[AiRequestService] Failed to record telemetry to Mongo: ${err?.message || err}`);
       this.inMemoryLog.push(params);
     }

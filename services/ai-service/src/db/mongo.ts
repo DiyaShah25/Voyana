@@ -1,3 +1,4 @@
+import { toError } from '../utils/errors.js';
 /**
  * MongoDB Connection Manager for Voyana
  * Establishes and manages the centralized Mongoose connection to MongoDB Atlas
@@ -76,9 +77,10 @@ export async function connectMongo(): Promise<boolean> {
     isConnected = true;
     console.log(`[Mongo] Connected successfully to database "${config.dbName}" via ${maskedUri}`);
     return true;
-  } catch (error: any) {
+  } catch (caught) {
+      const error = toError(caught);
     console.warn(`[Mongo] Failed to connect to ${maskedUri}: ${error?.message || error}`);
-    console.warn('[Mongo] Running with in-memory fallback. Team data will persist once valid MongoDB URI is supplied.');
+    console.warn('[Mongo] Database persistence is unavailable. The browser may use its local preview cache.');
     isConnected = false;
     return false;
   }

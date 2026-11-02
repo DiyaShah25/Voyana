@@ -1,3 +1,5 @@
+import BookingImage from './BookingImage';
+import { getPlanningContext } from '@/services/planningContext';
 /**
  * Hotel Booking Modal
  * Full-screen modal for searching and booking hotel accommodations.
@@ -6,11 +8,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Building2, MapPin, Calendar, Users, ArrowRight, Search,
-  Filter, X, CheckCircle2, Star, Wifi, Coffee, Sparkles,
-  BedDouble, BedSingle, ShieldCheck, Heart, Bath,
-} from 'lucide-react';
+import { Building2, MapPin, Calendar, Users, ArrowRight, Search, Filter, X, CheckCircle2, Star, Sparkles, BedDouble } from 'lucide-react';
 import {
   searchHotels,
   bookHotel,
@@ -52,7 +50,6 @@ function HotelCard({
   roomType,
   nights,
   rooms,
-  guests,
   onSelect,
 }: {
   hotel: Hotel;
@@ -73,11 +70,7 @@ function HotelCard({
     >
       {/* Hotel Image */}
       <div className="relative md:w-56 h-48 md:h-auto flex-shrink-0 overflow-hidden">
-        <img
-          src={hotel.imageUrl}
-          alt={hotel.name}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
+        <BookingImage kind="hotel" src={hotel.imageUrl} className="w-full h-full" />
         <div className="absolute top-3 left-3 flex items-center gap-1 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full border border-slate-200 text-xs font-semibold text-amber-700 shadow-sm">
           <Star size={12} className="fill-amber-500 text-amber-500" />
           <span>{hotel.starRating.toFixed(1)}</span>
@@ -174,8 +167,8 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
   const [location, setLocation] = useState(initialDestination || 'Paris');
   const [checkInDate, setCheckInDate] = useState('');
   const [checkOutDate, setCheckOutDate] = useState('');
-  const [guests, setGuests] = useState(2);
-  const [rooms, setRooms] = useState(1);
+  const [guests, setGuests] = useState(() => getPlanningContext().trip?.travelMode === 'group' ? Math.min(20, Math.max(1, getPlanningContext().members.length)) : 1);
+  const [rooms, setRooms] = useState(() => getPlanningContext().trip?.travelMode === 'group' ? Math.max(1, Math.ceil(getPlanningContext().members.length / 2)) : 1);
   const [roomType, setRoomType] = useState<RoomType>('Standard');
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
@@ -335,6 +328,7 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
             )}
             <button
               onClick={handleClose}
+              aria-label="Close hotel booking"
               className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition"
             >
               <X size={18} />
@@ -356,7 +350,8 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                 <div className="relative">
                   <input
                     value={location}
-                    onChange={(e) => setLocation(e.target.value)}
+                    readOnly
+                    aria-label="Selected hotel destination"
                     placeholder="Enter city name (e.g. Paris, Tokyo, Dubai, New York, Ahmedabad)"
                     list="hotel-dest-list"
                     className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-600 focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition"
@@ -487,7 +482,7 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                   Popular Hotel Destinations
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {POPULAR_DESTINATIONS.map((d) => (
+                  {POPULAR_DESTINATIONS.filter(d => d.city.toLowerCase() === initialDestination?.toLowerCase()).map((d) => (
                     <button
                       key={d.city}
                       type="button"
@@ -579,11 +574,7 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
             <div className="p-5 space-y-4">
               {/* Selected Hotel Summary Card */}
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 flex items-center gap-3 shadow-sm">
-                <img
-                  src={selectedHotel.imageUrl}
-                  alt={selectedHotel.name}
-                  className="w-16 h-16 rounded-xl object-cover border border-slate-200"
-                />
+                <BookingImage kind="hotel" src={selectedHotel.imageUrl} className="w-20 h-20 rounded-xl flex-shrink-0" />
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-slate-900">{selectedHotel.name}</p>
                   <p className="text-xs text-slate-600">
@@ -686,11 +677,12 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                     label: `${roomType} (${nights} night${nights > 1 ? 's' : ''} × ${rooms} room${rooms > 1 ? 's' : ''})`,
                     amount: (selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate) * nights * rooms,
                   },
-                  { label: 'City Occupancy Tax & Service Charges', amount: 0 },
                 ]}
                 onCancel={() => setStep('guest')}
-                onPaymentSuccess={({ transactionReference }) => {
-                  setBookingRef(transactionReference.replace('TXN', 'VYN'));
+                onPaymentSuccess={async () => {
+                  const result = await bookHotel(selectedHotel, guest, checkInDate, checkOutDate, roomType, rooms, guests);
+                  if (!result.success || !result.bookingReference) throw new Error(result.error || 'Could not save reservation.');
+                  setBookingRef(result.bookingReference);
                   setStep('success');
                 }}
               />

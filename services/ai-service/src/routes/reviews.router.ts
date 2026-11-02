@@ -1,3 +1,4 @@
+import { toError } from '../utils/errors.js';
 /**
  * Travel Reviews Router
  * REST endpoints for querying reviews, calculating category metrics,
@@ -15,7 +16,7 @@ export const reviewsRouter = Router();
 reviewsRouter.get('/', async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { targetType, targetId, travelerType, minRating, sortBy } = req.query;
-    const filter: Record<string, any> = {};
+    const filter: Record<string, unknown> = {};
 
     if (targetType) {
       filter.targetType = targetType;
@@ -42,7 +43,8 @@ reviewsRouter.get('/', async (req: AuthenticatedRequest, res: Response): Promise
 
     const reviews = await query.limit(100);
     res.status(200).json({ ok: true, count: reviews.length, reviews });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to retrieve reviews.', error: err?.message });
   }
 });
@@ -80,7 +82,8 @@ reviewsRouter.post('/', optionalAuth, async (req: AuthenticatedRequest, res: Res
     });
 
     res.status(201).json({ ok: true, review: newReview });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(400).json({ ok: false, message: 'Failed to create review.', error: err?.message });
   }
 });
@@ -108,7 +111,8 @@ reviewsRouter.post('/:id/vote', optionalAuth, async (req: AuthenticatedRequest, 
 
     await review.save();
     res.status(200).json({ ok: true, helpfulVotes: review.helpfulVotes, voted: !hasVoted });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to update review vote.', error: err?.message });
   }
 });

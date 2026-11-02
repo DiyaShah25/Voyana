@@ -1,3 +1,5 @@
+import BookingImage from './BookingImage';
+import { getPlanningContext } from '@/services/planningContext';
 /**
  * Transport Booking Modal
  * Handles ground transport reservations including taxis, private cars,
@@ -5,25 +7,8 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Car, Train, Bus, MapPin, Calendar, Users, ArrowRight, Search,
-  Filter, X, CheckCircle2, Star, ShieldCheck, Sparkles,
-  Clock, Navigation, Shield, Check, Luggage, KeyRound,
-  ArrowUpDown, SlidersHorizontal, RefreshCw, AlertCircle
-} from 'lucide-react';
-import {
-  searchTransport,
-  bookTransport,
-  cancelTransportBooking,
-  getTransportTypeLabel,
-  getTransportIcon,
-  formatTransportDuration,
-  SEED_TRANSPORTS,
-  type TransportItem,
-  type TransportType,
-  type TransportModeFilter,
-  type TransportBookingDetails,
-} from '@/services/transportService';
+import { Car, MapPin, Calendar, Users, ArrowRight, Search, X, CheckCircle2, Star, ShieldCheck, Clock, Navigation, Shield, Luggage, SlidersHorizontal, RefreshCw } from 'lucide-react';
+import { searchTransport, bookTransport, getTransportTypeLabel, getTransportIcon, formatTransportDuration, type TransportItem, type TransportType, type TransportModeFilter, type TransportBookingDetails } from '@/services/transportService';
 import { PaymentView } from '@/components/Payment/PaymentModal';
 import { useCurrency } from '@/context/CurrencyContext';
 import { downloadTransportVoucher } from '@/services/ticketService';
@@ -40,13 +25,6 @@ const TRANSPORT_MODES: { value: TransportModeFilter; label: string; icon: string
   { value: 'bus', label: 'Coaches & Shuttles', icon: '🚌' },
 ];
 
-const POPULAR_HUBS = [
-  { origin: 'Paris', destination: 'London', desc: 'Eurostar High-Speed (2h 18m)' },
-  { origin: 'Tokyo', destination: 'Kyoto', desc: 'Shinkansen Bullet Train (2h 15m)' },
-  { origin: 'Dubai Airport (DXB)', destination: 'Downtown Dubai', desc: 'VIP Luxury Chauffeur (30m)' },
-  { origin: 'New York (JFK)', destination: 'Manhattan', desc: 'Executive Black Car (60m)' },
-  { origin: 'Ahmedabad (ADI)', destination: 'Mumbai', desc: 'Vande Bharat Express (5h 25m)' },
-];
 
 // ─── Transport Card Component ───────────────────────────────────────────────
 function TransportCard({
@@ -79,11 +57,7 @@ function TransportCard({
       {/* Thumbnail */}
       {item.imageUrl && (
         <div className="relative md:w-52 h-44 md:h-auto flex-shrink-0 overflow-hidden">
-          <img
-            src={item.imageUrl}
-            alt={item.providerName}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
+          <BookingImage kind={item.transportType} src={item.imageUrl} className="w-full h-full" />
           <div className="absolute top-3 left-3 flex items-center gap-1 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full border border-slate-200 text-xs font-semibold text-amber-700 shadow-sm">
             <Star size={12} className="fill-amber-500 text-amber-500" />
             <span>{item.operatorRating.toFixed(1)}</span>
@@ -206,7 +180,7 @@ export default function TransportBookingModal({
     return d.toISOString().split('T')[0];
   });
   const [modeFilter, setModeFilter] = useState<TransportModeFilter>('all');
-  const [passengers, setPassengers] = useState(1);
+  const [passengers, setPassengers] = useState(() => getPlanningContext().trip?.travelMode === 'group' ? Math.min(9, Math.max(1, getPlanningContext().members.length)) : 1);
   const [sortBy, setSortBy] = useState<'price' | 'rating' | 'duration'>('price');
 
   // Results & Selection
@@ -249,7 +223,7 @@ export default function TransportBookingModal({
     try {
       const results = await searchTransport(
         orig !== undefined ? orig : origin,
-        dest !== undefined ? dest : destination,
+        defaultDestination || (dest !== undefined ? dest : destination),
         date,
         mode !== undefined ? mode : modeFilter
       );
@@ -266,12 +240,12 @@ export default function TransportBookingModal({
       setStep('results');
     } catch (err) {
       console.error(err);
-      setSearchResults(SEED_TRANSPORTS);
+      setSearchResults([]);
       setStep('results');
     } finally {
       setIsLoading(false);
     }
-  }, [origin, destination, date, modeFilter, sortBy]);
+  }, [origin, destination, date, modeFilter, sortBy, defaultDestination]);
 
   if (!isOpen) return null;
 
@@ -290,23 +264,12 @@ export default function TransportBookingModal({
     setStep('payment');
   };
 
-  const handlePaymentSuccess = async (res: { paymentId: string; transactionReference: string }) => {
-    if (!selectedTransport) return;
-    setStep('confirming');
-    try {
-      const bkg = await bookTransport(selectedTransport, passengerDetails, userId);
-      setBookingResult({
-        reference: bkg.bookingReference || `VYN-TRP-${Math.floor(100000 + Math.random() * 900000)}`,
-        bookingId: bkg.bookingId || `bkg-trp-${Date.now()}`,
-      });
-      setStep('success');
-    } catch {
-      setBookingResult({
-        reference: `VYN-TRP-${Math.floor(100000 + Math.random() * 900000)}`,
-        bookingId: `bkg-trp-${Date.now()}`,
-      });
-      setStep('success');
-    }
+  const handlePaymentSuccess = async () => {
+    if (!selectedTransport) throw new Error('Select a transport option first.');
+    const result = await bookTransport(selectedTransport, passengerDetails, userId);
+    if (!result.success || !result.bookingReference || !result.bookingId) throw new Error(result.error || 'Could not save reservation.');
+    setBookingResult({ reference: result.bookingReference, bookingId: result.bookingId });
+    setStep('success');
   };
 
   const handleDownloadVoucher = () => {
@@ -332,7 +295,7 @@ export default function TransportBookingModal({
   };
 
   const computedTotal = selectedTransport
-    ? (selectedTransport.transportType === 'train' || selectedTransport.transportType === 'bus'
+    ? (['train','bus','ferry'].includes(selectedTransport.transportType)
         ? selectedTransport.basePrice * passengers
         : selectedTransport.basePrice)
     : 0;
@@ -416,7 +379,7 @@ export default function TransportBookingModal({
               <select
                 value={sortBy}
                 onChange={(e) => {
-                  setSortBy(e.target.value as any);
+                  setSortBy(e.target.value as typeof sortBy);
                   triggerSearch(origin, destination, modeFilter);
                 }}
                 className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-800 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
@@ -453,7 +416,8 @@ export default function TransportBookingModal({
                 <input
                   type="text"
                   value={destination}
-                  onChange={(e) => setDestination(e.target.value)}
+                  readOnly
+                  aria-label="Selected transport destination"
                   placeholder="e.g. London, Kyoto, Hotel"
                   className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
                 />
@@ -686,9 +650,9 @@ export default function TransportBookingModal({
                 amount={computedTotal}
                 currency={currency}
                 lineItems={[
-                  { label: `${getTransportTypeLabel(selectedTransport.transportType)} (${selectedTransport.vehicleClass})`, amount: selectedTransport.basePrice },
-                  { label: `Passenger Surcharge (${passengers} pax)`, amount: computedTotal - selectedTransport.basePrice },
-                  { label: 'Tolls & Airport Surcharges', amount: 0 },
+                  { label: `${getTransportTypeLabel(selectedTransport.transportType)} · ${selectedTransport.vehicleClass}`, amount: selectedTransport.basePrice },
+                  { label: `Additional traveler fares (${passengers} travelers total)`, amount: computedTotal - selectedTransport.basePrice },
+
                 ]}
                 onPaymentSuccess={handlePaymentSuccess}
                 onCancel={() => setStep('passenger')}

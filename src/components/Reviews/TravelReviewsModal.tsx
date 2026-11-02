@@ -5,12 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import {
-  Star, ThumbsUp, MessageSquare, ShieldCheck,
-  Plus, X, Filter, Sparkles, MapPin, Camera,
-  CheckCircle2, AlertCircle, ArrowRight, UserCheck,
-  SlidersHorizontal, Search
-} from 'lucide-react';
+import { Star, ThumbsUp, ShieldCheck, Plus, X, MapPin, Search } from 'lucide-react';
 import {
   getReviews,
   getReviewStats,
@@ -90,7 +85,7 @@ export default function TravelReviewsModal({
 
   const loadReviewsData = async () => {
     const list = await getReviews(
-      selectedTargetId === 'all' ? undefined : 'destination',
+      selectedTargetId === 'all' ? undefined : initialTargetType,
       selectedTargetId === 'all' ? undefined : selectedTargetId,
       {
         travelerType: selectedTravelerType,
@@ -328,7 +323,7 @@ export default function TravelReviewsModal({
                 <span className="text-slate-500">Sort by:</span>
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
+                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
                   className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-800 focus:outline-none focus:border-emerald-600 shadow-sm"
                 >
                   <option value="helpful">Most Helpful</option>
@@ -598,7 +593,7 @@ export default function TravelReviewsModal({
                   <label className="block text-xs font-semibold text-slate-700 mb-1">Traveler Type</label>
                   <select
                     value={newTravelerType}
-                    onChange={(e) => setNewTravelerType(e.target.value as any)}
+                    onChange={(e) => setNewTravelerType(e.target.value as TravelerType)}
                     className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 shadow-sm"
                   >
                     <option value="Solo">Solo</option>
