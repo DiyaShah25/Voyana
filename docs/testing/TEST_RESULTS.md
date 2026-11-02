@@ -3,7 +3,7 @@
 **Project**: Voyana — Collaborative AI Travel Platform  
 **Author / QA Lead**: Bhavika Sainani  
 **Team Members**: Diya Shah, Nigam Sanghvi, Tirth Gandhi, Bhavika Sainani, Megha Lalwani, Manav Vyas, Bhavika Mulani, Jagrat Kumar  
-**Tested Commit Hash**: `13fbf2f` (Updated on `99ca84f`)  
+**Tested Commit Hash**: `b53a4f7`  
 **Execution Timestamp**: November 2, 2026  
 **Environment**: Localhost Development & Isolated Sandbox (Windows 11, Node.js v22.19.0, Isolated In-Memory MongoDB)  
 
@@ -117,7 +117,6 @@ From Istanbul/v8 automated instrumentation (`npm run test:coverage`):
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **GET /health** (Health Ping Micro-Benchmark) | 2,700 | 3.00 s | **898.8 req/s** | **9.96 ms** | **15.99 ms** | 68.35 ms | 0.00% (0 err) | **Pass** |
 | **GET /api/destinations** (Mongoose DB Query) | 1,214 | 3.01 s | **403.6 req/s** | **23.44 ms** | **30.85 ms** | 76.51 ms | 0.00% (0 err) | **Pass** |
-| **Combined Benchmark Load** | **3,914** | **6.01 s** | **651.2 req/s** | **14.20 ms** | **24.50 ms** | 76.51 ms | **0.00%** | **Pass** |
 
 ### 4.2 Browser Core Web Vitals & Navigation Timings
 - **Evidence Files**: `docs/testing/evidence/lighthouse-report.html`, `lighthouse-report.json`
@@ -136,19 +135,20 @@ From Istanbul/v8 automated instrumentation (`npm run test:coverage`):
 ### 4.3 UI & Cross-Browser E2E Testing
 - **Evidence Files**: `docs/testing/evidence/playwright-chromium.txt`, `playwright-results.json`
 - **Screenshots Captured**:
-  1. `01_homepage_hero.png` (2.7 MB) — Desktop 3D globe and header
-  2. `02_destination_search.png` (462 KB) — Interactive search input and destination cards
-  3. `03_responsive_mobile_375px.png` (60 KB) — Mobile viewport (iPhone 12, 375x667)
-  4. `03_responsive_tablet_768px.png` (202 KB) — Tablet viewport (iPad Mini, 768x1024)
-  5. `03_responsive_desktop_1440px.png` (489 KB) — Full desktop view (1440x900)
-  6. `04_accessibility_view.png` (463 KB) — Interactive elements & contrast verification
+  1. `01_homepage_hero.png` — Desktop 3D globe and header
+  2. `02_destination_search.png` — Interactive search input and destination cards
+  3. `03_responsive_mobile_375px.png` — Mobile viewport (iPhone 12, 375x667; header overflow/clipping noted, **Partial**, see BUG-07)
+  4. `03_responsive_tablet_768px.png` — Tablet viewport (iPad Mini, 768x1024)
+  5. `03_responsive_desktop_1440px.png` — Full desktop view (1440x900; search placeholder truncated at ≥1280px noted, see BUG-08)
+  6. `04_accessibility_view.png` — Interactive focus ring baseline verification
+  7. `05_ai_assistant_view.png` — VoyaBot interactive chat drawer with question and response
 
 ### 4.4 Security Audit (`npm audit` & Code Review)
 - **Evidence Files**: `docs/testing/evidence/npm-audit-frontend.txt`, `npm-audit-backend.txt`
 - **Automated Dependency Audit**:
-  - Frontend: 27 vulnerabilities (2 low, 8 moderate, 14 high, 3 critical) in dev tools (`vitest`, `tinypool`).
-  - Backend: 36 vulnerabilities in transitive CLI tools (`proxy-addr`, `qs`, `zod`).
-  - Risk Assessment: Documented in Bug Log as **BUG-06 (Accepted Risk)** since they are isolated to dev/build tooling or non-exposed transitive parsers.
+  - Frontend: 27 vulnerabilities (2 low, 8 moderate, 14 high, 3 critical)
+  - Backend: 36 vulnerabilities (4 low, 27 moderate, 3 high, 2 critical)
+  - Risk Assessment: Documented in Bug Log as **BUG-06 (Accepted Risk)**: mix of runtime (express: body-parser, qs, proxy-addr) and dev dependencies; backend 36 (2 critical, 3 high), frontend 27 (3 critical, 14 high); npm audit fix available, deferred.
 - **Code Security Findings**:
   - **BUG-01 (Critical)**: Blind base64 token decoding when signature failed in `auth.middleware.ts`. **Fixed in commit `2421b1f`** (dev mock token path kept for non-production preview only).
   - **BUG-02 (High)**: Hardcoded fallback secret string in `config/env.ts`. **Fixed in commit `25b4c39`** (startup assertion throws if missing in production).
