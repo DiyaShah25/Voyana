@@ -77,3 +77,4 @@ test('Collect browser performance and Core Web Vitals audit', async ({ page }) =
   fs.writeFileSync(path.join(outDir, 'lighthouse-report.html'), htmlReport, 'utf-8');
   console.log('Saved Lighthouse equivalent report to docs/testing/evidence/lighthouse-report.html');
 });
+

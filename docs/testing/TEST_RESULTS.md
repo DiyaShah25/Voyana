@@ -147,3 +147,4 @@ From Istanbul/v8 automated instrumentation (`npm run test:coverage`):
 ### 4.5 System Resilience & Fault Tolerance
 - **Backend Offline Handling**: Verified `aiChatService.ts` smoothly catches network failures and switches to the local deterministic contextual engine.
 - **LocalStorage Fallback**: Verified `authService.ts`, `bookingService.ts`, and `destinationService.ts` operate smoothly with seeded local records when remote API is unreachable.
+
