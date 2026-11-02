@@ -12,13 +12,13 @@ async function generatePdf() {
 <style>
   @page {
     size: A4;
-    margin: 18mm 15mm 18mm 15mm;
+    margin: 16mm 14mm 16mm 14mm;
   }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     color: #1e293b;
-    line-height: 1.5;
-    font-size: 10pt;
+    line-height: 1.45;
+    font-size: 9.5pt;
   }
   .cover-page {
     page-break-after: always;
@@ -26,23 +26,23 @@ async function generatePdf() {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    min-height: 90vh;
+    min-height: 88vh;
     text-align: center;
     border: 2px solid #3b82f6;
     border-radius: 12px;
-    padding: 40px 20px;
-    margin-top: 20px;
+    padding: 35px 20px;
+    margin-top: 15px;
   }
   .cover-title {
     font-size: 26pt;
     font-weight: 800;
     color: #1e3a8a;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
   .cover-subtitle {
-    font-size: 15pt;
+    font-size: 14pt;
     color: #2563eb;
-    margin-bottom: 30px;
+    margin-bottom: 25px;
   }
   .cover-badge {
     background: #eff6ff;
@@ -50,27 +50,27 @@ async function generatePdf() {
     color: #1d4ed8;
     padding: 6px 16px;
     border-radius: 9999px;
-    font-size: 11pt;
+    font-size: 10.5pt;
     font-weight: 600;
     display: inline-block;
-    margin-bottom: 30px;
+    margin-bottom: 25px;
   }
   .cover-meta {
-    margin-top: 30px;
+    margin-top: 20px;
     text-align: left;
-    width: 80%;
+    width: 82%;
     background: #f8fafc;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
-    padding: 20px;
-    font-size: 10.5pt;
+    padding: 18px;
+    font-size: 10pt;
   }
   .cover-meta table {
     width: 100%;
     border-collapse: collapse;
   }
   .cover-meta td {
-    padding: 6px 10px;
+    padding: 5px 8px;
     border: none;
   }
   .cover-meta td.label {
@@ -80,27 +80,27 @@ async function generatePdf() {
   }
   h1 {
     color: #0f172a;
-    font-size: 16pt;
+    font-size: 15pt;
     border-bottom: 2px solid #e2e8f0;
     padding-bottom: 4px;
-    margin-top: 24px;
+    margin-top: 20px;
     page-break-after: avoid;
   }
   h2 {
     color: #1e3a8a;
-    font-size: 12pt;
-    margin-top: 18px;
+    font-size: 11pt;
+    margin-top: 14px;
     page-break-after: avoid;
   }
   table {
     width: 100%;
     border-collapse: collapse;
-    margin: 12px 0;
-    font-size: 8.5pt;
+    margin: 10px 0;
+    font-size: 8pt;
   }
   th, td {
     border: 1px solid #cbd5e1;
-    padding: 5px 8px;
+    padding: 4px 6px;
     text-align: left;
     vertical-align: top;
   }
@@ -116,32 +116,32 @@ async function generatePdf() {
     background-color: #dcfce7;
     color: #166534;
     font-weight: bold;
-    padding: 2px 6px;
-    border-radius: 4px;
+    padding: 1px 5px;
+    border-radius: 3px;
     display: inline-block;
   }
   .badge-crit {
     background-color: #fee2e2;
     color: #991b1b;
     font-weight: bold;
-    padding: 2px 6px;
-    border-radius: 4px;
+    padding: 1px 5px;
+    border-radius: 3px;
     display: inline-block;
   }
   .badge-high {
     background-color: #fef3c7;
     color: #92400e;
     font-weight: bold;
-    padding: 2px 6px;
-    border-radius: 4px;
+    padding: 1px 5px;
+    border-radius: 3px;
     display: inline-block;
   }
   .badge-neutral {
     background-color: #e2e8f0;
     color: #334155;
     font-weight: bold;
-    padding: 2px 6px;
-    border-radius: 4px;
+    padding: 1px 5px;
+    border-radius: 3px;
     display: inline-block;
   }
   .page-break {
@@ -151,8 +151,9 @@ async function generatePdf() {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
     border-radius: 6px;
-    padding: 10px;
-    margin-bottom: 12px;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    font-size: 8.5pt;
   }
 </style>
 </head>
@@ -172,7 +173,7 @@ async function generatePdf() {
       </tr>
       <tr>
         <td class="label">Author / QA Lead:</td>
-        <td><strong>Bhavika Sainani</strong></td>
+        <td><strong>Bhavika Sainani</strong> (<code>bhavikasainani2608@gmail.com</code>)</td>
       </tr>
       <tr>
         <td class="label">Project Team:</td>
@@ -180,7 +181,7 @@ async function generatePdf() {
       </tr>
       <tr>
         <td class="label">Tested Commit Hash:</td>
-        <td><code>19b914a</code></td>
+        <td><code>13fbf2f</code> (Updated on <code>99ca84f</code>)</td>
       </tr>
       <tr>
         <td class="label">Repository:</td>
@@ -203,11 +204,12 @@ async function generatePdf() {
 <p>
 Voyana combines an AI itinerary recommendation engine (VoyaBot), interactive 3D Globe visualization, multi-modal travel bookings (Flights, Hotels, Transport), shared budget tracking, debt settlements, packing checklists, collaborative polls, and travel memories into an integrated web application.
 </p>
-<h2>1.1 Scope of Testing</h2>
+<h2>1.1 Scope of Testing & Coverage Boundaries</h2>
 <ul>
   <li><strong>In-Scope Modules:</strong> Authentication & Security, Destinations & Globe Canvas, AI Travel Assistant, Trip Workspaces, Bookings & Payments, OTP Verification, Real PDF E-Ticket Generation, Budgeting & Debt Settlement, Packing Checklists, Notifications, and Third-Party External APIs.</li>
-  <li><strong>In-Scope Testing Levels:</strong> Frontend Unit Testing (Vitest), Backend Integration & Supertest (Jest), UI/Visual E2E (Playwright), API Load Testing (Concurrent Benchmark), Security Analysis (npm audit & code audit), Cross-Browser and Accessibility Baselines.</li>
-  <li><strong>Known Gaps / Not Implemented:</strong> Multi-file chunked video streaming upload is not implemented on the backend; single image upload UI is supported. Live airline GDS pipes use deterministic mock providers.</li>
+  <li><strong>In-Scope Testing Levels:</strong> Frontend Unit Testing (Vitest), Backend Integration & Supertest (Jest), UI/Visual E2E (Playwright), Multi-Endpoint API Load Testing (Concurrent Benchmark), Security Analysis (npm audit & code review), Cross-Browser and Accessibility Baselines.</li>
+  <li><strong>Coverage & Scope Nuance:</strong> The 17 tested frontend service suites achieve 73.94% statement coverage across their specific files. Across all files in <code>src/services/</code>, statement coverage is 45.73%, as modules like <code>tripService.ts</code> (0%), <code>reviewService.ts</code> (0%), and <code>itineraryService.ts</code> (0%) lack isolated unit tests. These are verified through backend integration (<code>all-routes-integration.test.ts</code>) and Playwright E2E browser automation.</li>
+  <li><strong>Known Gaps / Not Implemented:</strong> Multi-file chunked video streaming upload is not implemented on the backend; single photo upload is supported. Live airline GDS pipes use deterministic mock catalog providers.</li>
 </ul>
 
 <h2>1.2 Test Environment & Configurations</h2>
@@ -233,8 +235,8 @@ Defects are prioritized from Critical (P1, blocking security/data loss) to Low (
 <h1>2. Test Execution Results & Metrics</h1>
 <div class="metric-card">
   <strong>Execution Summary:</strong> 29 Test Suites | 222 Automated Tests Executed | <strong>222 Passed | 0 Failed (100% Pass Rate)</strong><br>
-  <strong>Service Code Coverage:</strong> 73.94% Statements | 71.49% Branch | 86.58% Functions | 73.94% Lines<br>
-  <strong>Tested Commit:</strong> <code>19b914a</code> | Duration: Vitest (24.58s), Jest (32.92s), Playwright (15.2s)
+  <strong>Service Code Coverage:</strong> 73.94% Statements on tested modules (45.73% across all files in <code>src/services/</code>)<br>
+  <strong>Tested Commit:</strong> <code>13fbf2f</code> (Updated on <code>99ca84f</code>) | Duration: Vitest (24.58s), Jest (32.92s), Playwright (15.2s)
 </div>
 
 <h2>2.1 Automated Test Suites Summary</h2>
@@ -246,65 +248,100 @@ Defects are prioritized from Critical (P1, blocking security/data loss) to Low (
   <tr><td><strong>Total Automated Tests</strong></td><td><strong>29</strong></td><td><strong>222</strong></td><td><strong>222</strong></td><td><strong>0</strong></td><td><strong>100.0%</strong></td><td><strong>All automated regression tests verified</strong></td></tr>
 </table>
 
-<h2>2.2 Non-Functional Testing (NFR) Results</h2>
+<h2>2.2 Multi-Endpoint API Load Testing & Performance Benchmark</h2>
+<p><em>Real multi-endpoint benchmark executed with 10 concurrent connections on local Node.js v22.19.0 / Express server:</em></p>
+<table>
+  <tr><th>Benchmark Target</th><th>Endpoint Type</th><th>Total Requests</th><th>Throughput (RPS)</th><th>p50 Latency</th><th>p95 Latency</th><th>Max Latency</th><th>Error Rate</th><th>Status</th></tr>
+  <tr><td><code>GET /health</code></td><td>Health Ping (No DB)</td><td>2,700 reqs</td><td><strong>898.8 req/s</strong></td><td><strong>9.96 ms</strong></td><td><strong>15.99 ms</strong></td><td>68.35 ms</td><td>0.00%</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td><code>GET /api/destinations</code></td><td>Database Query (Mongoose)</td><td>1,214 reqs</td><td><strong>403.6 req/s</strong></td><td><strong>23.44 ms</strong></td><td><strong>30.85 ms</strong></td><td>76.51 ms</td><td>0.00%</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td><strong>Combined API Benchmark</strong></td><td>Multi-Endpoint</td><td><strong>3,914 reqs</strong></td><td><strong>651.2 req/s</strong></td><td><strong>14.20 ms</strong></td><td><strong>24.50 ms</strong></td><td>76.51 ms</td><td><strong>0.00%</strong></td><td><span class="badge-pass">Pass</span></td></tr>
+</table>
+
+<h2>2.3 Browser Core Web Vitals & Real Navigation Timings</h2>
 <table>
   <tr><th>NFR Aspect</th><th>Measurement / Tool</th><th>Observed Real Metric</th><th>Benchmark / Criteria</th><th>Status</th></tr>
-  <tr><td>Throughput (RPS)</td><td>Concurrent Load Suite</td><td><strong>1,125.8 req/sec</strong></td><td>&gt; 250 req/sec</td><td><span class="badge-pass">Pass</span></td></tr>
-  <tr><td>Latency p50 (Median)</td><td>Concurrent Load Suite</td><td><strong>8.08 ms</strong></td><td>&lt; 50 ms</td><td><span class="badge-pass">Pass</span></td></tr>
-  <tr><td>Latency p95</td><td>Concurrent Load Suite</td><td><strong>12.69 ms</strong></td><td>&lt; 150 ms</td><td><span class="badge-pass">Pass</span></td></tr>
-  <tr><td>Error Rate</td><td>4,510 Requests Target</td><td><strong>0.00% (0 errors)</strong></td><td>0.00%</td><td><span class="badge-pass">Pass</span></td></tr>
   <tr><td>Time to First Byte (TTFB)</td><td>Navigation Timing API</td><td><strong>17.3 ms</strong></td><td>&lt; 100 ms</td><td><span class="badge-pass">Pass</span></td></tr>
   <tr><td>DOM Content Loaded</td><td>Navigation Timing API</td><td><strong>297.6 ms</strong></td><td>&lt; 500 ms</td><td><span class="badge-pass">Pass</span></td></tr>
   <tr><td>First Contentful Paint (FCP)</td><td>Paint Timing API</td><td><strong>756.0 ms</strong></td><td>&lt; 1800 ms</td><td><span class="badge-pass">Pass</span></td></tr>
   <tr><td>Load Complete</td><td>Navigation Timing API</td><td><strong>304.0 ms</strong></td><td>&lt; 2000 ms</td><td><span class="badge-pass">Pass</span></td></tr>
-  <tr><td>Lighthouse Scores</td><td>Synthetic Categories</td><td><em>Not measured</em> (timing metrics measured directly)</td><td>N/A</td><td><span class="badge-neutral">Not measured</span></td></tr>
+  <tr><td>Lighthouse Synthetic Scores</td><td>Categories</td><td><em>Not measured</em> (timing metrics measured directly)</td><td>N/A</td><td><span class="badge-neutral">Not measured</span></td></tr>
   <tr><td>Responsive Layouts</td><td>Playwright Headless</td><td>375px (Mobile), 768px (Tablet), 1440px (Desktop)</td><td>Zero horizontal layout overflow</td><td><span class="badge-pass">Pass</span></td></tr>
 </table>
 
 <div class="page-break"></div>
 
-<!-- SECTION 3: TEST CASES & TRACEABILITY -->
-<h1>3. Test Cases & Requirements Traceability Matrix</h1>
+<!-- SECTION 3: ALL 33 TEST CASES -->
+<h1>3. Complete Test Cases & Traceability Matrix</h1>
+<p><em>The full suite of 33 test cases is presented below and matches <code>Voyana_Test_Cases.xlsx</code> exactly.</em></p>
 
-<h2>3.1 Core Test Cases</h2>
+<h2>3.1 Master Test Cases (33 Cases)</h2>
 <table>
   <tr><th>ID</th><th>Req / Jira</th><th>Module</th><th>Title</th><th>Precondition / Input</th><th>Expected Result</th><th>Status</th></tr>
   <tr><td>TC-AUTH-01</td><td>FR-AUTH-01 / VPM-16</td><td>Auth</td><td>User Registration Success</td><td>New user email</td><td>HTTP 201 Created</td><td><span class="badge-pass">Pass</span></td></tr>
   <tr><td>TC-AUTH-02</td><td>FR-AUTH-01 / VPM-16</td><td>Auth</td><td>Duplicate Email Rejection</td><td>Existing email</td><td>HTTP 400 Bad Request</td><td><span class="badge-pass">Pass</span></td></tr>
   <tr><td>TC-AUTH-03</td><td>FR-AUTH-02 / VPM-16</td><td>Auth</td><td>Login with Valid Password</td><td>Valid credentials</td><td>HTTP 200 OK + JWT</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td>TC-AUTH-04</td><td>FR-AUTH-02 / VPM-16</td><td>Auth</td><td>User Login Wrong Password</td><td>Wrong password</td><td>HTTP 401 Unauthorized</td><td><span class="badge-pass">Pass</span></td></tr>
   <tr><td>TC-AUTH-05</td><td>NFR-03 / VPM-16</td><td>Security</td><td>Tampered JWT Token Rejection</td><td>Forged signature</td><td>HTTP 401 Unauthorized</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td>TC-AUTH-06</td><td>NFR-03 / VPM-16</td><td>Security</td><td>Expired JWT Token Rejection</td><td>exp: -3600 token</td><td>HTTP 401 Token expired</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td>TC-AUTH-07</td><td>NFR-02 / VPM-16</td><td>Auth</td><td>Client Offline Sign-in Fallback</td><td>Network offline</td><td>Signs in via local fallback</td><td><span class="badge-pass">Pass</span></td></tr>
   <tr><td>TC-DST-01</td><td>FR-DST-01 / VPM-16</td><td>Destinations</td><td>List Curated Destinations</td><td>Seeded DB</td><td>HTTP 200 OK, 15+ items</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td>TC-DST-02</td><td>FR-DST-01 / VPM-16</td><td>Destinations</td><td>Filter Destinations by Region</td><td>region=Europe</td><td>HTTP 200, Europe items only</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td>TC-DST-03</td><td>FR-DST-02 / VPM-16</td><td>Destinations</td><td>Get Destination by Valid ID</td><td>dst-test-paris</td><td>HTTP 200 OK, returns destination</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td>TC-DST-04</td><td>FR-DST-02 / VPM-16</td><td>Destinations</td><td>Unknown Destination ID Returns 404</td><td>unknown-id-999</td><td>HTTP 404 Not Found</td><td><span class="badge-pass">Pass</span></td></tr>
   <tr><td>TC-AI-01</td><td>FR-AI-01 / VPM-38</td><td>AI Chat</td><td>AI Itinerary Recommendations</td><td>"Suggest 3-day Paris trip"</td><td>HTTP 200 OK with day citations</td><td><span class="badge-pass">Pass</span></td></tr>
-  <tr><td>TC-AI-04</td><td>NFR-01 / VPM-38</td><td>AI Chat</td><td>2.5s Remote Timeout Fallback</td><td>Server delay &gt; 2.5s</td><td>Local contextual advice</td><td><span class="badge-pass">Pass</span></td></tr>
-  <tr><td>TC-TRIP-01</td><td>FR-TRIP-01 / VPM-16</td><td>Trips</td><td>Collaborative Trip Creation</td><td>User logged in</td><td>HTTP 201 Created with owner</td><td><span class="badge-pass">Pass</span></td></tr>
-  <tr><td>TC-TRIP-03</td><td>FR-TRIP-03 / VPM-16</td><td>Collaboration</td><td>Group Voting Poll & Vote Tally</td><td>Trip active</td><td>HTTP 201 poll, vote tallied</td><td><span class="badge-pass">Pass</span></td></tr>
-  <tr><td>TC-BOOK-01</td><td>FR-BOOK-01 / VPM-16</td><td>Bookings</td><td>Flight Reservation Creation</td><td>User logged in</td><td>HTTP 201 Created (pending)</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td>TC-AI-02</td><td>FR-AI-02 / VPM-46</td><td>AI Chat</td><td>Contextual Day Citations</td><td>"What is budget on day 2?"</td><td>Cites itinerary days accurately</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td>TC-AI-03</td><td>FR-AI-01 / VPM-44</td><td>AI Chat</td><td>Validation on Empty Payload</td><td>message: ""</td><td>HTTP 400 Bad Request</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td>TC-AI-04</td><td>NFR-01 / VPM-38</td><td>AI Chat</td><td>2.5s Remote Timeout Fallback</td><td>Server delay &gt; 2.5s</td><td>Local contextual advice rendered</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td>TC-TRIP-01</td><td>FR-TRIP-01 / VPM-16</td><td>Trips</td><td>Collaborative Trip Creation</td><td>User logged in</td><td>HTTP 201 Created with owner member</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td>TC-TRIP-02</td><td>FR-TRIP-02 / VPM-16</td><td>Collaboration</td><td>Task Assignment in Trip</td><td>"Book Louvre tickets" -> Diya</td><td>HTTP 201 Created, task saved</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td>TC-TRIP-03</td><td>FR-TRIP-03 / VPM-16</td><td>Collaboration</td><td>Group Voting Poll & Vote Tally</td><td>Where to dine? Italian vs French</td><td>HTTP 201 poll, vote tallied</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td>TC-BOOK-01</td><td>FR-BOOK-01 / VPM-16</td><td>Bookings</td><td>Flight Reservation Creation</td><td>User logged in</td><td>HTTP 201 Created (pending status)</td><td><span class="badge-pass">Pass</span></td></tr>
   <tr><td>TC-BOOK-02</td><td>FR-BOOK-02 / VPM-16</td><td>Security</td><td>OTP Verification Prior to Payment</td><td>Pending booking</td><td>6-digit OTP verified in 5m TTL</td><td><span class="badge-pass">Pass</span></td></tr>
-  <tr><td>TC-BOOK-03</td><td>FR-BOOK-03 / VPM-16</td><td>Payments</td><td>Payment Status Confirmation</td><td>Card data</td><td>Status updated to confirmed</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td>TC-BOOK-03</td><td>FR-BOOK-03 / VPM-16</td><td>Payments</td><td>Payment Status Confirmation</td><td>Card data submitted</td><td>Status transitioned to confirmed</td><td><span class="badge-pass">Pass</span></td></tr>
   <tr><td>TC-BOOK-04</td><td>FR-BOOK-04 / VPM-16</td><td>Bookings</td><td>Real PDF E-Ticket Generation</td><td>Confirmed booking</td><td>Generates binary PDF document</td><td><span class="badge-pass">Pass</span></td></tr>
-  <tr><td>TC-BUD-01</td><td>FR-BUD-01 / VPM-41</td><td>Budget</td><td>Dynamic Budget Allocations</td><td>Total $5000</td><td>HTTP 200 OK</td><td><span class="badge-pass">Pass</span></td></tr>
-  <tr><td>TC-BUD-03</td><td>FR-BUD-04 / VPM-41</td><td>Budget</td><td>Debt Settlement Minimization</td><td>3 members with debts</td><td>Greedy net settlement computed</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td>TC-BOOK-05</td><td>FR-BOOK-05 / VPM-16</td><td>Bookings</td><td>Booking Cancellation Workflow</td><td>Confirmed booking</td><td>HTTP 200, status: cancelled</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td>TC-BUD-01</td><td>FR-BUD-01 / VPM-41</td><td>Budget</td><td>Dynamic Budget Allocations</td><td>Total $5000</td><td>HTTP 200 OK, allocations saved</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td>TC-BUD-02</td><td>FR-BUD-02 / VPM-67</td><td>Budget</td><td>Shared Multi-Member Expense</td><td>USD 45 / Alex Morgan / Food</td><td>HTTP 201 Created, added to ledger</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td>TC-BUD-03</td><td>FR-BUD-04 / VPM-41</td><td>Budget</td><td>Debt Settlement Minimization</td><td>3 members with reciprocal debts</td><td>Greedy net settlement computed</td><td><span class="badge-pass">Pass</span></td></tr>
   <tr><td>TC-PCK-01</td><td>FR-PCK-01 / VPM-42</td><td>Packing</td><td>Default Packing Checklist Init</td><td>Trip initialized</td><td>HTTP 200 OK, default items</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td>TC-PCK-02</td><td>FR-PCK-03 / VPM-191</td><td>Packing</td><td>Add and Toggle Packing Item</td><td>Power Bank / Alex Morgan</td><td>HTTP 200, item added & toggled</td><td><span class="badge-pass">Pass</span></td></tr>
   <tr><td>TC-ALT-01</td><td>FR-ALT-01 / VPM-16</td><td>Alerts</td><td>Automated Booking Notification</td><td>Booking confirmed</td><td>Notification created in ledger</td><td><span class="badge-pass">Pass</span></td></tr>
   <tr><td>TC-LIVE-01</td><td>FR-EXT-01 / VPM-16</td><td>ThirdParty</td><td>Missing Weather API Key</td><td>No key header</td><td>HTTP 401 Unauthorized</td><td><span class="badge-pass">Pass</span></td></tr>
   <tr><td>TC-LIVE-02</td><td>FR-EXT-01 / VPM-16</td><td>ThirdParty</td><td>Downstream Timeout Handling</td><td>Fetch hangs &gt; 3s</td><td>HTTP 504 Gateway Timeout</td><td><span class="badge-pass">Pass</span></td></tr>
-  <tr><td>TC-LIVE-03</td><td>FR-EXT-01 / VPM-16</td><td>ThirdParty</td><td>Downstream 5xx Handling</td><td>Upstream 500 error</td><td>HTTP 502 Bad Gateway</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td>TC-LIVE-03</td><td>FR-EXT-01 / VPM-16</td><td>ThirdParty</td><td>Downstream 5xx/4xx Handling</td><td>Upstream 500 error</td><td>HTTP 502 Bad Gateway</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td>TC-LIVE-04</td><td>FR-EXT-01 / VPM-16</td><td>ThirdParty</td><td>Malformed JSON Response</td><td>Upstream returns bad syntax</td><td>HTTP 502 Bad Gateway</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td>TC-LIVE-05</td><td>FR-EXT-02 / VPM-16</td><td>ThirdParty</td><td>Live Currency Exchange Rates</td><td>USD to EUR,GBP,INR</td><td>HTTP 200 OK, exchange rates returned</td><td><span class="badge-pass">Pass</span></td></tr>
 </table>
 
-<h2>3.2 Requirements Traceability Matrix (RTM)</h2>
+<div class="page-break"></div>
+
+<!-- SECTION 3.2: ALL 24 TRACEABILITY ROWS -->
+<h2>3.2 Requirements Traceability Matrix (All 24 Rows)</h2>
 <table>
   <tr><th>Requirement</th><th>Jira Key</th><th>Module Description</th><th>Implementation Source</th><th>Automated Suite</th><th>Verification</th></tr>
   <tr><td>FR-AUTH-01</td><td>VPM-16</td><td>User Registration & Email Uniqueness</td><td>authService.ts / auth.router.ts</td><td>authService.test.ts / all-routes</td><td><span class="badge-pass">Verified</span></td></tr>
   <tr><td>FR-AUTH-02</td><td>VPM-16</td><td>User Authentication & Token Grant</td><td>authService.ts / auth.middleware.ts</td><td>auth-middleware.test.ts</td><td><span class="badge-pass">Verified</span></td></tr>
   <tr><td>FR-DST-01</td><td>VPM-16</td><td>Curated Destinations & Region Search</td><td>destinationService.ts / destinations.router.ts</td><td>destinationService.test.ts</td><td><span class="badge-pass">Verified</span></td></tr>
+  <tr><td>FR-DST-02</td><td>VPM-16</td><td>Destination Query & Details</td><td>destinations.router.ts</td><td>all-routes-integration.test.ts</td><td><span class="badge-pass">Verified</span></td></tr>
   <tr><td>FR-AI-01</td><td>VPM-38</td><td>AI Chat Itinerary Advice & Citations</td><td>aiChatService.ts / chat.router.ts</td><td>chat.test.ts / aiChatService.test.ts</td><td><span class="badge-pass">Verified</span></td></tr>
+  <tr><td>FR-AI-02</td><td>VPM-46</td><td>Contextual Citation Engine</td><td>chat-service.ts / llm/client-factory.ts</td><td>chat.test.ts</td><td><span class="badge-pass">Verified</span></td></tr>
+  <tr><td>FR-AI-03</td><td>VPM-44</td><td>Zod Payload & Schema Validation</td><td>schemas/chat.schema.ts</td><td>schemas.test.ts</td><td><span class="badge-pass">Verified</span></td></tr>
   <tr><td>FR-TRIP-01</td><td>VPM-16</td><td>Collaborative Trip Workspaces</td><td>trips.router.ts</td><td>all-routes-integration.test.ts</td><td><span class="badge-pass">Verified</span></td></tr>
+  <tr><td>FR-TRIP-02</td><td>VPM-16</td><td>Shared Task Assignments</td><td>collaboration.router.ts</td><td>all-routes-integration.test.ts</td><td><span class="badge-pass">Verified</span></td></tr>
+  <tr><td>FR-TRIP-03</td><td>VPM-16</td><td>Group Voting Polls & Tallies</td><td>collaboration.router.ts</td><td>collaborationService.test.ts</td><td><span class="badge-pass">Verified</span></td></tr>
   <tr><td>FR-BOOK-01</td><td>VPM-16</td><td>Multi-Modal Booking Services</td><td>bookingService.ts / bookings.router.ts</td><td>bookingService.test.ts</td><td><span class="badge-pass">Verified</span></td></tr>
   <tr><td>FR-BOOK-02</td><td>VPM-16</td><td>OTP Verification Before Payment</td><td>otpService.ts</td><td>otpService.test.ts</td><td><span class="badge-pass">Verified</span></td></tr>
+  <tr><td>FR-BOOK-03</td><td>VPM-16</td><td>Payment Settlement & Transitions</td><td>paymentService.ts</td><td>paymentService.test.ts</td><td><span class="badge-pass">Verified</span></td></tr>
   <tr><td>FR-BOOK-04</td><td>VPM-16</td><td>Real PDF E-Ticket & Voucher Downloads</td><td>ticketService.ts</td><td>ticketService.test.ts</td><td><span class="badge-pass">Verified</span></td></tr>
   <tr><td>FR-BUD-01</td><td>VPM-41</td><td>Dynamic Budget Allocations</td><td>budgetService.ts / budget.router.ts</td><td>budgetService.test.ts</td><td><span class="badge-pass">Verified</span></td></tr>
+  <tr><td>FR-BUD-02</td><td>VPM-67</td><td>Shared Multi-Member Expense Splits</td><td>budgetService.ts / budget.router.ts</td><td>all-routes-integration.test.ts</td><td><span class="badge-pass">Verified</span></td></tr>
+  <tr><td>FR-BUD-04</td><td>VPM-41</td><td>Debt Settlement Minimization Matrix</td><td>collaborationService.ts</td><td>collaborationService.test.ts</td><td><span class="badge-pass">Verified</span></td></tr>
   <tr><td>FR-PCK-01</td><td>VPM-42</td><td>Categorized Packing Checklist</td><td>packingService.ts / packing.router.ts</td><td>packingService.test.ts</td><td><span class="badge-pass">Verified</span></td></tr>
-  <tr><td>NFR-01</td><td>VPM-38</td><td>Throughput & Latency SLA</td><td>Vite / Express Microservice</td><td>performance-audit.spec.ts</td><td><span class="badge-pass">Verified</span></td></tr>
+  <tr><td>FR-ALT-01</td><td>VPM-16</td><td>Automated Status Alert Notification</td><td>alertService.ts / alerts.router.ts</td><td>alertService.test.ts</td><td><span class="badge-pass">Verified</span></td></tr>
+  <tr><td>FR-EXT-01</td><td>VPM-16</td><td>Third-Party Live Weather Fault Tolerance</td><td>live-travel.router.ts</td><td>live-travel-api.test.ts</td><td><span class="badge-pass">Verified</span></td></tr>
+  <tr><td>FR-EXT-02</td><td>VPM-16</td><td>Live Currency Conversion Rates</td><td>live-travel.router.ts / currencyService.ts</td><td>currencyService.test.ts</td><td><span class="badge-pass">Verified</span></td></tr>
+  <tr><td>NFR-01</td><td>VPM-38</td><td>Performance & Throughput SLA</td><td>Vite / Express Microservice</td><td>performance-audit.spec.ts</td><td><span class="badge-pass">Verified</span></td></tr>
+  <tr><td>NFR-02</td><td>VPM-16</td><td>Client Offline Resilience & LocalStorage</td><td>authService.ts / aiChatService.ts</td><td>authService.test.ts / aiChat</td><td><span class="badge-pass">Verified</span></td></tr>
   <tr><td>NFR-03</td><td>VPM-16</td><td>Strict Security & JWT Signature Policy</td><td>auth.middleware.ts</td><td>auth-middleware.test.ts</td><td><span class="badge-pass">Verified</span></td></tr>
 </table>
 
@@ -322,7 +359,7 @@ Defects are prioritized from Critical (P1, blocking security/data loss) to Low (
     <td>Security</td>
     <td>JWT Signature Verification Bypass via Base64 Fallback</td>
     <td><strong>Expected:</strong> 401 Unauthorized on forged signature.<br><strong>Actual:</strong> 200 OK (blindly decoded base64 payload).</td>
-    <td><strong>Fixed</strong> in commit <code>2421b1f</code>. Enforced strict <code>jwt.verify()</code>.</td>
+    <td><strong>Fixed in Production (Dev-Mode Risk Noted)</strong> in commit <code>2421b1f</code>. In production, strict verification is enforced. Dev fallback retained in non-prod.</td>
   </tr>
   <tr>
     <td><strong>BUG-02</strong></td>
@@ -330,7 +367,7 @@ Defects are prioritized from Critical (P1, blocking security/data loss) to Low (
     <td>Security</td>
     <td>Hardcoded Fallback JWT Secret in <code>config/env.ts</code></td>
     <td><strong>Expected:</strong> Startup crash if JWT_SECRET unset in prod.<br><strong>Actual:</strong> Replaced with strict throw on missing secret.</td>
-    <td><strong>Fixed</strong> in commit <code>25b4c39</code>.</td>
+    <td><strong>Fixed</strong> in commit <code>25b4c39</code>. Server throws fatal error on boot if missing.</td>
   </tr>
   <tr>
     <td><strong>BUG-03</strong></td>
@@ -346,7 +383,7 @@ Defects are prioritized from Critical (P1, blocking security/data loss) to Low (
     <td>Docs</td>
     <td>Initial Check: <code>docs/API_DOCUMENTATION.md</code> Missing</td>
     <td><strong>Expected:</strong> OpenAPI/REST documentation file exists.<br><strong>Actual:</strong> File exists with 1,290 lines in updated tree.</td>
-    <td><strong>Invalid / Closed</strong> (Confirmed present in repository).</td>
+    <td><strong>Invalid / Closed</strong> (Confirmed present in repository with 1,290 lines).</td>
   </tr>
   <tr>
     <td><strong>BUG-05</strong></td>
@@ -362,7 +399,7 @@ Defects are prioritized from Critical (P1, blocking security/data loss) to Low (
     <td>Security/Deps</td>
     <td>Known Vulnerabilities in Transitive & Dev Dependencies</td>
     <td><strong>Expected:</strong> Clean audit on dev tooling.<br><strong>Actual:</strong> 27 frontend & 36 backend CVEs in test/dev tooling.</td>
-    <td><strong>Accepted Risk</strong> (Documented; build & test harness only).</td>
+    <td><strong>Accepted Risk</strong> (Documented; isolated to dev build harnesses).</td>
   </tr>
 </table>
 
@@ -421,7 +458,7 @@ The seed script enforces a strict regex guard refusing execution if the connecti
   });
 
   await browser.close();
-  console.log('Successfully generated PDF deliverable at:', outPath);
+  console.log('Successfully regenerated complete PDF deliverable at:', outPath);
 }
 
 generatePdf().catch(console.error);
