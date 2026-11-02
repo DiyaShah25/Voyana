@@ -1,12 +1,16 @@
+import { checkoutReservation, type ReservationChoice } from './paymentService';
+import { getPlanningContext, selectPlanningTrip } from './planningContext';
+import { matchesDestination } from './destinationPolicy';
+import { restoreSession } from './authService';
 /**
  * Booking Management Service
  * Provides unified cross-service booking management, multi-service cancellation
  * with refund tiers, date/guest/class modifications with automatic price adjustments,
  * and automated alert triggers.
  */
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { supabase } from './supabaseClient';
 import { createAlert } from './alertService';
-import { initiatePayment, confirmPayment } from './paymentService';
+
 import { apiRequest } from './apiClient';
 
 // ---------------------------------------------------------------------------
@@ -19,12 +23,16 @@ export type PaymentStatus = 'unpaid' | 'authorized' | 'paid' | 'refunded' | 'fai
 export interface UnifiedBooking {
   id: string;
   userId: string;
+  destination?: string;
+  tripId?: string;
+  details?: Record<string, unknown>;
   bookingReference: string;
   bookingType: BookingType;
   status: BookingStatus;
   totalAmount: number;
   currency: string;
   paymentStatus: PaymentStatus;
+  paymentReference?: string;
   contactEmail: string;
   contactPhone?: string;
   specialRequests?: string;
@@ -60,6 +68,8 @@ export interface UnifiedBooking {
     nightlyRate: number;
   };
   transportDetails?: {
+    destinationCity?: string;
+    originCity?: string;
     providerName: string;
     transportType: string;
     originLocation: string;
@@ -106,17 +116,7 @@ export interface ModificationResult {
 // ---------------------------------------------------------------------------
 // Supabase Client Setup
 // ---------------------------------------------------------------------------
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-let supabase: SupabaseClient | null = null;
-if (supabaseUrl && supabaseKey) {
-  try {
-    supabase = createClient(supabaseUrl, supabaseKey);
-  } catch {
-    supabase = null;
-  }
-}
 
 // ---------------------------------------------------------------------------
 // LocalStorage & Mock Store for Offline / Demo Parity
@@ -592,18 +592,42 @@ function saveStoredBookings(bookings: UnifiedBooking[]) {
   }
 }
 
+export async function recordBooking(input: Omit<UnifiedBooking, 'id' | 'userId' | 'createdAt' | 'updatedAt'> & { userId?: string; choices?: ReservationChoice[] }): Promise<UnifiedBooking> {
+  const session = restoreSession();
+  const context = getPlanningContext();
+  if (!session) throw new Error('Sign in before booking your trip.');
+  if (!context.selected || !context.destination) throw new Error('Select a destination on the globe first.');
+  const actual = input.flightDetails?.destinationCity || input.hotelDetails?.city || input.transportDetails?.destinationCity || input.destination;
+  if (!actual || !matchesDestination(context.destination, actual)) throw new Error('This service does not match the selected destination.');
+  const booking: UnifiedBooking = {
+    ...input, id: crypto.randomUUID(), userId: session.user.id, destination: context.destination,
+    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+  };
+  if (!input.choices?.length) throw new Error('Search again to get a current reservation quote.');
+  if (context.trip && context.trip.ownerId !== session.user.id) throw new Error('Only the group leader can book for this trip.');
+  const confirmed = await checkoutReservation({...booking, travelMode: context.trip?.travelMode || context.bookingMode || 'solo', tripId: context.trip?.id});
+  const response = {data: confirmed};
+  const saved = response.data.booking;
+  saveStoredBookings([saved, ...getStoredBookings().filter(item => item.bookingReference !== saved.bookingReference)]);
+  const { getStoredTrips, saveStoredTrips } = await import('./tripService');
+  saveStoredTrips([response.data.trip, ...getStoredTrips().filter(trip => trip.id !== response.data!.trip.id)]);
+  selectPlanningTrip(response.data.trip);
+  window.dispatchEvent(new Event('voyana:booking-changed'));
+  return saved;
+}
+
 // ---------------------------------------------------------------------------
 // 1. Fetch User Bookings Across All Three Types (getUserBookings)
 // ---------------------------------------------------------------------------
-export async function getUserBookings(userId: string = 'usr-demo-01'): Promise<UnifiedBooking[]> {
+export async function getUserBookings(userId: string = restoreSession()?.user.id || 'usr-traveler-03'): Promise<UnifiedBooking[]> {
   // 1. Fetch from shared MongoDB Atlas backend
   try {
-    const apiRes = await apiRequest<{ ok: boolean; bookings: UnifiedBooking[] }>('/api/bookings');
-    if (apiRes.ok && apiRes.data?.bookings && apiRes.data.bookings.length > 0) {
+    const apiRes = await apiRequest<{ ok: boolean; bookings: UnifiedBooking[] }>(`/api/bookings?userId=${encodeURIComponent(userId)}`);
+    if (apiRes.ok && apiRes.data?.bookings && Array.isArray(apiRes.data.bookings)) {
       saveStoredBookings(apiRes.data.bookings);
       return apiRes.data.bookings;
     }
-  } catch { }
+  } catch { /* Retain the local preview fallback when the remote service is unavailable. */ }
 
   // If Supabase is connected, query joined tables
   if (supabase) {
@@ -675,7 +699,7 @@ export async function getUserBookings(userId: string = 'usr-demo-01'): Promise<U
         .order('created_at', { ascending: false });
 
       if (!error && bookings && bookings.length > 0) {
-        const mapped: UnifiedBooking[] = bookings.map((b: any) => {
+        const mapped: UnifiedBooking[] = bookings.map((b) => {
           const item: UnifiedBooking = {
             id: b.id,
             userId: b.user_id,
@@ -694,7 +718,7 @@ export async function getUserBookings(userId: string = 'usr-demo-01'): Promise<U
 
           if (b.booking_type === 'flight' && b.flight_bookings?.[0]) {
             const fb = b.flight_bookings[0];
-            const f = fb.flights;
+            const f = Array.isArray(fb?.flights) ? fb.flights[0] : fb?.flights;
             item.flightDetails = {
               flightNumber: f?.flight_number || 'FL-001',
               airline: f?.airline || 'Airline',
@@ -713,7 +737,7 @@ export async function getUserBookings(userId: string = 'usr-demo-01'): Promise<U
             };
           } else if (b.booking_type === 'hotel' && b.hotel_bookings?.[0]) {
             const hb = b.hotel_bookings[0];
-            const h = hb.hotels;
+            const h = Array.isArray(hb?.hotels) ? hb.hotels[0] : hb?.hotels;
             item.hotelDetails = {
               hotelName: h?.name || 'Grand Hotel',
               city: h?.city || 'City',
@@ -728,7 +752,7 @@ export async function getUserBookings(userId: string = 'usr-demo-01'): Promise<U
             };
           } else if (b.booking_type === 'transport' && b.transport_bookings?.[0]) {
             const tb = b.transport_bookings[0];
-            const t = tb.transport;
+            const t = Array.isArray(tb?.transport) ? tb.transport[0] : tb?.transport;
             item.transportDetails = {
               providerName: t?.provider_name || 'Ground Transport',
               transportType: t?.transport_type || 'private_transfer',
@@ -762,7 +786,7 @@ export async function getUserBookings(userId: string = 'usr-demo-01'): Promise<U
     }
   }
 
-  return getStoredBookings();
+  return getStoredBookings().filter(booking => booking.userId === userId);
 }
 
 // ---------------------------------------------------------------------------
@@ -871,25 +895,15 @@ export async function modifyBooking(
 
   updated.totalAmount = newTotal;
 
-  // 2. Supabase Sync if active
-  if (supabase) {
-    try {
-      await supabase
-        .from('bookings')
-        .update({
-          total_amount: newTotal,
-          special_requests: updated.specialRequests || null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', bookingId);
-    } catch (err) {
-      console.warn('[BookingService] Supabase update warning:', err);
-    }
-  }
+  const sync = await apiRequest(`/api/bookings/${encodeURIComponent(bookingId)}`, {
+    method: 'PUT', body: JSON.stringify({ totalAmount: updated.totalAmount, specialRequests: updated.specialRequests, flightDetails: updated.flightDetails, hotelDetails: updated.hotelDetails, transportDetails: updated.transportDetails }),
+  });
+  if (!sync.ok) return { success: false, priceDifference: 0, requiresPayment: false, error: sync.error };
 
   // 3. Update Local Storage
   currentList[index] = updated;
   saveStoredBookings(currentList);
+  window.dispatchEvent(new Event('voyana:booking-changed'));
 
   // 4. Trigger Realtime Alert Notification via alertService.ts
   const fareAdjustmentText =
@@ -937,13 +951,10 @@ export async function cancelBooking(
   target.paymentStatus = 'refunded';
   target.updatedAt = new Date().toISOString();
 
-  // Shared MongoDB Atlas Backend cancellation
-  try {
-    await apiRequest(`/api/bookings/${encodeURIComponent(target.bookingReference || bookingId)}/cancel`, {
-      method: 'POST',
-      body: JSON.stringify({ reason }),
-    });
-  } catch { }
+  const response = await apiRequest(`/api/bookings/${encodeURIComponent(target.bookingReference || bookingId)}/cancel`, {
+    method: 'POST', body: JSON.stringify({ reason }),
+  });
+  if (!response.ok) return { success: false, error: response.error || 'Cancellation could not be saved.' };
 
   if (supabase) {
     try {
@@ -957,6 +968,7 @@ export async function cancelBooking(
   }
 
   saveStoredBookings(currentList);
+  window.dispatchEvent(new Event('voyana:booking-changed'));
 
   // Trigger alert
   await createAlert({

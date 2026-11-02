@@ -1,3 +1,5 @@
+import { getPlanningContext } from './planningContext';
+import { fetchTripBudget, addExpense, type ExpenseCategory } from './budgetService';
 /**
  * Trip Collaboration Service
  * Powers multi-user trip collaboration features: group chat, task boards,
@@ -5,7 +7,6 @@
  * and travel memories/journal entries. Uses localStorage for preview mode.
  */
 
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { apiRequest } from './apiClient';
 
 // --- Types & Interfaces ---
@@ -98,41 +99,11 @@ export interface TripMemory {
 // ---------------------------------------------------------------------------
 // Mock Store in LocalStorage
 // ---------------------------------------------------------------------------
-const CHAT_KEY = 'voyana.trip_chat';
 const TASKS_KEY = 'voyana.trip_tasks';
 const POLLS_KEY = 'voyana.trip_polls';
 const EXPENSES_KEY = 'voyana.trip_expenses';
 const DOCS_KEY = 'voyana.trip_docs';
 const MEMORIES_KEY = 'voyana.trip_memories';
-
-const INITIAL_CHAT: Record<string, TripChatMessage[]> = {
-  'trip-user-01': [
-    {
-      id: 'msg-01',
-      tripId: 'trip-user-01',
-      senderName: 'Megha Lalwani',
-      message: 'Hey everyone! Welcome to the Paris trip workspace. Let us finalize our museum itinerary and dinner plans here!',
-      messageType: 'text',
-      createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-    },
-    {
-      id: 'msg-02',
-      tripId: 'trip-user-01',
-      senderName: 'Bhavika Sainani',
-      message: 'I have confirmed our high-speed Eurostar transport and hotel reservation at Ritz Paris!',
-      messageType: 'text',
-      createdAt: new Date(Date.now() - 86400000 * 1.5).toISOString(),
-    },
-    {
-      id: 'msg-03',
-      tripId: 'trip-user-01',
-      senderName: 'Diya Shah',
-      message: 'Awesome! I created a poll for our Day 2 dinner restaurant. Please vote!',
-      messageType: 'activity_log',
-      createdAt: new Date(Date.now() - 86400000 * 0.5).toISOString(),
-    },
-  ],
-};
 
 const INITIAL_TASKS: Record<string, TripTask[]> = {
   'trip-user-01': [
@@ -317,64 +288,19 @@ const INITIAL_MEMORIES: Record<string, TripMemory[]> = {
 // 1. Group Chat Methods
 // ---------------------------------------------------------------------------
 export async function getTripChatMessages(tripId: string): Promise<TripChatMessage[]> {
-  try {
-    const res = await apiRequest<{ ok: boolean; messages: TripChatMessage[] }>(`/api/collaboration/${tripId}/chat`);
-    if (res.ok && res.data?.messages && res.data.messages.length > 0) {
-      const raw = localStorage.getItem(CHAT_KEY);
-      const store = raw ? JSON.parse(raw) : INITIAL_CHAT;
-      store[tripId] = res.data.messages;
-      localStorage.setItem(CHAT_KEY, JSON.stringify(store));
-      return res.data.messages;
-    }
-  } catch {}
-
-  try {
-    const raw = localStorage.getItem(CHAT_KEY);
-    const store = raw ? JSON.parse(raw) : INITIAL_CHAT;
-    return store[tripId] || INITIAL_CHAT['trip-user-01'] || [];
-  } catch {
-    return INITIAL_CHAT[tripId] || INITIAL_CHAT['trip-user-01'] || [];
-  }
+  const res = await apiRequest<{ messages: TripChatMessage[] }>(`/api/collaboration/${encodeURIComponent(tripId)}/chat`);
+  return res.ok ? res.data?.messages || [] : [];
 }
 
 export async function sendTripChatMessage(
-  tripId: string,
-  message: string,
-  senderName: string = 'Megha Lalwani',
+  tripId: string, message: string, senderName = 'Voyana Traveler',
   messageType: 'text' | 'activity_log' | 'poll_share' | 'image' = 'text'
 ): Promise<TripChatMessage> {
-  try {
-    const res = await apiRequest<{ ok: boolean; message: TripChatMessage }>(`/api/collaboration/${tripId}/chat`, {
-      method: 'POST',
-      body: JSON.stringify({ message, senderName, messageType }),
-    });
-    if (res.ok && res.data?.message) {
-      const raw = localStorage.getItem(CHAT_KEY);
-      const store = raw ? JSON.parse(raw) : INITIAL_CHAT;
-      if (!store[tripId]) store[tripId] = [];
-      store[tripId].push(res.data.message);
-      localStorage.setItem(CHAT_KEY, JSON.stringify(store));
-      return res.data.message;
-    }
-  } catch {}
-
-  const raw = localStorage.getItem(CHAT_KEY);
-  const store = raw ? JSON.parse(raw) : INITIAL_CHAT;
-
-  if (!store[tripId]) store[tripId] = [];
-
-  const newMsg: TripChatMessage = {
-    id: `msg-${Date.now()}`,
-    tripId,
-    senderName,
-    message,
-    messageType,
-    createdAt: new Date().toISOString(),
-  };
-
-  store[tripId].push(newMsg);
-  localStorage.setItem(CHAT_KEY, JSON.stringify(store));
-  return newMsg;
+  const res = await apiRequest<{ message: TripChatMessage }>(`/api/collaboration/${encodeURIComponent(tripId)}/chat`, {
+    method: 'POST', body: JSON.stringify({ message, senderName, messageType }),
+  });
+  if (!res.ok || !res.data?.message) throw new Error(res.error || 'Message could not be sent. Please try again.');
+  return res.data.message;
 }
 
 // ---------------------------------------------------------------------------
@@ -390,14 +316,14 @@ export async function getTripTasks(tripId: string): Promise<TripTask[]> {
       localStorage.setItem(TASKS_KEY, JSON.stringify(store));
       return res.data.tasks;
     }
-  } catch {}
+  } catch { /* Retain local preview data when remote synchronization fails. */ }
 
   try {
     const raw = localStorage.getItem(TASKS_KEY);
     const store = raw ? JSON.parse(raw) : INITIAL_TASKS;
-    return store[tripId] || INITIAL_TASKS['trip-user-01'] || [];
+    return store[tripId] || [];
   } catch {
-    return INITIAL_TASKS[tripId] || INITIAL_TASKS['trip-user-01'] || [];
+    return INITIAL_TASKS[tripId] || [];
   }
 }
 
@@ -418,7 +344,7 @@ export async function createTripTask(
       localStorage.setItem(TASKS_KEY, JSON.stringify(store));
       return res.data.task;
     }
-  } catch {}
+  } catch { /* Retain local preview data when remote synchronization fails. */ }
 
   const raw = localStorage.getItem(TASKS_KEY);
   const store = raw ? JSON.parse(raw) : INITIAL_TASKS;
@@ -447,7 +373,7 @@ export async function updateTripTaskStatus(
       method: 'PUT',
       body: JSON.stringify({ status: newStatus }),
     });
-  } catch {}
+  } catch { /* Retain local preview data when remote synchronization fails. */ }
 
   const raw = localStorage.getItem(TASKS_KEY);
   const store = raw ? JSON.parse(raw) : INITIAL_TASKS;
@@ -476,14 +402,14 @@ export async function getTripPolls(tripId: string): Promise<TripPoll[]> {
       localStorage.setItem(POLLS_KEY, JSON.stringify(store));
       return res.data.polls;
     }
-  } catch {}
+  } catch { /* Retain local preview data when remote synchronization fails. */ }
 
   try {
     const raw = localStorage.getItem(POLLS_KEY);
     const store = raw ? JSON.parse(raw) : INITIAL_POLLS;
-    return store[tripId] || INITIAL_POLLS['trip-user-01'] || [];
+    return store[tripId] || [];
   } catch {
-    return INITIAL_POLLS[tripId] || INITIAL_POLLS['trip-user-01'] || [];
+    return INITIAL_POLLS[tripId] || [];
   }
 }
 
@@ -492,6 +418,16 @@ export async function createTripPoll(
   question: string,
   optionTexts: string[]
 ): Promise<TripPoll> {
+  const result = await apiRequest<{ poll: TripPoll }>(`/api/collaboration/${encodeURIComponent(tripId)}/polls`, {
+    method: 'POST', body: JSON.stringify({ question, options: optionTexts }),
+  });
+  if (result.ok && result.data?.poll) {
+    const raw = localStorage.getItem(POLLS_KEY);
+    const store = raw ? JSON.parse(raw) : {};
+    store[tripId] = [result.data.poll, ...(store[tripId] || [])];
+    localStorage.setItem(POLLS_KEY, JSON.stringify(store));
+    return result.data.poll;
+  }
   const raw = localStorage.getItem(POLLS_KEY);
   const store = raw ? JSON.parse(raw) : INITIAL_POLLS;
 
@@ -531,6 +467,18 @@ export async function voteTripPoll(
   const target = store[tripId].find((p: TripPoll) => p.id === pollId);
   if (!target || target.isClosed) return null;
 
+  const selected = target.options[optionIndex];
+  if (!selected) return null;
+  const result = await apiRequest<{ poll: TripPoll }>(`/api/collaboration/${encodeURIComponent(tripId)}/polls/${encodeURIComponent(pollId)}/vote`, {
+    method: 'POST', body: JSON.stringify({ optionId: selected.id, voterName }),
+  });
+  if (result.ok && result.data?.poll) {
+    const saved = { ...result.data.poll, userVotedOption: optionIndex };
+    store[tripId] = store[tripId].map((poll: TripPoll) => poll.id === pollId ? saved : poll);
+    localStorage.setItem(POLLS_KEY, JSON.stringify(store));
+    return saved;
+  }
+
   // Remove previous vote if any
   target.options.forEach((opt: PollOption) => {
     const idx = opt.voterNames.indexOf(voterName);
@@ -557,6 +505,10 @@ export async function voteTripPoll(
 // 4. Expense Splitting & Debt Settlement Calculator
 // ---------------------------------------------------------------------------
 export async function getTripExpenses(tripId: string): Promise<TripExpense[]> {
+  if (getPlanningContext().id === tripId) {
+    const budget = await fetchTripBudget();
+    return budget.expenses.map(expense => ({ ...expense, tripId, currency: budget.currency }));
+  }
   try {
     const raw = localStorage.getItem(EXPENSES_KEY);
     const store = raw ? JSON.parse(raw) : INITIAL_EXPENSES;
@@ -570,6 +522,13 @@ export async function addTripExpense(
   tripId: string,
   expense: Omit<TripExpense, 'id' | 'tripId'>
 ): Promise<TripExpense> {
+  if (getPlanningContext().id === tripId) {
+    const categories: Record<string, ExpenseCategory> = { Dining: 'Food & Dining', Accommodation: 'Accommodations', Sightseeing: 'Activities' };
+    const allowed = ['Flights', 'Accommodations', 'Food & Dining', 'Activities', 'Transport', 'Shopping', 'Miscellaneous'];
+    const category = categories[expense.category] || (allowed.includes(expense.category) ? expense.category as ExpenseCategory : 'Miscellaneous');
+    const budget = addExpense({ ...expense, category });
+    return { ...expense, id: budget.expenses[0].id, tripId };
+  }
   const raw = localStorage.getItem(EXPENSES_KEY);
   const store = raw ? JSON.parse(raw) : INITIAL_EXPENSES;
 
@@ -777,7 +736,7 @@ export async function getAllMemories(params?: {
 
     const queryString = query.toString() ? `?${query.toString()}` : '';
     const res = await apiRequest<{ ok: boolean; memories: TripMemory[] }>(`/api/memories${queryString}`);
-    if (res.ok && Array.isArray(res.data?.memories) && res.data.memories.length > 0) {
+    if (res.ok && Array.isArray(res.data?.memories)) {
       const raw = localStorage.getItem(MEMORIES_KEY);
       const store = raw ? JSON.parse(raw) : INITIAL_MEMORIES;
       res.data.memories.forEach((mem) => {
@@ -800,10 +759,10 @@ export async function getAllMemories(params?: {
   try {
     const raw = localStorage.getItem(MEMORIES_KEY);
     const store: Record<string, TripMemory[]> = raw ? JSON.parse(raw) : INITIAL_MEMORIES;
-    const all = Object.values(store).flat();
+    const all = params?.tripId ? (store[params.tripId] || []) : [];
     return all;
   } catch {
-    return Object.values(INITIAL_MEMORIES).flat();
+    return [];
   }
 }
 
@@ -817,7 +776,7 @@ export async function getTripMemories(tripId: string): Promise<TripMemory[]> {
       localStorage.setItem(MEMORIES_KEY, JSON.stringify(store));
       return res.data.memories;
     }
-  } catch {}
+  } catch { /* Retain local preview data when remote synchronization fails. */ }
 
   try {
     const raw = localStorage.getItem(MEMORIES_KEY);

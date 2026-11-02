@@ -38,7 +38,7 @@ export function requireAuth(req: AuthenticatedRequest, res: Response, next: Next
 
   try {
     // Verify using configured secret
-    const decoded = jwt.verify(token, config.jwtSecret) as any;
+    const decoded = jwt.verify(token, config.jwtSecret) as jwt.JwtPayload;
     req.user = {
       id: decoded.sub || decoded.id,
       email: decoded.email,
@@ -100,7 +100,7 @@ export function optionalAuth(req: AuthenticatedRequest, _res: Response, next: Ne
 
   const token = authHeader.split(' ')[1];
   try {
-    const decoded = jwt.verify(token, config.jwtSecret) as any;
+    const decoded = jwt.verify(token, config.jwtSecret) as jwt.JwtPayload;
     req.user = {
       id: decoded.sub || decoded.id,
       email: decoded.email,

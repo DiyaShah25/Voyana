@@ -1,3 +1,6 @@
+import { requireBookedTrip } from '../middleware/booked-trip.middleware.js';
+import { toError } from '../utils/errors.js';
+import { TripModel } from '../db/models/trip.model.js';
 /**
  * Smart Packing Checklist Router
  * Provides REST endpoints for trip packing checklists, category items,
@@ -10,6 +13,7 @@ import { PackingListModel, IPackingItem } from '../db/models/packing.model.js';
 import { optionalAuth, AuthenticatedRequest } from '../middleware/auth.middleware.js';
 
 export const packingRouter = Router();
+packingRouter.use('/:tripId', requireBookedTrip);
 
 const DEFAULT_ITEMS: IPackingItem[] = [
   {
@@ -53,19 +57,21 @@ packingRouter.get('/:tripId', optionalAuth, async (req: AuthenticatedRequest, re
     });
 
     if (!list) {
+      const trip = await TripModel.findOne({ id: tripId });
       list = new PackingListModel({
         id: tripId,
         tripId,
-        destination: 'Paris',
+        destination: trip?.destination || String(req.query.destination || 'Travel Destination'),
         tripDurationDays: 5,
         seasonOrWeather: 'Mild Autumn',
-        items: DEFAULT_ITEMS,
+        items: DEFAULT_ITEMS.map(item => ({ ...item, isPacked: false, assignedTo: 'Everyone' })),
       });
       await list.save();
     }
 
     res.status(200).json({ ok: true, list });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to retrieve packing list.', error: err?.message });
   }
 });
@@ -78,6 +84,8 @@ packingRouter.put('/:tripId', optionalAuth, async (req: AuthenticatedRequest, re
     const { tripId } = req.params;
     const updates = req.body;
     delete updates._id;
+    delete updates.id;
+    delete updates.tripId;
 
     const list = await PackingListModel.findOneAndUpdate(
       { $or: [{ id: tripId }, { tripId }] },
@@ -86,7 +94,8 @@ packingRouter.put('/:tripId', optionalAuth, async (req: AuthenticatedRequest, re
     );
 
     res.status(200).json({ ok: true, message: 'Packing checklist updated.', list });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to update packing list.', error: err?.message });
   }
 });
@@ -136,7 +145,8 @@ packingRouter.post('/:tripId/items', optionalAuth, async (req: AuthenticatedRequ
     await list.save();
 
     res.status(201).json({ ok: true, message: 'Item added.', item: newItem, list });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to add packing item.', error: err?.message });
   }
 });
@@ -169,7 +179,8 @@ packingRouter.put('/:tripId/items/:itemId', optionalAuth, async (req: Authentica
     await list.save();
 
     res.status(200).json({ ok: true, message: 'Item updated.', item, list });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to update item.', error: err?.message });
   }
 });
@@ -193,7 +204,8 @@ packingRouter.delete('/:tripId/items/:itemId', optionalAuth, async (req: Authent
     }
 
     res.status(200).json({ ok: true, message: 'Item removed.', list });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to delete item.', error: err?.message });
   }
 });

@@ -1,3 +1,4 @@
+import { toError } from '../utils/errors.js';
 /**
  * Destinations Router
  * REST endpoints for retrieving curated global destinations, coordinates,
@@ -15,7 +16,7 @@ export const destinationsRouter = Router();
 destinationsRouter.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
     const { region } = req.query;
-    const filter: Record<string, any> = {};
+    const filter: Record<string, unknown> = {};
 
     if (region && typeof region === 'string' && region.toLowerCase() !== 'all') {
       filter.region = new RegExp(`^${region.trim()}$`, 'i');
@@ -28,7 +29,8 @@ destinationsRouter.get('/', async (req: Request, res: Response): Promise<void> =
       count: destinations.length,
       destinations,
     });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     console.error('[DestinationsRouter] Error fetching destinations:', err);
     res.status(500).json({
       ok: false,
@@ -52,7 +54,8 @@ destinationsRouter.get('/:id', async (req: Request, res: Response): Promise<void
     }
 
     res.status(200).json({ ok: true, destination });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({
       ok: false,
       message: 'Failed to fetch destination details.',

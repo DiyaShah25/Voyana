@@ -1,3 +1,5 @@
+> Current implementation: [Project flow](PROJECT_FLOW.md) and [Verification report](VERIFICATION.md). The design documents below include historical and planned features.
+
 # Documentation
 
 This directory contains the documentation for the **Voyana** project.
