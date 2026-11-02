@@ -25,3 +25,4 @@ if (typeof AbortSignal !== 'undefined' && !AbortSignal.timeout) {
     return controller.signal;
   };
 }
+
