@@ -181,7 +181,7 @@ async function generatePdf() {
       </tr>
       <tr>
         <td class="label">Tested Commit Hash:</td>
-        <td><code>13fbf2f</code> (Updated on <code>99ca84f</code>)</td>
+        <td><code>b53a4f7</code></td>
       </tr>
       <tr>
         <td class="label">Repository:</td>
@@ -236,7 +236,7 @@ Defects are prioritized from Critical (P1, blocking security/data loss) to Low (
 <div class="metric-card">
   <strong>Execution Summary:</strong> 29 Test Suites | 222 Automated Tests Executed | <strong>222 Passed | 0 Failed (100% Pass Rate)</strong><br>
   <strong>Service Code Coverage:</strong> 73.94% Statements on tested modules (45.73% across all files in <code>src/services/</code>)<br>
-  <strong>Tested Commit:</strong> <code>13fbf2f</code> (Updated on <code>99ca84f</code>) | Duration: Vitest (24.58s), Jest (32.92s), Playwright (15.2s)
+  <strong>Tested Commit:</strong> <code>b53a4f7</code> | Duration: Vitest (24.58s), Jest (32.92s), Playwright (15.2s)
 </div>
 
 <h2>2.1 Automated Test Suites Summary</h2>
@@ -254,7 +254,6 @@ Defects are prioritized from Critical (P1, blocking security/data loss) to Low (
   <tr><th>Benchmark Target</th><th>Endpoint Type</th><th>Total Requests</th><th>Throughput (RPS)</th><th>p50 Latency</th><th>p95 Latency</th><th>Max Latency</th><th>Error Rate</th><th>Status</th></tr>
   <tr><td><code>GET /health</code></td><td>Health Ping (No DB)</td><td>2,700 reqs</td><td><strong>898.8 req/s</strong></td><td><strong>9.96 ms</strong></td><td><strong>15.99 ms</strong></td><td>68.35 ms</td><td>0.00%</td><td><span class="badge-pass">Pass</span></td></tr>
   <tr><td><code>GET /api/destinations</code></td><td>Database Query (Mongoose)</td><td>1,214 reqs</td><td><strong>403.6 req/s</strong></td><td><strong>23.44 ms</strong></td><td><strong>30.85 ms</strong></td><td>76.51 ms</td><td>0.00%</td><td><span class="badge-pass">Pass</span></td></tr>
-  <tr><td><strong>Combined API Benchmark</strong></td><td>Multi-Endpoint</td><td><strong>3,914 reqs</strong></td><td><strong>651.2 req/s</strong></td><td><strong>14.20 ms</strong></td><td><strong>24.50 ms</strong></td><td>76.51 ms</td><td><strong>0.00%</strong></td><td><span class="badge-pass">Pass</span></td></tr>
 </table>
 
 <h2>2.3 Browser Core Web Vitals & Real Navigation Timings</h2>
@@ -265,16 +264,16 @@ Defects are prioritized from Critical (P1, blocking security/data loss) to Low (
   <tr><td>First Contentful Paint (FCP)</td><td>Paint Timing API</td><td><strong>756.0 ms</strong></td><td>&lt; 1800 ms</td><td><span class="badge-pass">Pass</span></td></tr>
   <tr><td>Load Complete</td><td>Navigation Timing API</td><td><strong>304.0 ms</strong></td><td>&lt; 2000 ms</td><td><span class="badge-pass">Pass</span></td></tr>
   <tr><td>Lighthouse Synthetic Scores</td><td>Categories</td><td><em>Not measured</em> (timing metrics measured directly)</td><td>N/A</td><td><span class="badge-neutral">Not measured</span></td></tr>
-  <tr><td>Responsive Layouts</td><td>Playwright Headless</td><td>375px (Mobile), 768px (Tablet), 1440px (Desktop)</td><td>Zero horizontal layout overflow</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td>Responsive Layouts</td><td>Playwright Headless</td><td>375px (Mobile: navbar clipped on right, see BUG-07), 768px (Tablet), 1440px (Desktop)</td><td>Zero horizontal layout overflow</td><td><span class="badge-high">Partial (BUG-07)</span></td></tr>
 </table>
 
 <div class="page-break"></div>
 
-<!-- SECTION 3: ALL 33 TEST CASES -->
+<!-- SECTION 3: ALL 34 TEST CASES -->
 <h1>3. Complete Test Cases & Traceability Matrix</h1>
-<p><em>The full suite of 33 test cases is presented below and matches <code>Voyana_Test_Cases.xlsx</code> exactly.</em></p>
+<p><em>The full suite of 34 test cases is presented below and matches <code>Voyana_Test_Cases.xlsx</code> exactly.</em></p>
 
-<h2>3.1 Master Test Cases (33 Cases)</h2>
+<h2>3.1 Master Test Cases (34 Cases)</h2>
 <table>
   <tr><th>ID</th><th>Req / Jira</th><th>Module</th><th>Title</th><th>Precondition / Input</th><th>Expected Result</th><th>Status</th></tr>
   <tr><td>TC-AUTH-01</td><td>FR-AUTH-01 / VPM-16</td><td>Auth</td><td>User Registration Success</td><td>New user email</td><td>HTTP 201 Created</td><td><span class="badge-pass">Pass</span></td></tr>
@@ -343,6 +342,7 @@ Defects are prioritized from Critical (P1, blocking security/data loss) to Low (
   <tr><td>NFR-01</td><td>VPM-38</td><td>Performance & Throughput SLA</td><td>Vite / Express Microservice</td><td>performance-audit.spec.ts</td><td><span class="badge-pass">Verified</span></td></tr>
   <tr><td>NFR-02</td><td>VPM-16</td><td>Client Offline Resilience & LocalStorage</td><td>authService.ts / aiChatService.ts</td><td>authService.test.ts / aiChat</td><td><span class="badge-pass">Verified</span></td></tr>
   <tr><td>NFR-03</td><td>VPM-16</td><td>Strict Security & JWT Signature Policy</td><td>auth.middleware.ts</td><td>auth-middleware.test.ts</td><td><span class="badge-pass">Verified</span></td></tr>
+  <tr><td>NFR-04</td><td>VPM-16</td><td>Responsive UI & Accessibility</td><td>Tailwind CSS / React</td><td>voyana-flows.spec.ts</td><td><span class="badge-high">Partial (BUG-07)</span></td></tr>
 </table>
 
 <div class="page-break"></div>
@@ -366,7 +366,7 @@ Defects are prioritized from Critical (P1, blocking security/data loss) to Low (
     <td><span class="badge-high">High</span></td>
     <td>Security</td>
     <td>Hardcoded Fallback JWT Secret in <code>config/env.ts</code></td>
-    <td><strong>Expected:</strong> Startup crash if JWT_SECRET unset in prod.<br><strong>Actual:</strong> Replaced with strict throw on missing secret.</td>
+    <td><strong>Expected:</strong> Startup crash if JWT_SECRET unset in prod.<br><strong>Actual:</strong> Started silently with hardcoded team secret.</td>
     <td><strong>Fixed</strong> in commit <code>25b4c39</code>. Server throws fatal error on boot if missing.</td>
   </tr>
   <tr>
@@ -391,15 +391,31 @@ Defects are prioritized from Critical (P1, blocking security/data loss) to Low (
     <td>Functional</td>
     <td>Missing Multi-File / Chunked Video Upload Endpoint</td>
     <td><strong>Expected:</strong> Multipart video streaming endpoint exists.<br><strong>Actual:</strong> Only single JSON mediaUrl accepted in memories router.</td>
-    <td><strong>Open</strong> (Formally documented in Test Plan Section 2.3).</td>
+    <td><strong>Open</strong> (Formally documented in Test Plan Section 1.1).</td>
   </tr>
   <tr>
     <td><strong>BUG-06</strong></td>
     <td>Moderate</td>
     <td>Security/Deps</td>
     <td>Known Vulnerabilities in Transitive & Dev Dependencies</td>
-    <td><strong>Expected:</strong> Clean audit on dev tooling.<br><strong>Actual:</strong> 27 frontend & 36 backend CVEs in test/dev tooling.</td>
-    <td><strong>Accepted Risk</strong> (Documented; isolated to dev build harnesses).</td>
+    <td><strong>Expected:</strong> Zero unvetted dependencies.<br><strong>Actual:</strong> mix of runtime (express: body-parser, qs, proxy-addr) and dev dependencies; backend 36 (2 critical, 3 high), frontend 27 (3 critical, 14 high); npm audit fix available, deferred.</td>
+    <td><strong>Accepted Risk</strong> (npm audit fix available, deferred).</td>
+  </tr>
+  <tr>
+    <td><strong>BUG-07</strong></td>
+    <td>Medium</td>
+    <td>UI / Responsive</td>
+    <td>Header Navigation Bar Clipped & Overflow at 375px Mobile Viewport</td>
+    <td><strong>Expected:</strong> Fits cleanly within 375px viewport.<br><strong>Actual:</strong> Header clipped at right ("Sign In" cut, menu missing).</td>
+    <td><strong>Open (Partial)</strong> (Responsive testing marked Partial).</td>
+  </tr>
+  <tr>
+    <td><strong>BUG-08</strong></td>
+    <td>Low</td>
+    <td>UI / Search</td>
+    <td>Destination Search Placeholder Truncated as "regior" at ≥1280px</td>
+    <td><strong>Expected:</strong> Complete placeholder string.<br><strong>Actual:</strong> Clipped placeholder text "regior".</td>
+    <td><strong>Open</strong>.</td>
   </tr>
 </table>
 

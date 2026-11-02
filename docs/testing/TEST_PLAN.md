@@ -4,7 +4,7 @@
 **Project**: Voyana — Collaborative AI-Assisted Travel Platform  
 **Author / QA Lead**: Bhavika Sainani  
 **Team Members**: Diya Shah, Nigam Sanghvi, Tirth Gandhi, Bhavika Sainani, Megha Lalwani, Manav Vyas, Bhavika Mulani, Jagrat Kumar  
-**Tested Commit**: `13fbf2f` (Updated on `99ca84f`)  
+**Tested Commit**: `b53a4f7`  
 **Date**: November 2, 2026  
 
 ---
@@ -14,6 +14,11 @@
 Voyana is a real-time collaborative travel planning and booking platform integrating an AI itinerary assistant (VoyaBot), interactive 3D Globe visualization, multi-service bookings (Flights, Hotels, Transport), shared budget tracking, debt settlements, packing checklists, collaborative polls, and travel memories.
 
 The primary objective of this Test Plan is to validate the correctness, security, reliability, performance, accessibility, and user experience of both the frontend client and backend microservices before university deliverable submission.
+
+### 1.1 Scope Boundaries & Known Technical Gaps
+- **Multi-File / Chunked Video Upload Router**: Formally documented as not implemented on backend (tracked as BUG-05); single photo/memory upload is supported.
+- **Responsive Viewport at 375px**: Mobile navbar layout clipping identified at 375px width (tracked as BUG-07; responsive verification marked Partial).
+- **Search Placeholder Truncation**: Search placeholder text truncated at ≥1280px (tracked as BUG-08).
 
 ---
 

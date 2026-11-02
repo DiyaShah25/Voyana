@@ -29,18 +29,20 @@ async function generateWorkbook() {
     { category: 'E2E & Non-Functional (Playwright)', suites: 2, executed: 6, passed: 6, failed: 0, rate: '100.0%', notes: 'Chromium visual flows, responsive views & a11y baseline' },
     { category: 'TOTAL AUTOMATED TESTS', suites: 29, executed: 222, passed: 222, failed: 0, rate: '100.0%', notes: 'All automated regression tests verified on codebase' },
     {},
-    { category: 'Load Benchmark: GET /health', suites: 1, executed: 2700, passed: 2700, failed: 0, rate: '100.0%', notes: '898.8 req/s throughput; 9.96ms p50; 0 errors (Health ping)' },
-    { category: 'Load Benchmark: GET /api/destinations', suites: 1, executed: 1214, passed: 1214, failed: 0, rate: '100.0%', notes: '403.6 req/s throughput; 23.44ms p50; 0 errors (Mongoose DB query)' },
-    { category: 'Browser Navigation & Web Vitals', suites: 1, executed: 5, passed: 5, failed: 0, rate: '100.0%', notes: 'TTFB 17.3ms, DOM Loaded 297.6ms, FCP 756ms (Real values)' },
-    { category: 'Security & Dependency Vulnerabilities', suites: 2, executed: 63, passed: 61, failed: 2, rate: '96.8%', notes: 'BUG-01 & BUG-02 Fixed; BUG-06 Accepted Risk' },
+    { category: 'Non-Test Operational Metrics & Benchmarks', notes: '(Independent operational metrics without pass/fail test tally)' },
+    { category: 'Load Benchmark: GET /health', notes: '2,700 requests | 898.8 req/s throughput | 9.96ms p50 | 0 errors (Health ping micro-benchmark)' },
+    { category: 'Load Benchmark: GET /api/destinations', notes: '1,214 requests | 403.6 req/s throughput | 23.44ms p50 | 0 errors (Mongoose DB query)' },
+    { category: 'Browser Navigation & Web Vitals', notes: 'TTFB 17.3ms, DOM Loaded 297.6ms, FCP 756.0ms, Load 304.0ms (W3C Real Metrics)' },
+    { category: 'Security & Dependency Vulnerabilities', notes: '36 backend CVEs (2 critical, 3 high), 27 frontend CVEs (3 critical, 14 high); Accepted Risk (BUG-06)' },
   ]);
 
   wsSummary.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
   wsSummary.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
   wsSummary.getRow(5).font = { bold: true };
+  wsSummary.getRow(7).font = { bold: true, italic: true, color: { argb: 'FF1E3A8A' } };
 
   // --------------------------------------------------------------------------
-  // SHEET 2: Test Cases (All 33 Cases)
+  // SHEET 2: Test Cases (All 34 Cases)
   // --------------------------------------------------------------------------
   const wsCases = wb.addWorksheet('Test Cases', { views: [{ showGridLines: true }] });
   wsCases.columns = [
@@ -136,7 +138,7 @@ async function generateWorkbook() {
     { req: 'FR-EXT-02', jira: 'VPM-16', name: 'Live Currency Conversion Rates', src: 'live-travel.router.ts / currencyService.ts', test: 'currencyService.test.ts', cases: 'TC-LIVE-05', status: 'Verified (Pass)' },
     { req: 'NFR-01', jira: 'VPM-38', name: 'Performance & Web Vitals Benchmark', src: 'Vite / Express Microservice', test: 'performance-audit.spec.ts', cases: 'TC-NFR-PERF-01', status: 'Verified (Pass)' },
     { req: 'NFR-02', jira: 'VPM-16', name: 'Client Offline Resilience & LocalStorage', src: 'authService.ts / aiChatService.ts', test: 'authService.test.ts', cases: 'TC-AUTH-07, TC-AI-04', status: 'Verified (Pass)' },
-    { req: 'NFR-03', jira: 'VPM-16', name: 'Strict Security & JWT Signature Policy', src: 'auth.middleware.ts', test: 'auth-middleware.test.ts', cases: 'TC-AUTH-05, TC-AUTH-06', status: 'Verified (Pass)' },
+    { req: 'NFR-04', jira: 'VPM-16', name: 'Responsive UI & Accessibility', src: 'Tailwind / React Components', test: 'voyana-flows.spec.ts', cases: 'TC-NFR-UI-01, TC-NFR-A11Y-01', status: 'Partial (BUG-07)' },
   ];
 
   traceData.forEach(row => wsTrace.addRow(row));
@@ -144,7 +146,7 @@ async function generateWorkbook() {
   wsTrace.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0D9488' } };
 
   // --------------------------------------------------------------------------
-  // SHEET 4: Bug Log (BUG-01 to BUG-06)
+  // SHEET 4: Bug Log (BUG-01 to BUG-08)
   // --------------------------------------------------------------------------
   const wsBug = wb.addWorksheet('Bug Log', { views: [{ showGridLines: true }] });
   wsBug.columns = [
@@ -161,11 +163,13 @@ async function generateWorkbook() {
 
   const bugData = [
     { id: 'BUG-01', severity: 'Critical', category: 'Security', title: 'JWT Signature Verification Bypass via Base64 Fallback', steps: '1. Forge JWT with fake secret.\n2. Send GET /api/auth/me with Bearer token.', expected: 'HTTP 401 Unauthorized', actual: 'HTTP 200 OK (Bypassed check)', status: 'Fixed (Dev Risk Noted)', evidence: 'Commit 2421b1f' },
-    { id: 'BUG-02', severity: 'High', category: 'Security', title: 'Hardcoded Fallback JWT Secret in env.ts', steps: '1. Inspect env.ts in older commit.\n2. Run without JWT_SECRET in production.', expected: 'Crash on startup in production', actual: 'Used hardcoded team fallback', status: 'Fixed', evidence: 'Commit 25b4c39' },
+    { id: 'BUG-02', severity: 'High', category: 'Security', title: 'Hardcoded Fallback JWT Secret in env.ts', steps: '1. Inspect env.ts in older commit.\n2. Run without JWT_SECRET in production.', expected: 'Crash on startup in production', actual: 'Started silently with hardcoded team secret', status: 'Fixed', evidence: 'Commit 25b4c39' },
     { id: 'BUG-03', severity: 'Medium', category: 'Functional/DB', title: 'BudgetModel Upsert Fails Validation on Blank Trip', steps: '1. POST /api/budget/:tripId/expenses for uninitialized trip.', expected: 'HTTP 404 or default fields', actual: 'HTTP 500 Mongoose validation error', status: 'Fixed', evidence: 'Integration Test Suite' },
     { id: 'BUG-04', severity: 'Low', category: 'Documentation', title: 'Initial Check: docs/API_DOCUMENTATION.md Missing in Repo', steps: '1. Search for docs/API_DOCUMENTATION.md.\n2. Observe pre-merge absence.', expected: 'OpenAPI/REST doc exists', actual: 'File exists with 1290 lines', status: 'Invalid / Closed', evidence: 'docs/API_DOCUMENTATION.md' },
-    { id: 'BUG-05', severity: 'Medium', category: 'Functional', title: 'Missing Multi-File / Chunked Video Upload Router', steps: '1. Search memories router for multipart video streaming.', expected: 'Chunked video upload endpoint exists', actual: 'Only single JSON mediaUrl accepted', status: 'Open', evidence: 'TEST_PLAN.md Section 2.3' },
-    { id: 'BUG-06', severity: 'Moderate', category: 'Security/Deps', title: 'Known Vulnerabilities in Transitive & Dev Dependencies', steps: '1. Run npm audit on root and backend.\n2. Observe 27 frontend and 36 backend CVEs.', expected: 'Zero unvetted high vulnerabilities', actual: 'Dev & transitive parsers flagged', status: 'Accepted Risk', evidence: 'npm-audit-frontend/backend.txt' },
+    { id: 'BUG-05', severity: 'Medium', category: 'Functional', title: 'Missing Multi-File / Chunked Video Upload Router', steps: '1. Search memories router for multipart video streaming.', expected: 'Chunked video upload endpoint exists', actual: 'Only single JSON mediaUrl accepted', status: 'Open', evidence: 'TEST_PLAN.md Section 1.1' },
+    { id: 'BUG-06', severity: 'Moderate', category: 'Security/Deps', title: 'Known Vulnerabilities in Transitive & Dev Dependencies', steps: '1. Run npm audit on root and backend.\n2. Observe 27 frontend and 36 backend CVEs.', expected: 'Zero unvetted high vulnerabilities', actual: 'mix of runtime (express: body-parser, qs, proxy-addr) and dev dependencies; backend 36 (2 critical, 3 high), frontend 27 (3 critical, 14 high); npm audit fix available, deferred', status: 'Accepted Risk', evidence: 'npm-audit-frontend/backend.txt' },
+    { id: 'BUG-07', severity: 'Medium', category: 'UI/Responsive', title: 'Header Navigation Clipped & Overflow at 375px', steps: '1. View site at 375x667 viewport.\n2. Observe right-edge navbar clipping.', expected: 'Responsive mobile navbar fits cleanly without clipping', actual: 'Header clipped at right on 375px mobile', status: 'Open (Partial)', evidence: '03_responsive_mobile_375px.png' },
+    { id: 'BUG-08', severity: 'Low', category: 'UI/Search', title: 'Search Placeholder Truncated as "regior" at ≥1280px', steps: '1. View search bar at ≥1280px resolution.\n2. Inspect placeholder text.', expected: 'Full text: Search destinations...', actual: 'Truncated text: "regior"', status: 'Open', evidence: '03_responsive_desktop_1440px.png' },
   ];
 
   bugData.forEach(row => wsBug.addRow(row));

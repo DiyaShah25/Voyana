@@ -3,7 +3,7 @@
 **Project**: Voyana — Collaborative AI Travel Platform  
 **Author / QA Lead**: Bhavika Sainani  
 **Team Members**: Diya Shah, Nigam Sanghvi, Tirth Gandhi, Bhavika Sainani, Megha Lalwani, Manav Vyas, Bhavika Mulani, Jagrat Kumar  
-**Tested Commit**: `19b914a`  
+**Tested Commit**: `b53a4f7`  
 **Execution Date**: November 2, 2026  
 
 ---
@@ -117,5 +117,5 @@
 | **NFR-01** | VPM-38 | Performance & Web Vitals | Vite Preview, Node Express Server | `performance-audit.spec.ts`, `run-benchmark.ts` | TC-NFR-PERF-01 | **Verified (Pass)** |
 | **NFR-02** | VPM-16 | Offline Resilience & Fallback | `authService.ts`, `aiChatService.ts` | `authService.test.ts`, `aiChatService.test.ts` | TC-AUTH-07, TC-AI-04 | **Verified (Pass)** |
 | **NFR-03** | VPM-16 | Security & JWT Verification | `auth.middleware.ts`, `env.ts` | `auth-middleware.test.ts` | TC-AUTH-05, TC-AUTH-06 | **Verified (Pass)** |
-| **NFR-04** | VPM-16 | Responsive UI & Accessibility | Tailwind CSS, React Components | `voyana-flows.spec.ts` | TC-NFR-UI-01, TC-NFR-A11Y-01| **Verified (Pass)** |
+| **NFR-04** | VPM-16 | Responsive UI & Accessibility | Tailwind CSS, React Components | `voyana-flows.spec.ts` | TC-NFR-UI-01, TC-NFR-A11Y-01| **Partial (BUG-07)** |
 

@@ -3,7 +3,7 @@
 **Project**: Voyana — Collaborative AI Travel Platform  
 **Author / QA Lead**: Bhavika Sainani  
 **Team Members**: Diya Shah, Nigam Sanghvi, Tirth Gandhi, Bhavika Sainani, Megha Lalwani, Manav Vyas, Bhavika Mulani, Jagrat Kumar  
-**Tested Commit Hash**: `13fbf2f` (Updated on `99ca84f`)  
+**Tested Commit Hash**: `b53a4f7`  
 **Date**: November 2, 2026  
 
 ---
@@ -16,8 +16,10 @@
 | **BUG-02** | High | Security | Hardcoded Fallback JWT Secret in `config/env.ts` | **Fixed** | Fixed in commit `25b4c39` |
 | **BUG-03** | Medium | Functional / DB | `BudgetModel` Upsert Fails Validation on Uninitialized Trip IDs | **Fixed** | Resolved in integration test workflow |
 | **BUG-04** | Low | Documentation | Initial Check: `docs/API_DOCUMENTATION.md` Missing in Repo | **Invalid / Closed** | File exists with 1,290 lines documenting REST endpoints |
-| **BUG-05** | Medium | Functional | Missing Multi-File / Chunked Video Upload Router | **Open** | Documented as Known Gap in `TEST_PLAN.md` |
-| **BUG-06** | Moderate | Security / Deps | Known Vulnerabilities in Transitive & Dev Dependencies (`npm audit`) | **Accepted Risk** | Documented accepted risk; dev/transitive packages |
+| **BUG-05** | Medium | Functional | Missing Multi-File / Chunked Video Upload Router | **Open** | Documented as Known Gap in `TEST_PLAN.md` Section 1.1 |
+| **BUG-06** | Moderate | Security / Deps | Known Vulnerabilities in Transitive & Dev Dependencies (`npm audit`) | **Accepted Risk** | mix of runtime (express: body-parser, qs, proxy-addr) and dev dependencies; backend 36 (2 critical, 3 high), frontend 27 (3 critical, 14 high); npm audit fix available, deferred |
+| **BUG-07** | Medium | UI / Responsive | Header Navigation Bar Clipped & Overflow at 375px Mobile Viewport | **Open (Partial)** | Responsive navbar clipped on mobile (375px); responsive testing marked Partial |
+| **BUG-08** | Low | UI / Search | Destination Search Placeholder Truncated as "regior" at ≥1280px | **Open** | Search placeholder text clipped at large desktop resolutions |
 
 ---
 
@@ -57,6 +59,10 @@
 - **Evidence File**: `services/ai-service/src/config/env.ts` (Lines 21, 31)
 - **Description**:
   In older code, `config.jwtSecret` defaulted to `'voyana-team-shared-secret-key-2026'` when `process.env.JWT_SECRET` was unset, risking production exposure if deployed without explicit environment configuration.
+- **Expected Result**:
+  Server refuses to start and throws an error if `JWT_SECRET` is unset in non-test mode.
+- **Actual Result (Before Fix)**:
+  Started silently with hardcoded team secret.
 - **Resolution**:
   In commit `25b4c39`, `services/ai-service/src/config/env.ts` was updated:
   ```ts
@@ -109,7 +115,7 @@
 - **Found During**: Codebase Survey
 - **Description**:
   The codebase only accepts a single JSON payload with `mediaUrl` string. There is no `multipart/form-data` or chunked video streaming endpoint implemented on the Express backend.
-- **Status**: **Open** (Formally documented in `TEST_PLAN.md` Section 2.3 as a Known Gap).
+- **Status**: **Open** (Formally documented in `TEST_PLAN.md` Section 1.1 as a Known Gap).
 
 ---
 
@@ -120,11 +126,39 @@
 - **Found During**: Non-Functional Security Audit (`npm audit`)
 - **Evidence Files**: `docs/testing/evidence/npm-audit-frontend.txt`, `docs/testing/evidence/npm-audit-backend.txt`
 - **Description**:
-  Automated dependency vulnerability audits flagged:
-  - **Frontend**: 27 vulnerabilities (2 low, 8 moderate, 14 high, 3 critical) primarily originating in dev-tool chains: `vitest` / `@vitest/mocker` / `tinypool` and `brace-expansion`.
-  - **Backend**: 36 vulnerabilities (4 low, 27 moderate, 3 high, 2 critical) originating in transitive CLI parsing libraries (`proxy-addr`, `qs`, `zod`).
+  mix of runtime (express: body-parser, qs, proxy-addr) and dev dependencies; backend 36 (2 critical, 3 high), frontend 27 (3 critical, 14 high); npm audit fix available, deferred.
 - **Risk Assessment & Action**:
-  - **Accepted Risk**: The affected libraries are either build-time test harnesses (`vitest`, `tinypool`) or internal parsing utilities not directly vulnerable to unauthenticated remote code execution in Voyana's deployment context.
-  - Forcing `npm audit fix --force` on the frontend attempts to install `vitest@5.x`, which requires breaking changes to `vite@6.x`.
-  - Logged as an accepted technical debt item scheduled for framework upgrade in a future release cycle.
-- **Status**: **Accepted Risk** (Documented with justification).
+  The affected packages comprise runtime Express dependencies (`body-parser`, `qs`, `proxy-addr`) as well as dev-tools (`vitest`, `tinypool`). Automated fixes require breaking major version framework upgrades (e.g. Vite 6 / Vitest 5), which are deferred to future milestones.
+- **Status**: **Accepted Risk** (mix of runtime express: body-parser, qs, proxy-addr and dev dependencies; backend 36 (2 critical, 3 high), frontend 27 (3 critical, 14 high); npm audit fix available, deferred).
+
+---
+
+### BUG-07: Header Navigation Bar Clipped & Overflow at 375px Mobile Viewport
+- **Defect ID**: `BUG-07`
+- **Severity**: **Medium (P3)**
+- **Component**: Header Navigation & Responsive Styling (`src/components/layout/Header.tsx`, `src/index.css`)
+- **Found During**: Playwright Responsive UI Automation (`voyana-flows.spec.ts`)
+- **Evidence File**: `docs/testing/evidence/screenshots/03_responsive_mobile_375px.png`
+- **Description**:
+  When tested against a standard mobile viewport (375x667, iPhone 12), the top navigation header exceeds the viewport width on the right edge. Specifically, "Sign In" is partially cut off, while "Start Exploring" and the expanded menu toggle are pushed offscreen.
+- **Expected Result**:
+  Navbar scales smoothly or wraps into a unified mobile hamburger menu without horizontal layout clipping.
+- **Actual Result**:
+  Header navigation bar clipped at right boundary on 375px mobile viewport.
+- **Status**: **Open (Responsive Testing Marked Partial)**.
+
+---
+
+### BUG-08: Destination Search Placeholder Truncated as "regior" at ≥1280px
+- **Defect ID**: `BUG-08`
+- **Severity**: **Low (P4)**
+- **Component**: Search Input (`src/components/Search/TravelSearch.tsx`)
+- **Found During**: UI Visual Inspection at Large Resolutions
+- **Evidence File**: `docs/testing/evidence/screenshots/03_responsive_desktop_1440px.png`
+- **Description**:
+  At large desktop viewport widths (≥1280px), the placeholder text for the destination search input is clipped, displaying "regior" instead of the intended "region".
+- **Expected Result**:
+  Full placeholder text ("Search destinations, cities, or regions...") rendered without mid-word truncation.
+- **Actual Result**:
+  Truncated placeholder text "regior" displayed.
+- **Status**: **Open**.
