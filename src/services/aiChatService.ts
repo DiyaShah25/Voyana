@@ -1,3 +1,5 @@
+import { apiRequest } from './apiClient';
+import { getPlanningContext } from './planningContext';
 /**
  * AI Travel Chatbot Service
  * Provides conversational travel reasoning, destination recommendations,
@@ -18,7 +20,7 @@ export interface ChatMessage {
   proposedChanges?: Array<{
     type: 'add_activity' | 'update_budget' | 'add_packing_item' | 'recommendation';
     title: string;
-    details?: any;
+    details?: unknown;
   }>;
 }
 
@@ -35,32 +37,17 @@ export interface SendMessageOptions {
   };
 }
 
-const AI_SERVICE_URL = import.meta.env.VITE_AI_SERVICE_URL || 'http://localhost:3001';
 
 export async function sendChatMessage(options: SendMessageOptions): Promise<ChatMessage> {
-  const { message, tripId = 'trip-bali-01', destination = 'Paris', history = [], context } = options;
+  const { message, tripId = getPlanningContext().id, destination = 'Paris', history = [], context } = options;
 
   // Attempt backend AI service if reachable
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
-
-    const response = await fetch(`${AI_SERVICE_URL}/ai/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        tripId,
-        destination,
-        message,
-        history: history.slice(-6),
-      }),
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (response.ok) {
-      const data = await response.json();
+    const response = await apiRequest<Omit<ChatMessage, 'proposedChanges'> & { proposedChanges?: { day: number; activity: string; rationale: string }[] }>('/ai/chat', {
+      method: 'POST', body: JSON.stringify({ tripId, destination, message, history: history.slice(-6) }),
+    }, 30000);
+    if (response.ok && response.data) {
+      const data = response.data;
       return {
         id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
         role: 'assistant',
@@ -68,10 +55,10 @@ export async function sendChatMessage(options: SendMessageOptions): Promise<Chat
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         aiGenerated: true,
         citedContext: data.citedContext,
-        proposedChanges: data.proposedChanges,
+        proposedChanges: data.proposedChanges?.map(change => ({ type: 'add_activity', title: change.activity, details: { day: change.day, rationale: change.rationale } })),
       };
     }
-  } catch (_err) {
+  } catch {
     // Fallback to intelligent client-side engine
   }
 
@@ -98,7 +85,7 @@ function generateContextualResponse(
 ): {
   content: string;
   citedContext: { days?: number[]; categories?: string[]; topics?: string[] };
-  proposedChanges?: any[];
+  proposedChanges?: ChatMessage['proposedChanges'];
 } {
   const q = query.toLowerCase();
 

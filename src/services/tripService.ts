@@ -1,9 +1,10 @@
+import { restoreSession } from './authService';
 /**
  * Trip Creation & Itinerary Management Engine
  * Provides custom trip creation wizards, curated destination templates,
  * multi-collaborator invitations, and auto-generated initial day schedules.
  */
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { supabase } from './supabaseClient';
 import { createAlert } from './alertService';
 import { apiRequest } from './apiClient';
 
@@ -41,6 +42,13 @@ export interface TripActivity {
 }
 
 export interface Trip {
+  travelMode?: 'solo' | 'group';
+  lifecycle?: 'planning' | 'booked' | 'completed';
+  photoCount?: number;
+  albumStatus?: string;
+  albumStory?: string;
+  albumError?: string;
+  hasConfirmedBooking?: boolean;
   id: string;
   ownerId: string;
   title: string;
@@ -81,17 +89,7 @@ export interface CreateTripInput {
 // ---------------------------------------------------------------------------
 // Supabase Client Setup
 // ---------------------------------------------------------------------------
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-let supabase: SupabaseClient | null = null;
-if (supabaseUrl && supabaseKey) {
-  try {
-    supabase = createClient(supabaseUrl, supabaseKey);
-  } catch {
-    supabase = null;
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Mock Store for Offline / Demo Mode
@@ -528,6 +526,17 @@ export function saveStoredTrips(trips: Trip[]) {
   }
 }
 
+export async function persistTrip(trip: Trip): Promise<boolean> {
+  const trips = getStoredTrips();
+  saveStoredTrips([trip, ...trips.filter(item => item.id !== trip.id)]);
+  const existing = await apiRequest(`/api/trips/${encodeURIComponent(trip.id)}`);
+  if (!existing.ok && existing.status !== 404) return false;
+  const result = await apiRequest(existing.status === 404 ? '/api/trips' : `/api/trips/${encodeURIComponent(trip.id)}`, {
+    method: existing.status === 404 ? 'POST' : 'PUT', body: JSON.stringify(trip),
+  });
+  return result.ok;
+}
+
 // ---------------------------------------------------------------------------
 // 1. Fetch User Trips (getUserTrips)
 // ---------------------------------------------------------------------------
@@ -537,7 +546,7 @@ export async function getUserTrips(userId: string = 'usr-demo-01'): Promise<Trip
     const apiRes = await apiRequest<{ ok: boolean; trips: Trip[] }>('/api/trips');
     if (apiRes.ok && apiRes.data?.trips) {
       saveStoredTrips(apiRes.data.trips);
-      return apiRes.data.trips;
+      return apiRes.data.trips.filter(trip => !trip.isTemplate && (trip.ownerId === userId || trip.members?.some(member => member.userId === userId || member.email === restoreSession()?.user.email)));
     }
   } catch {
     // Fall through to other data sources
@@ -556,7 +565,7 @@ export async function getUserTrips(userId: string = 'usr-demo-01'): Promise<Trip
         .order('created_at', { ascending: false });
 
       if (!error && trips && trips.length > 0) {
-        return trips.map((t: any) => ({
+        return trips.map((t) => ({
           id: t.id,
           ownerId: t.owner_id,
           title: t.title,
@@ -573,7 +582,7 @@ export async function getUserTrips(userId: string = 'usr-demo-01'): Promise<Trip
           isTemplate: t.is_template,
           createdAt: t.created_at,
           updatedAt: t.updated_at,
-          members: t.trip_members?.map((m: any) => ({
+          members: t.trip_members?.map((m: TripMember & { trip_id: string; user_id?: string; avatar_url?: string; joined_at: string }) => ({
             id: m.id,
             tripId: m.trip_id,
             name: m.name || m.email.split('@')[0],
@@ -582,7 +591,7 @@ export async function getUserTrips(userId: string = 'usr-demo-01'): Promise<Trip
             role: m.role,
             joinedAt: m.joined_at,
           })),
-          activities: t.trip_activities?.map((a: any) => ({
+          activities: t.trip_activities?.map((a: TripActivity & { trip_id: string; day_number: number; activity_date?: string; time_slot?: string; location_name?: string; order_index: number }) => ({
             id: a.id,
             tripId: a.trip_id,
             dayNumber: a.day_number,
@@ -613,7 +622,7 @@ export async function getTripTemplates(): Promise<Trip[]> {
     if (apiRes.ok && apiRes.data?.trips && apiRes.data.trips.length > 0) {
       return apiRes.data.trips;
     }
-  } catch {}
+  } catch { /* Retain local preview data when remote synchronization fails. */ }
   return CURATED_TEMPLATES;
 }
 
@@ -714,7 +723,7 @@ export async function createTrip(
     coverImage: input.coverImage || 'https://images.pexels.com/photos/14681748/pexels-photo-14681748.jpeg?auto=compress&cs=tinysrgb&w=800',
     visibility: input.visibility || 'shared',
     budgetTarget: input.budgetTarget || 2000,
-    currency: input.currency || 'USD',
+    currency: input.currency || 'INR',
     tags: tags.length > 0 ? tags : ['Custom Trip'],
     isTemplate: false,
     createdAt: new Date().toISOString(),
@@ -803,7 +812,7 @@ export async function cloneTripTemplate(
   userName: string = 'Megha Lalwani',
   userEmail: string = 'megha@voyana.com'
 ): Promise<{ success: boolean; trip?: Trip; error?: string }> {
-  const template = CURATED_TEMPLATES.find((t) => t.id === templateId);
+  const template = (await getTripTemplates()).find((t) => t.id === templateId);
   if (!template) return { success: false, error: 'Template not found' };
 
   const newTripId = `trip-cloned-${Date.now()}`;
@@ -812,6 +821,7 @@ export async function cloneTripTemplate(
     id: newTripId,
     ownerId: userId,
     title: `${template.title} (My Trip)`,
+    activities: template.activities?.map(activity => ({ ...activity, tripId: newTripId })),
     isTemplate: false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -831,6 +841,7 @@ export async function cloneTripTemplate(
   const list = getStoredTrips();
   list.unshift(cloned);
   saveStoredTrips(list);
+  await persistTrip(cloned);
 
   await createAlert({
     user_id: userId,
@@ -873,10 +884,10 @@ export async function addTripMember(
     joinedAt: new Date().toISOString(),
   };
 
-  trip.members.push(newMember);
-  saveStoredTrips(list);
-
-  return { success: true, member: newMember };
+  const response = await apiRequest<{ trip: Trip; member: TripMember }>(`/api/trips/${encodeURIComponent(tripId)}/members`, { method: 'POST', body: JSON.stringify({ email, role, name: newMember.name }) });
+  if (!response.ok || !response.data?.trip) return { success: false, error: response.error || 'The collaborator could not be added.' };
+  saveStoredTrips(list.map(item => item.id === tripId ? response.data!.trip : item));
+  return { success: true, member: response.data.member };
 }
 
 // ---------------------------------------------------------------------------
@@ -890,12 +901,12 @@ export async function deleteTrip(tripId: string): Promise<{ success: boolean }> 
   // Shared MongoDB Atlas Backend deletion
   try {
     await apiRequest(`/api/trips/${encodeURIComponent(tripId)}`, { method: 'DELETE' });
-  } catch {}
+  } catch { /* Retain local preview data when remote synchronization fails. */ }
 
   if (supabase) {
     try {
       await supabase.from('trips').delete().eq('id', tripId);
-    } catch {}
+    } catch { /* Retain local preview data when remote synchronization fails. */ }
   }
 
   return { success: true };
@@ -911,8 +922,13 @@ export function generateShareLink(tripId: string, role: TripMemberRole = 'editor
 }
 
 export async function getPublicTripById(tripId: string): Promise<Trip | undefined> {
-  const list = getStoredTrips();
-  return list.find((t) => t.id === tripId);
+  const result = await apiRequest<{ trip: Trip }>(`/api/trips/${encodeURIComponent(tripId)}`);
+  if (result.ok && result.data?.trip) {
+    const trip = result.data.trip;
+    saveStoredTrips([trip, ...getStoredTrips().filter(item => item.id !== tripId)]);
+    return trip;
+  }
+  return getStoredTrips().find(trip => trip.id === tripId);
 }
 
 export async function updateTripVisibility(
@@ -926,11 +942,12 @@ export async function updateTripVisibility(
   target.visibility = visibility;
   target.updatedAt = new Date().toISOString();
   saveStoredTrips(list);
+  await persistTrip(target);
 
   if (supabase) {
     try {
       await supabase.from('trips').update({ visibility }).eq('id', tripId);
-    } catch {}
+    } catch { /* Retain local preview data when remote synchronization fails. */ }
   }
 
   return { success: true, trip: target };
@@ -970,7 +987,7 @@ export async function addTripActivity(
       method: 'POST',
       body: JSON.stringify(newActivity),
     });
-  } catch {}
+  } catch { /* Retain local preview data when remote synchronization fails. */ }
 
   if (supabase) {
     try {
@@ -988,7 +1005,7 @@ export async function addTripActivity(
         booking_reference: newActivity.bookingReference,
         order_index: newActivity.orderIndex,
       });
-    } catch {}
+    } catch { /* Retain local preview data when remote synchronization fails. */ }
   }
 
   return { success: true, activity: newActivity };
@@ -1009,6 +1026,7 @@ export async function updateTripActivity(
   Object.assign(act, updates);
   trip.updatedAt = new Date().toISOString();
   saveStoredTrips(list);
+  await persistTrip(trip);
 
   return { success: true, activity: act };
 }
@@ -1027,6 +1045,7 @@ export async function toggleActivityCompleted(
   act.isCompleted = !act.isCompleted;
   trip.updatedAt = new Date().toISOString();
   saveStoredTrips(list);
+  await persistTrip(trip);
 
   return { success: true, isCompleted: act.isCompleted };
 }
@@ -1042,11 +1061,12 @@ export async function deleteTripActivity(
   trip.activities = trip.activities.filter((a) => a.id !== activityId);
   trip.updatedAt = new Date().toISOString();
   saveStoredTrips(list);
+  await persistTrip(trip);
 
   if (supabase) {
     try {
       await supabase.from('trip_activities').delete().eq('id', activityId);
-    } catch {}
+    } catch { /* Retain local preview data when remote synchronization fails. */ }
   }
 
   return { success: true };
@@ -1073,6 +1093,7 @@ export async function reorderTripActivities(
   trip.activities = [...otherActivities, ...updatedDay];
   trip.updatedAt = new Date().toISOString();
   saveStoredTrips(list);
+  await persistTrip(trip);
 
   return { success: true };
 }

@@ -1,3 +1,6 @@
+import { getPlanningContext } from "./planningContext";
+import { matchesDestination } from "./destinationPolicy";
+import { recordBooking } from "./bookingService";
 /**
  * VPM-145: Booking API Integration Service
  * Assignee: Bhavika Sainani (202512053) <bhavikasainani2608@gmail.com>
@@ -20,26 +23,21 @@ import { convertFromUSD, formatCurrency } from './currencyService';
 // ---------------------------------------------------------------------------
 // Supabase Client Initialization (Matching flightService & paymentService pattern)
 // ---------------------------------------------------------------------------
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
-
-let supabase: SupabaseClient | null = null;
-if (supabaseUrl && supabaseAnonKey) {
-  supabase = createClient(supabaseUrl, supabaseAnonKey);
-}
 
 // ---------------------------------------------------------------------------
 // Types & Interfaces for VPM-145
 // ---------------------------------------------------------------------------
 export interface BundledBookingItem {
-  type: 'flight' | 'hotel' | 'transport';
+  type: "flight" | "hotel" | "transport";
   id: string;
   title: string;
   subTitle: string;
   price: number;
   date: string;
   referenceCode: string;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
+  choice?: ReservationChoice;
+  priceBasis?: string;
 }
 
 export interface UnifiedBundleCheckoutRequest {
@@ -80,8 +78,7 @@ export interface IntegratedPackageOffer {
   items: BundledBookingItem[];
 }
 
-const BUNDLE_STORAGE_KEY = 'voyana.unified_bundles';
-const UNIFIED_BOOKINGS_STORAGE_KEY = 'voyana.unified_bookings';
+const BUNDLE_STORAGE_KEY = "voyana.unified_bundles";
 
 // ---------------------------------------------------------------------------
 // 1. Unified Cross-Service Bundle Calculator (15% Bundle Saver Discount)
@@ -97,11 +94,12 @@ export function calculateBundlePricing(items: BundledBookingItem[]): {
 
   // Cross-service bundle discount: 2 items = 10%, 3+ items = 15%
   const distinctTypes = new Set(items.map((i) => i.type)).size;
-  const discountPercentage = distinctTypes >= 3 ? 15 : distinctTypes >= 2 ? 10 : 0;
+  const discountPercentage =
+    distinctTypes >= 3 ? 15 : distinctTypes >= 2 ? 10 : 0;
 
   const discountAmount = Math.round((subtotal * discountPercentage) / 100);
   const taxableSubtotal = subtotal - discountAmount;
-  const taxAmount = Math.round(taxableSubtotal * 0.05); // 5% standard travel GST/VAT
+  const taxAmount = Math.round(taxableSubtotal * 0.05); // Demo package service charge, not a live tax quote.
   const totalAmount = taxableSubtotal + taxAmount;
 
   return {
@@ -116,108 +114,170 @@ export function calculateBundlePricing(items: BundledBookingItem[]): {
 // ---------------------------------------------------------------------------
 // 2. Search & Aggregate Integrated Booking APIs
 // ---------------------------------------------------------------------------
+export interface BundleSearchOptions {
+  originCode?: string;
+  passengers?: number;
+  nights?: number;
+  rooms?: number;
+  tier?: "essential" | "comfort" | "premium";
+}
 export async function searchIntegratedOffers(
   destination: string,
-  departureDate: string = '2026-10-15'
+  departureDate = new Date(Date.now() + 14 * 86400000)
+    .toISOString()
+    .slice(0, 10),
+  options: BundleSearchOptions = {},
 ): Promise<IntegratedPackageOffer[]> {
-  const destClean = destination.trim().toLowerCase();
-  const destAirportCode = resolveAirportCode(destClean) || 'CDG';
-
-  // 1. Flight search integration
-  const flights = generateMockFlights({
-    originCode: 'JFK',
-    destinationCode: destAirportCode,
+  const airport = resolveAirportCode(destination);
+  if (!airport) return [];
+  const passengers = Math.min(20, Math.max(1, options.passengers || 1));
+  const nights = Math.min(60, Math.max(1, options.nights || 3));
+  const rooms = Math.min(
+    20,
+    Math.max(1, options.rooms || Math.ceil(passengers / 2)),
+  );
+  const tier = options.tier || "essential";
+  const cabin =
+    tier === "premium"
+      ? "business"
+      : tier === "comfort"
+        ? "premium_economy"
+        : "economy";
+  const roomType =
+    tier === "premium"
+      ? "Executive Suite"
+      : tier === "comfort"
+        ? "Deluxe"
+        : "Standard";
+  const originCode = options.originCode || (airport === "DEL" ? "BOM" : "DEL");
+  if (originCode === airport) return [];
+  const flight = generateMockFlights({
+    originCode,
+    destinationCode: airport,
     departureDate,
-    passengers: 1,
-    cabinClass: 'economy',
-  });
-  const bestFlight = flights[0];
-
-  // 2. Hotel search integration
-  const hotels = await searchHotels(destination, departureDate, '2026-10-18');
-  const bestHotel = hotels[0];
-
-  // 3. Ground Transport search integration
-  const transportList = await searchTransport(undefined, destination, departureDate, 'all');
-  const bestTransport = transportList[0];
-
-  const packages: IntegratedPackageOffer[] = [];
-
-  if (bestFlight && bestHotel && bestTransport) {
-    const flightItem: BundledBookingItem = {
-      type: 'flight',
-      id: bestFlight.id,
-      title: `${bestFlight.airline} ${bestFlight.flightNumber} (${bestFlight.originAirport.code} → ${bestFlight.destinationAirport.code})`,
-      subTitle: `${bestFlight.aircraft} • Economy`,
-      price: bestFlight.prices.economy,
+    passengers,
+    cabinClass: cabin,
+  })
+    .filter((item) => item.seatsAvailable[cabin] >= passengers)
+    .sort((a, b) => a.prices[cabin] - b.prices[cabin])[0];
+  const checkOut = new Date(Date.parse(departureDate) + nights * 86400000)
+    .toISOString()
+    .slice(0, 10);
+  const hotel = (
+    await searchHotels(
+      destination,
+      departureDate,
+      checkOut,
+      passengers,
+      rooms,
+      roomType,
+    )
+  ).sort((a, b) => a.roomRates[roomType] - b.roomRates[roomType])[0];
+  const mode =
+    tier === "essential"
+      ? "bus"
+      : tier === "premium"
+        ? "car_rental"
+        : "private_transfer";
+  let transport = (
+    await searchTransport(destination, destination, departureDate, mode)
+  ).find((item) => item.maxPassengers >= passengers);
+  if (!transport)
+    transport = (
+      await searchTransport(destination, destination, departureDate, "bus")
+    ).find((item) => item.maxPassengers >= passengers);
+  if (!flight || !hotel || !transport) return [];
+  const fare = flight.prices[cabin];
+  const rate = hotel.roomRates[roomType];
+  const transportSeats = ["train", "bus", "ferry"].includes(
+    transport.transportType,
+  );
+  const rentalDays = transport.transportType === "car_rental" ? nights : 1;
+  const items: BundledBookingItem[] = [
+    {
+      type: "flight",
+      id: flight.id,
+      title: `${flight.airline} ${flight.flightNumber}`,
+      subTitle: `${flight.originAirport.code} → ${flight.destinationAirport.code} · ${cabin.replace("_", " ")}`,
+      price: fare * passengers,
       date: departureDate,
-      referenceCode: `FLT-${bestFlight.flightNumber}`,
-      details: { flight: bestFlight },
-    };
-
-    const hotelItem: BundledBookingItem = {
-      type: 'hotel',
-      id: bestHotel.id,
-      title: bestHotel.name,
-      subTitle: `${bestHotel.city}, ${bestHotel.country} • Standard Room`,
-      price: bestHotel.baseNightlyRate * 3, // 3 nights estimate
-      date: `${departureDate} (3 nights)`,
-      referenceCode: `HTL-${bestHotel.id.substring(0, 6).toUpperCase()}`,
-      details: { hotel: bestHotel, nights: 3 },
-    };
-
-    const transportItem: BundledBookingItem = {
-      type: 'transport',
-      id: bestTransport.id,
-      title: `${bestTransport.providerName} (${bestTransport.transportType.toUpperCase()})`,
-      subTitle: `${bestTransport.originLocation} → ${bestTransport.destinationLocation}`,
-      price: bestTransport.basePrice,
+      referenceCode: flight.flightNumber,
+      details: { flight },
+      priceBasis: `₹${fare.toLocaleString("en-IN")} × ${passengers} traveler${passengers > 1 ? "s" : ""}`,
+      choice: {
+        type: "flight",
+        id: flight.id,
+        origin: originCode,
+        destination: airport,
+        date: departureDate,
+        cabin,
+        passengers,
+      },
+    },
+    {
+      type: "hotel",
+      id: hotel.id,
+      title: hotel.name,
+      subTitle: `${hotel.city} · ${roomType}`,
+      price: rate * nights * rooms,
       date: departureDate,
-      referenceCode: `TRP-${bestTransport.id.substring(0, 6).toUpperCase()}`,
-      details: { transport: bestTransport },
-    };
-
-    const items = [flightItem, hotelItem, transportItem];
-    const pricing = calculateBundlePricing(items);
-
-    packages.push({
-      id: `pkg-${destClean}-deluxe`,
-      name: `${bestHotel.city} All-in-One Explorer Pass`,
-      destination: bestHotel.city,
-      flight: bestFlight,
-      hotel: bestHotel,
-      transport: bestTransport,
+      referenceCode: hotel.id,
+      details: { hotel },
+      priceBasis: `₹${rate.toLocaleString("en-IN")} × ${nights} night${nights > 1 ? "s" : ""} × ${rooms} room${rooms > 1 ? "s" : ""}`,
+      choice: {
+        type: "hotel",
+        id: hotel.id,
+        checkIn: departureDate,
+        checkOut,
+        roomType,
+        rooms,
+        guests: passengers,
+      },
+    },
+    {
+      type: "transport",
+      id: transport.id,
+      title: transport.providerName,
+      subTitle: `${transport.vehicleClass} · ${transport.destinationLocation}`,
+      price: transport.basePrice * (transportSeats ? passengers : rentalDays),
+      date: departureDate,
+      referenceCode: transport.id,
+      details: { transport },
+      priceBasis: transportSeats
+        ? `₹${transport.basePrice.toLocaleString("en-IN")} × ${passengers} traveler${passengers > 1 ? "s" : ""}`
+        : transport.transportType === "car_rental"
+          ? `₹${transport.basePrice.toLocaleString("en-IN")} × ${rentalDays} rental day${rentalDays > 1 ? "s" : ""}`
+          : `₹${transport.basePrice.toLocaleString("en-IN")} per vehicle`,
+      choice: {
+        type: "transport",
+        id: transport.id,
+        origin: transport.originCity,
+        date: departureDate,
+        passengers,
+        days: rentalDays,
+      },
+    },
+  ];
+  const pricing = calculateBundlePricing(items);
+  return [
+    {
+      id: `bundle-${airport}-${tier}`,
+      name: `${destination} ${tier} package`,
+      destination,
+      flight,
+      hotel,
+      transport,
+      items,
       originalPrice: pricing.subtotal,
       discountPercentage: pricing.discountPercentage,
       bundlePrice: pricing.totalAmount,
       savings: pricing.discountAmount,
-      items,
-    });
-  }
-
-  return packages;
+    },
+  ];
 }
-
-// ---------------------------------------------------------------------------
-// 3. Process Unified Bundle Checkout & Workspace Integration (VPM-145)
-// ---------------------------------------------------------------------------
 export async function processUnifiedBundleCheckout(
-  req: UnifiedBundleCheckoutRequest
+  req: UnifiedBundleCheckoutRequest,
 ): Promise<UnifiedBundleBookingResult> {
-  if (!req.items || req.items.length === 0) {
-    return {
-      success: false,
-      bundleReference: '',
-      totalOriginalPrice: 0,
-      discountAmount: 0,
-      finalPaidAmount: 0,
-      bookedItems: [],
-      tripSynced: false,
-      bookingDate: new Date().toISOString(),
-      error: 'No items provided in bundle checkout',
-    };
-  }
-
   const pricing = calculateBundlePricing(req.items);
   const bundleReference = `VY-BDL-${Date.now().toString().substring(6)}`;
   const activeCurrency = req.currency || 'USD';
@@ -338,66 +398,42 @@ export async function processUnifiedBundleCheckout(
     old_status: 'pending',
     new_status: 'confirmed',
   });
-
-  // 6. Auto-Sync to Trip Workspace if tripId provided
-  let tripSynced = false;
-  if (req.tripId) {
-    try {
-      const trips = getStoredTrips();
-      const targetTrip = trips.find((t) => t.id === req.tripId);
-      if (targetTrip) {
-        // Add each item as a scheduled activity in Trip Workspace
-        for (let idx = 0; idx < req.items.length; idx++) {
-          const item = req.items[idx];
-          await addTripActivity(req.tripId, {
-            dayNumber: Math.min(idx + 1, 5),
-            timeSlot: item.type === 'flight' ? '09:00 AM' : item.type === 'transport' ? '12:00 PM' : '03:00 PM',
-            title: `${item.title} (${item.type.toUpperCase()})`,
-            locationName: item.subTitle,
-            category: item.type === 'flight' || item.type === 'transport' ? 'Transport' : 'Sightseeing',
-            cost: item.price,
-            bookingReference: item.referenceCode,
-            description: `Auto-synced from Unified Booking Bundle ${bundleReference}`,
-          });
-        }
-
-        // Add overall bundled cost to Expense Splitter
-        await addTripExpense(req.tripId, {
-          title: `Unified Travel Bundle (${req.items.length} services)`,
-          amount: pricing.totalAmount,
-          currency: 'USD',
-          paidBy: req.customerName,
-          splitAmong: targetTrip.members?.map((m) => m.name) || [req.customerName],
-          category: 'Transport',
-          date: new Date().toISOString(),
-        });
-
-        tripSynced = true;
-      }
-    } catch {}
-  }
-
-  return {
+  const booking = await recordBooking({
+    choices,
+    destination: context.destination,
+    details: { items: req.items },
+    bookingReference: crypto.randomUUID(),
+    bookingType: "package",
+    status: "confirmed",
+    paymentStatus: "paid",
+    totalAmount: pricing.totalAmount,
+    currency: "INR",
+    contactEmail: req.customerEmail,
+    contactPhone: req.customerPhone,
+  });
+  const result: UnifiedBundleBookingResult = {
     success: true,
-    bundleReference,
+    bundleReference: booking.bookingReference,
     totalOriginalPrice: pricing.subtotal,
     discountAmount: pricing.discountAmount,
-    finalPaidAmount: pricing.totalAmount,
+    finalPaidAmount: booking.totalAmount,
     bookedItems: req.items,
-    tripSynced,
+    tripSynced: true,
     bookingDate: new Date().toISOString(),
   };
+  const bundles = JSON.parse(localStorage.getItem(BUNDLE_STORAGE_KEY) || "[]");
+  localStorage.setItem(
+    BUNDLE_STORAGE_KEY,
+    JSON.stringify([{ ...result, userId: req.userId }, ...bundles]),
+  );
+  return result;
 }
-
-// ---------------------------------------------------------------------------
-// 4. Get User Unified Booking Bundles
-// ---------------------------------------------------------------------------
-export async function getUserBookingBundles(userId: string): Promise<any[]> {
-  try {
-    const raw = localStorage.getItem(BUNDLE_STORAGE_KEY);
-    const bundles = raw ? JSON.parse(raw) : [];
-    return bundles.filter((b: any) => !userId || b.userId === userId || userId === 'usr-demo-01');
-  } catch {
-    return [];
-  }
+export async function getUserBookingBundles(
+  userId: string,
+): Promise<
+  Array<{ userId: string; bundleReference: string } & Record<string, unknown>>
+> {
+  return JSON.parse(localStorage.getItem(BUNDLE_STORAGE_KEY) || "[]").filter(
+    (item: { userId: string }) => item.userId === userId,
+  );
 }

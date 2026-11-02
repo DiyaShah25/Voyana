@@ -1,10 +1,4 @@
-/**
- * Voyana Main Application Component
- * Orchestrates core page layout, 3D interactive globe view, search bar,
- * destination spotlights, intelligent travel suite, and modal management.
- */
-
-import { useState, useRef, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import type { GlobeLocation, GlobeRoute, VoyanaGlobeHandle } from '@/components/Globe/globe.types';
 import VoyanaGlobe from '@/components/Globe/VoyanaGlobe';
 import { Header } from '@/components/layout/Header';
@@ -13,147 +7,173 @@ import TravelSearch from '@/components/Search/TravelSearch';
 import DestinationRail from '@/components/Destinations/DestinationRail';
 import DestinationGrid from '@/components/Destinations/DestinationGrid';
 import TravelSuiteHub from '@/components/Services/TravelSuiteHub';
-import FeaturedJourneys from '@/components/Journeys/FeaturedJourneys';
-import DestinationDetailsModal from '@/components/Destinations/DestinationDetailsModal';
+import FeaturedJourneys, { type FeaturedJourney } from '@/components/Journeys/FeaturedJourneys';
 import type { DestinationItem } from '@/components/Destinations/DestinationCard';
-
-// Auth & Modals
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { CurrencyProvider } from '@/context/CurrencyContext';
 import AuthLayout from '@/pages/AuthLayout';
 import LoginPage from '@/pages/LoginPage';
 import SignupPage from '@/pages/SignupPage';
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
-import ProfileModal from '@/pages/ProfileModal';
-import AdminDashboardModal from '@/pages/AdminDashboardModal';
+import { getPlanningContext, selectPlanningDestination, selectPlanningTrip } from '@/services/planningContext';
+import { getUserBookings, type UnifiedBooking } from '@/services/bookingService';
+import { getPublicTripById, type Trip } from '@/services/tripService';
+import { matchesDestination } from '@/services/destinationPolicy';
+import { resolveLocation } from '@/services/locationService';
+import { resolveAirportCode } from '@/services/flightService';
+import { generateMockHotels } from '@/services/hotelService';
 
-// Travel Services Modals
-import FlightBookingModal from '@/components/Booking/FlightBookingModal';
-import HotelBookingModal from '@/components/Booking/HotelBookingModal';
-import TransportBookingModal from '@/components/Booking/TransportBookingModal';
-import MyBookingsModal from '@/components/Booking/MyBookingsModal';
-import UnifiedBundleBookingModal from '@/components/Booking/UnifiedBundleBookingModal';
-import ChatAssistantModal from '@/components/Chat/ChatAssistantModal';
-import BudgetPlannerModal from '@/components/Budget/BudgetPlannerModal';
-import PackingChecklistModal from '@/components/Packing/PackingChecklistModal';
-import TripDashboardModal from '@/components/Trips/TripDashboardModal';
-import TripWorkspaceModal from '@/components/Trips/TripWorkspaceModal';
-import TravelReviewsModal from '@/components/Reviews/TravelReviewsModal';
-import TravelMemoriesModal from '@/components/Memories/TravelMemoriesModal';
-import type { Trip } from '@/services/tripService';
-
-type Route = 'home' | 'login' | 'signup' | 'forgot-password' | 'profile' | 'admin' | 'trips' | 'bookings';
-
-function readRoute(): Route {
-  const hash = window.location.hash.replace(/^#\/?/, '');
-  if (
-    hash === 'login' ||
-    hash === 'signup' ||
-    hash === 'forgot-password' ||
-    hash === 'profile' ||
-    hash === 'admin' ||
-    hash === 'trips' ||
-    hash === 'bookings'
-  ) {
-    return hash as Route;
-  }
-  return 'home';
-}
-
-function useHashRoute(): Route {
-  const [route, setRoute] = useState<Route>(readRoute);
-  useEffect(() => {
-    const onHashChange = () => {
-      setRoute(readRoute());
-      window.scrollTo(0, 0);
-    };
-    window.addEventListener('hashchange', onHashChange);
-    return () => window.removeEventListener('hashchange', onHashChange);
-  }, []);
-  return route;
-}
+const FlightBookingModal = lazy(() => import('@/components/Booking/FlightBookingModal'));
+const HotelBookingModal = lazy(() => import('@/components/Booking/HotelBookingModal'));
+const TransportBookingModal = lazy(() => import('@/components/Booking/TransportBookingModal'));
+const UnifiedBundleBookingModal = lazy(() => import('@/components/Booking/UnifiedBundleBookingModal'));
+const MyBookingsModal = lazy(() => import('@/components/Booking/MyBookingsModal'));
+const ChatAssistantModal = lazy(() => import('@/components/Chat/ChatAssistantModal'));
+const BudgetPlannerModal = lazy(() => import('@/components/Budget/BudgetPlannerModal'));
+const PackingChecklistModal = lazy(() => import('@/components/Packing/PackingChecklistModal'));
+const BookingModeDialog = lazy(() => import('@/components/Booking/BookingModeDialog'));
+const WorkspaceLobby = lazy(() => import('@/components/Trips/WorkspaceLobby'));
+const TripWorkspaceModal = lazy(() => import('@/components/Trips/TripWorkspaceModal'));
+const TravelReviewsModal = lazy(() => import('@/components/Reviews/TravelReviewsModal'));
+const TravelMemoriesModal = lazy(() => import('@/components/Memories/TravelMemoriesModal'));
+const ProfileModal = lazy(() => import('@/pages/ProfileModal'));
+const AdminDashboardModal = lazy(() => import('@/pages/AdminDashboardModal'));
+const DestinationDetailsModal = lazy(() => import('@/components/Destinations/DestinationDetailsModal'));
+const JourneyDetailsModal = lazy(() => import('@/components/Journeys/JourneyDetailsModal'));
+type Modal = 'flight' | 'hotel' | 'transport' | 'bundle' | 'bookings' | 'chat' | 'budget' | 'packing' | 'trips' | 'reviews' | 'memories' | 'profile' | 'admin';
+const postBookingTools: Modal[] = [ 'budget', 'packing', 'memories'];
+const readRoute = () => window.location.hash.replace(/^#\/?/, '').split('?')[0];
 
 function MainAppContent() {
-  const { user, isAuthenticated, loading } = useAuth();
-  const route = useHashRoute();
+  const { user, isAuthenticated, isAdmin, loading } = useAuth();
+  const userId = user?.id;
+  const userEmail = user?.email;
+  const [route, setRoute] = useState(readRoute);
+  const [planning, setPlanning] = useState(getPlanningContext);
+  const [selectedLocation, setSelectedLocation] = useState<GlobeLocation | undefined>(() => getPlanningContext().location);
+  const [bookings, setBookings] = useState<UnifiedBooking[]>([]);
+  const [sharedTrip, setSharedTrip] = useState<Trip | null>(null);
+  const [workspaceTrip, setWorkspaceTrip] = useState<Trip | null>(null);
+  const [pendingBooking, setPendingBooking] = useState<Modal | null>(null);
+  const [modal, setModal] = useState<Modal | null>(null);
+  const [resolvingPlace, setResolvingPlace] = useState(false);
+  const [notice, setNotice] = useState('');
+  const [prompt, setPrompt] = useState<string>();
+  const [routes, setRoutes] = useState<GlobeRoute[]>([]);
+  const [destinationDetails, setDestinationDetails] = useState<DestinationItem | null>(null);
+  const [journeyDetails, setJourneyDetails] = useState<FeaturedJourney | null>(null);
+  const globe = useRef<VoyanaGlobeHandle>(null);
+  const selected = Boolean(planning.selected && planning.destination && !planning.destination.includes('°') && planning.destination !== 'Finding place…');
+  const confirmed = bookings.find(booking => booking.status === 'confirmed' && booking.paymentStatus === 'paid' && booking.tripId && (!planning.trip || booking.tripId === planning.trip.id) && matchesDestination(planning.destination, booking.destination || ''));
+  const canCollaborate = Boolean(user && (planning.trip?.hasConfirmedBooking || confirmed || (sharedTrip?.hasConfirmedBooking && sharedTrip.id === planning.id)));
+  const citySelected = selected && !resolvingPlace && selectedLocation?.bookable !== false && !['country', 'state'].includes(selectedLocation?.type || 'city');
+  const services = {
+    flights: citySelected && Boolean(resolveAirportCode(planning.destination)),
+    hotels: citySelected && generateMockHotels({ location: planning.destination, checkInDate: '', checkOutDate: '', guests: 1, rooms: 1 }).length > 0,
+    transport: citySelected,
+    bundles: false,
+  };
+  services.bundles = services.flights && services.hotels && services.transport;
 
-  // Global Destination State driving the 3D Earth and UI
-  const [selectedDestination, setSelectedDestination] = useState<GlobeLocation>({
-    name: 'Paris',
-    city: 'Paris',
-    country: 'France',
-    latitude: 48.8566,
-    longitude: 2.3522,
-    type: 'city',
-  });
-
-  const [activeRoutes, setActiveRoutes] = useState<GlobeRoute[]>([]);
-
-  // Modals state
-  const [flightModalOpen, setFlightModalOpen] = useState(false);
-  const [flightModalDestination, setFlightModalDestination] = useState<string | undefined>(undefined);
-
-  const [hotelModalOpen, setHotelModalOpen] = useState(false);
-  const [hotelModalDestination, setHotelModalDestination] = useState<string | undefined>(undefined);
-
-  const [transportModalOpen, setTransportModalOpen] = useState(false);
-  const [transportModalDestination, setTransportModalDestination] = useState<string | undefined>(undefined);
-
-  const [bundleBookingModalOpen, setBundleBookingModalOpen] = useState(false);
-  const [myBookingsOpen, setMyBookingsOpen] = useState(false);
-
-  const [chatModalOpen, setChatModalOpen] = useState(false);
-  const [chatInitialPrompt, setChatInitialPrompt] = useState<string | undefined>(undefined);
-  const [budgetModalOpen, setBudgetModalOpen] = useState(false);
-  const [packingModalOpen, setPackingModalOpen] = useState(false);
-
-  const [tripDashboardOpen, setTripDashboardOpen] = useState(false);
-  const [activeWorkspaceTrip, setActiveWorkspaceTrip] = useState<Trip | null>(null);
-
-  const [reviewsModalOpen, setReviewsModalOpen] = useState(false);
-  const [reviewsDestination, setReviewsDestination] = useState<string | undefined>(undefined);
-
-  const [memoriesModalOpen, setMemoriesModalOpen] = useState(false);
-
-  // New Profile & Admin Modals
-  const [profileModalOpen, setProfileModalOpen] = useState(false);
-  const [adminModalOpen, setAdminModalOpen] = useState(false);
-
-  // Destination Details Full Explore Modal
-  const [selectedDestinationForModal, setSelectedDestinationForModal] = useState<DestinationItem | null>(null);
-
-  const globeRef = useRef<VoyanaGlobeHandle>(null);
-
-  // Handle protected and action routes
   useEffect(() => {
-    if (loading) return;
+    const hash = () => setRoute(readRoute());
+    const context = () => { const current = getPlanningContext(); setPlanning(current); if (current.location) setSelectedLocation(current.location); };
+    window.addEventListener('hashchange', hash);
+    window.addEventListener('voyana:planning-changed', context);
+    return () => { window.removeEventListener('hashchange', hash); window.removeEventListener('voyana:planning-changed', context); };
+  }, []);
 
-    if (route === 'profile') {
-      if (!isAuthenticated) {
-        window.location.hash = '/login';
-      } else {
-        setProfileModalOpen(true);
-      }
-    } else if (route === 'admin') {
-      setAdminModalOpen(true);
-    } else if (route === 'trips') {
-      setTripDashboardOpen(true);
-    } else if (route === 'bookings') {
-      setMyBookingsOpen(true);
+  useEffect(() => {
+    let cancelled = false;
+    setBookings([]);
+    setSharedTrip(null);
+    setWorkspaceTrip(null);
+    setModal(null);
+    const current = getPlanningContext();
+    if (current.trip && !current.trip.members?.some(member => member.userId === userId || member.email === userEmail)) {
+      selectPlanningDestination(current.destination, current.location);
     }
-  }, [route, isAuthenticated, loading]);
+    const refresh = async () => { if (userId) { const result = await getUserBookings(userId); if (!cancelled) setBookings(result); } };
+    void refresh();
+    window.addEventListener('voyana:booking-changed', refresh);
+    return () => { cancelled = true; window.removeEventListener('voyana:booking-changed', refresh); };
+  }, [userId, userEmail]);
 
-  // Geographic Selection Handler (Shared State: UI <-> 3D Earth)
-  const handleSelectLocation = (location: GlobeLocation) => {
-    setSelectedDestination(location);
-    globeRef.current?.focusOnLocation(location.latitude, location.longitude, location.type);
-    globeRef.current?.setMarker(location);
+  useEffect(() => {
+    let cancelled = false;
+    if (confirmed?.tripId && planning.trip?.id !== confirmed.tripId) {
+      void getPublicTripById(confirmed.tripId).then(trip => { if (trip && !cancelled) selectPlanningTrip(trip); });
+    }
+    return () => { cancelled = true; };
+  }, [confirmed?.tripId, planning.trip?.id]);
+
+  const selectLocation = (location: GlobeLocation) => {
+    if (!Number.isFinite(location.latitude) || !Number.isFinite(location.longitude)) return;
+    setSelectedLocation(location);
+    selectPlanningDestination(location.name, location);
+    setRoutes([]);
+    setSharedTrip(null);
+    setWorkspaceTrip(null);
+    setModal(null);
+    setNotice('');
   };
 
-  const handleSelectRoute = (routes: GlobeRoute[], startLocation: GlobeLocation) => {
-    setActiveRoutes(routes);
-    handleSelectLocation(startLocation);
-    document.getElementById('top')?.scrollIntoView({ behavior: 'smooth' });
+  const close = () => { setModal(null); setPrompt(undefined); if (['flight', 'hotel', 'transport', 'bundle', 'bookings', 'chat', 'budget', 'packing', 'trips', 'reviews', 'memories', 'profile', 'admin'].includes(readRoute())) window.location.hash = '/'; };
+  const requestService = async (name: Modal, modeChosen = false) => {
+    const current = getPlanningContext();
+    setDestinationDetails(null); setJourneyDetails(null);
+    if (name === 'admin' && !isAdmin) { setNotice('Administrator access is required.'); return; }
+    if (['trips', 'profile', 'flight', 'hotel', 'transport', 'bundle', 'bookings', ...postBookingTools].includes(name) && !isAuthenticated) { window.location.hash = '/login'; return; }
+    if (!['trips', 'profile', 'admin', 'bookings'].includes(name) && (!current.selected || !current.destination)) { setNotice('Choose a destination in the search bar or on the globe first.'); return; }
+    if (['flight','hotel','transport','bundle'].includes(name) && !modeChosen) { setPendingBooking(name); return; }
+    const booking = bookings.find(item => item.status === 'confirmed' && item.paymentStatus === 'paid' && item.tripId && matchesDestination(current.destination, item.destination || ''));
+    const sharedAccess = Boolean(current.trip?.hasConfirmedBooking || (sharedTrip?.hasConfirmedBooking && sharedTrip.id === current.id));
+    if (postBookingTools.includes(name) && !booking && !sharedAccess) { setNotice(`Confirm a booking for ${current.destination} to unlock its workspace and expense tools.`); return; }
+    if (postBookingTools.includes(name) && booking?.tripId && current.id !== booking.tripId) {
+      const bookedTrip = await getPublicTripById(booking.tripId);
+      if (!bookedTrip) { setNotice('Your booking workspace could not be loaded.'); return; }
+      selectPlanningTrip(bookedTrip);
+    }
+    if (name === 'memories') { const trip = getPlanningContext().trip; if(trip) { setWorkspaceTrip(trip); setModal(null); } else setNotice('Open the trip workspace to create your AI travel memories.'); return; }
+    if (name === 'trips') { setWorkspaceTrip(null); setNotice(''); setModal('trips'); return; }
+    if (name === 'flight' && !resolveAirportCode(current.destination)) { setNotice('No supported airport for this destination. Choose a nearby city.'); return; }
+    setNotice(''); setModal(name);
+  };
+
+  const serviceRequest = useRef(requestService);
+  serviceRequest.current = requestService;
+
+  useEffect(() => {
+    if (loading) return;
+    if (route === 'trip-share') {
+      const id = new URLSearchParams(window.location.hash.split('?')[1]).get('tripId');
+      if (!userId) { window.location.hash = '/login'; return; }
+      if (id) void getPublicTripById(id).then(async trip => {
+        if (!trip) { setNotice('This invitation is unavailable or your account is not a member.'); return; }
+        const location = await resolveLocation(trip.destination);
+        if (location) setSelectedLocation(location);
+        selectPlanningTrip(trip); setSharedTrip(trip); setWorkspaceTrip(trip);
+      });
+    } else if (['flight', 'hotel', 'transport', 'bundle', 'bookings', 'chat', 'budget', 'packing', 'trips', 'reviews', 'memories', 'profile', 'admin'].includes(route)) {
+      void serviceRequest.current(route as Modal);
+    }
+  }, [route, loading, userId]);
+
+  const selectAndBook = async (destination: string, service?: Modal) => {
+    const location = await resolveLocation(destination.split('→')[0].trim());
+    if (!location) { setNotice('We could not locate this destination. Try a more specific city name.'); return; }
+    selectLocation(location);
+    if (service) void requestService(service);
+    else { setNotice(`Destination selected: ${location.name}. Choose a reservation below to begin your trip.`); document.getElementById('suite')?.scrollIntoView({ behavior: 'smooth' }); }
+  };
+  const userContext = { id: user?.id || '', name: user?.name || '', email: user?.email || '' };
+  const actions = {
+    onOpenTrips: () => void requestService('trips'), onOpenMyBookings: () => void requestService('bookings'),
+    onOpenChat: () => void requestService('chat'), onOpenFlight: () => void requestService('flight'),
+    onOpenHotel: () => void requestService('hotel'), onOpenTransport: () => void requestService('transport'),
+    onOpenBundle: () => void requestService('bundle'), onOpenPacking: () => void requestService('packing'),
+    onOpenBudget: () => void requestService('budget'), onOpenReviews: () => void requestService('reviews'),
+    onOpenMemories: () => void requestService('memories'), onOpenProfile: () => void requestService('profile'), onOpenAdmin: () => void requestService('admin'),
   };
 
   // Launch Trip Workspace initialized for a destination

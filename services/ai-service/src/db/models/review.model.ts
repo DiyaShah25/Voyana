@@ -86,7 +86,7 @@ const ReviewSchema = new Schema<IReview>(
   {
     timestamps: true,
     toJSON: {
-      transform(_doc, ret: Record<string, any>) {
+      transform(_doc, ret: Record<string, unknown>) {
         delete ret._id;
         delete ret.__v;
         return ret;

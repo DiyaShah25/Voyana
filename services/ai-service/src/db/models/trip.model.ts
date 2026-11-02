@@ -35,6 +35,13 @@ export interface ITripActivity {
 export interface ITrip extends Document {
   id: string;
   ownerId: string;
+  travelMode: 'solo' | 'group';
+  lifecycle: 'planning' | 'booked' | 'completed';
+  photoCount: number;
+  albumStatus: string;
+  albumStory?: string;
+  albumError?: string;
+  albumStartedAt?: Date;
   title: string;
   destination: string;
   country?: string;
@@ -88,6 +95,11 @@ const TripSchema = new Schema<ITrip>(
   {
     id: { type: String, required: true, unique: true, index: true },
     ownerId: { type: String, required: true, index: true },
+    travelMode: { type: String, enum: ['solo', 'group'], default: 'group' },
+    lifecycle: { type: String, enum: ['planning', 'booked', 'completed'], default: 'planning' },
+    photoCount: { type: Number, default: 0 },
+    albumStatus: { type: String, default: 'empty' },
+    albumStory: String, albumError: String, albumStartedAt: Date,
     title: { type: String, required: true, trim: true },
     destination: { type: String, required: true, trim: true },
     country: { type: String, trim: true },
@@ -111,7 +123,7 @@ const TripSchema = new Schema<ITrip>(
   {
     timestamps: true,
     toJSON: {
-      transform(_doc, ret: Record<string, any>) {
+      transform(_doc, ret: Record<string, unknown>) {
         delete ret._id;
         delete ret.__v;
         return ret;

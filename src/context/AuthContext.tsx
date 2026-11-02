@@ -4,7 +4,7 @@
  * role permissions (traveler, organizer, admin), and login/signup/logout actions.
  */
 
-import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import type {
   AuthResult,
   UserProfile,
@@ -16,7 +16,7 @@ import {
   signOut as apiSignOut,
   restoreSession,
   updateUserProfile as apiUpdateProfile,
-  switchUserRole as apiSwitchRole,
+  signInWithGoogleCredential,
 } from '@/services/authService';
 
 // Shape of values exposed by the auth context
@@ -29,8 +29,8 @@ interface AuthContextValue {
   signIn: (email: string, password: string) => Promise<AuthResult>;
   signUp: (name: string, email: string, password: string, role?: UserRole) => Promise<AuthResult>;
   signOut: () => void;
+  signInWithGoogle: (credential: string, challenge: string) => Promise<AuthResult>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<boolean>;
-  switchRole: (newRole: UserRole) => Promise<void>;
   isAdmin: boolean;
   isOrganizer: boolean;
   isTraveler: boolean;
@@ -84,6 +84,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return result;
   };
 
+  const signInWithGoogle = async (credential: string, challenge: string): Promise<AuthResult> => {
+    const result = await signInWithGoogleCredential(credential, challenge);
+    if (result.ok && result.session) { setUser(result.session.user); setToken(result.session.token); }
+    return result;
+  };
+
   // Clear auth state and end session
   const signOut = () => {
     apiSignOut();
@@ -102,22 +108,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return false;
   };
 
-  // Switch user's active role
-  const switchRole = async (newRole: UserRole) => {
-    if (!user) return;
-    const updated = await apiSwitchRole(user.id, newRole);
-    if (updated) {
-      setUser(updated);
-    }
-  };
-
   // Derived role flags for quick permission checks
   const role: UserRole = user?.role || 'traveler';
   const isAuthenticated = Boolean(user && token);
 
   // Memoized context value to avoid unnecessary re-renders
-  const value = useMemo<AuthContextValue>(
-    () => ({
+  const value: AuthContextValue = {
       user,
       role,
       isAuthenticated,
@@ -126,14 +122,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       signIn,
       signUp,
       signOut,
+      signInWithGoogle,
       updateProfile,
-      switchRole,
       isAdmin: role === 'admin',
       isOrganizer: role === 'organizer',
       isTraveler: role === 'traveler',
-    }),
-    [user, role, isAuthenticated, token, loading]
-  );
+  };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

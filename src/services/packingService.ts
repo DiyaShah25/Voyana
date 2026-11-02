@@ -4,7 +4,7 @@
  * weather-aware recommendations, and member item assignments.
  */
 
-import { apiRequest } from './apiClient';
+import { createTripStore } from './tripStore';
 
 export type PackingCategory =
   | 'Clothing'
@@ -188,44 +188,14 @@ const INITIAL_PACKING_LIST: PackingListState = {
   ],
 };
 
-export function getPackingList(): PackingListState {
-  try {
-    const saved = localStorage.getItem(PACKING_STORAGE_KEY);
-    if (saved) return JSON.parse(saved);
-  } catch (e) {
-    console.error('Error reading packing list from storage', e);
-  }
-  return INITIAL_PACKING_LIST;
-}
+const packingStore = createTripStore<PackingListState>(PACKING_STORAGE_KEY, '/api/packing', 'list', context => ({
+  ...INITIAL_PACKING_LIST, destination: context.destination,
+  items: INITIAL_PACKING_LIST.items.map(item => ({ ...item, isPacked: false, assignedTo: 'Everyone' })),
+}));
 
-export async function fetchPackingList(tripIdOrDestination: string = 'trip-paris-01'): Promise<PackingListState> {
-  try {
-    const res = await apiRequest<{ ok: boolean; list: any }>(`/api/packing/${tripIdOrDestination}`);
-    if (res.ok && res.data?.list) {
-      const packingState: PackingListState = {
-        destination: res.data.list.destination || 'Paris',
-        tripDurationDays: res.data.list.tripDurationDays || 5,
-        seasonOrWeather: res.data.list.seasonOrWeather || 'Mild Autumn',
-        items: (res.data.list.items && res.data.list.items.length > 0)
-          ? res.data.list.items
-          : INITIAL_PACKING_LIST.items,
-      };
-      savePackingList(packingState);
-      return packingState;
-    }
-  } catch (err) {
-    console.warn('[PackingService] Backend fetch fallback to local cache:', err);
-  }
-  return getPackingList();
-}
-
-export function savePackingList(state: PackingListState): void {
-  try {
-    localStorage.setItem(PACKING_STORAGE_KEY, JSON.stringify(state));
-  } catch (e) {
-    console.error('Error saving packing list to storage', e);
-  }
-}
+export const getPackingList = packingStore.read;
+export const fetchPackingList = packingStore.load;
+export const savePackingList = packingStore.save;
 
 export function toggleItemPacked(itemId: string): PackingListState {
   const current = getPackingList();
@@ -358,7 +328,6 @@ export function getMemberTaskStats(state: PackingListState): Array<{ member: str
 }
 
 export function generateAiChecklist(destination: string, days: number = 5): PackingListState {
-  const current = getPackingList();
 
   const isTropical = ['Bali', 'Goa', 'Phuket', 'Maldives', 'Cancun', 'Dubai', 'Hawaii'].some((d) =>
     destination.toLowerCase().includes(d.toLowerCase())

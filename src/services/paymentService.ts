@@ -1,345 +1,197 @@
-/**
- * Payment Processing Service
- * Handles payment initiation, gateway settlement simulation, card validation,
- * transaction history, and booking confirmation alerts. Supports Supabase
- * backend and localStorage mock mode for preview.
- */
-
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { createAlert } from './alertService';
-
-// --- Types & Interfaces ---
-export type PaymentMethod = 'credit_card' | 'apple_pay' | 'google_pay' | 'paypal' | 'upi_qr';
-export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded';
-
-export interface PaymentRecord {
-  id: string;
-  booking_id: string;
-  user_id: string;
-  amount: number;
-  currency: string;
-  status: PaymentStatus;
-  payment_method: PaymentMethod;
-  transaction_reference: string;
-  metadata?: Record<string, any>;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface InitiatePaymentParams {
-  bookingId: string;
-  amount: number;
-  currency?: string;
-  paymentMethod: PaymentMethod;
-  userId?: string;
-  metadata?: Record<string, any>;
-}
-
-export interface CardDetails {
-  cardNumber: string;
-  cardHolder: string;
-  expiryDate: string; // MM/YY
-  cvv: string;
-  postalCode?: string;
-}
-
-export interface PaymentResult {
-  success: boolean;
+import { apiRequest } from "./apiClient";
+import { restoreSession } from "./authService";
+import type { UnifiedBooking } from "./bookingService";
+import type { Trip } from "./tripService";
+export type ReservationChoice =
+  | {
+      type: "flight";
+      id: string;
+      origin: string;
+      destination: string;
+      date: string;
+      cabin: "economy" | "premium_economy" | "business" | "first";
+      passengers: number;
+    }
+  | {
+      type: "hotel";
+      id: string;
+      checkIn: string;
+      checkOut: string;
+      roomType:
+        | "Standard"
+        | "Deluxe"
+        | "Executive Suite"
+        | "Presidential Suite";
+      rooms: number;
+      guests: number;
+    }
+  | {
+      type: "transport";
+      id: string;
+      origin: string;
+      date: string;
+      passengers: number;
+      days?: number;
+    };
+export interface ConfirmedCheckout {
+  booking: UnifiedBooking;
+  trip: Trip;
   paymentId?: string;
   transactionReference?: string;
-  error?: string;
 }
-
-// ---------------------------------------------------------------------------
-// Supabase Client Initialization (Matching authService & flightService pattern)
-// ---------------------------------------------------------------------------
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
-
-let supabase: SupabaseClient | null = null;
-if (supabaseUrl && supabaseAnonKey) {
-  supabase = createClient(supabaseUrl, supabaseAnonKey);
+interface GatewayResponse {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
 }
-
-// ---------------------------------------------------------------------------
-// Transaction Reference Generator (Standard: TXN-YYYYMMDD-XXXXXX)
-// ---------------------------------------------------------------------------
-export function generateTransactionReference(): string {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  const dateSegment = `${year}${month}${day}`;
-
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let randSegment = '';
-  for (let i = 0; i < 6; i++) {
-    randSegment += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-
-  return `TXN-${dateSegment}-${randSegment}`;
+interface GatewayOptions {
+  key: string;
+  order_id: string;
+  amount: number;
+  currency: string;
+  name: string;
+  description: string;
+  prefill: { name: string; email: string };
+  theme: { color: string };
+  handler: (response: GatewayResponse) => void;
+  modal: { ondismiss: () => void };
 }
-
-// ---------------------------------------------------------------------------
-// 1. Initiate Payment (Creates a Pending Payment Record)
-// ---------------------------------------------------------------------------
-export async function initiatePayment(params: InitiatePaymentParams): Promise<PaymentResult> {
-  const {
-    bookingId,
-    amount,
-    currency = 'USD',
-    paymentMethod,
-    userId,
-    metadata = {},
-  } = params;
-
-  const transactionReference = generateTransactionReference();
-
-  if (supabase) {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      const targetUserId = user?.id || userId;
-
-      if (!targetUserId) {
-        console.error('[PaymentService] initiatePayment error: Missing authenticated user.');
-        return { success: false, error: 'User must be authenticated to initiate payment.' };
-      }
-
-      const { data: payment, error: pErr } = await supabase
-        .from('payments')
-        .insert([{
-          booking_id: bookingId,
-          user_id: targetUserId,
-          amount,
-          currency,
-          status: 'pending',
-          payment_method: paymentMethod,
-          transaction_reference: transactionReference,
-          metadata,
-        }])
-        .select()
-        .single();
-
-      if (pErr || !payment) {
-        console.error('[PaymentService] Failed to insert pending payment into Supabase:', pErr);
-        return { success: false, error: `Failed to initiate payment: ${pErr?.message || 'Database error'}` };
-      }
-
-      return {
-        success: true,
-        paymentId: payment.id,
-        transactionReference: payment.transaction_reference,
+interface Gateway {
+  open(): void;
+  on(event: string, callback: () => void): void;
+}
+type GatewayWindow = Window & {
+  Razorpay?: new (options: GatewayOptions) => Gateway;
+};
+let loading: Promise<void> | undefined;
+function loadCheckout() {
+  if ((window as GatewayWindow).Razorpay) return Promise.resolve();
+  if (!loading)
+    loading = new Promise<void>((resolve, reject) => {
+      const script = document.createElement("script");
+      const timer = window.setTimeout(() => {
+        script.remove();
+        reject(new Error("Razorpay took too long to load. Please retry."));
+      }, 15000);
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.async = true;
+      script.onload = () => {
+        clearTimeout(timer);
+        if ((window as GatewayWindow).Razorpay) resolve();
+        else reject(new Error("Razorpay could not load."));
       };
-    } catch (err) {
-      console.error('[PaymentService] Unexpected error during initiatePayment:', err);
-      return { success: false, error: 'An unexpected error occurred while initiating payment.' };
-    }
-  }
-
-  // Preview / Offline Mock Mode
-  const mockPaymentId = `pay-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-  return {
-    success: true,
-    paymentId: mockPaymentId,
-    transactionReference,
-  };
-}
-
-// ---------------------------------------------------------------------------
-// 2. Confirm Payment (Settlement & Linked Booking Confirmation)
-// ---------------------------------------------------------------------------
-/**
- * Simulated Payment Gateway Settlement
- * Simulates gateway authorization, latency, and linked booking confirmation.
- */
-export async function confirmPayment(
-  paymentId: string,
-  bookingId: string,
-  bookingDetails?: {
-    bookingReference: string;
-    bookingType: 'flight' | 'hotel' | 'transport' | 'package';
-    title: string;
-    description: string;
-    userId?: string;
-  }
-): Promise<PaymentResult> {
-  // Simulate payment gateway settlement latency (800ms)
-  await new Promise((r) => setTimeout(r, 800));
-
-  if (supabase) {
-    try {
-      // 1. Update Payment Status to 'completed'
-      const { data: payment, error: pErr } = await supabase
-        .from('payments')
-        .update({
-          status: 'completed',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', paymentId)
-        .select()
-        .single();
-
-      if (pErr || !payment) {
-        console.error('[PaymentService] Failed to confirm payment in Supabase:', pErr);
-        return { success: false, error: `Payment authorization failed: ${pErr?.message || 'Database error'}` };
-      }
-
-      // 2. Update linked Booking Status to 'confirmed' and payment_status to 'paid'
-      const { error: bErr } = await supabase
-        .from('bookings')
-        .update({
-          status: 'confirmed',
-          payment_status: 'paid',
-          payment_reference: payment.transaction_reference,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', bookingId);
-
-      if (bErr) {
-        console.error('[PaymentService] Failed to update linked booking status:', bErr);
-        return { success: false, error: `Failed to confirm linked reservation: ${bErr.message}` };
-      }
-
-      return {
-        success: true,
-        paymentId: payment.id,
-        transactionReference: payment.transaction_reference,
+      script.onerror = () => {
+        clearTimeout(timer);
+        script.remove();
+        reject(
+          new Error("Could not connect to Razorpay. Check your connection."),
+        );
       };
-    } catch (err) {
-      console.error('[PaymentService] Unexpected error in confirmPayment:', err);
-      return { success: false, error: 'An unexpected error occurred during payment confirmation.' };
-    }
-  }
-
-  // Preview / Offline Mode
-  const fallbackRef = generateTransactionReference();
-
-  // Trigger booking confirmation alert via alertService
-  if (bookingDetails) {
-    await createAlert({
-      user_id: bookingDetails.userId || 'usr-demo-01',
-      booking_id: bookingId,
-      booking_reference: bookingDetails.bookingReference,
-      booking_type: bookingDetails.bookingType,
-      title: `${bookingDetails.bookingType === 'flight' ? 'Flight' : bookingDetails.bookingType === 'hotel' ? 'Hotel' : bookingDetails.bookingType === 'transport' ? 'Transport' : 'Package'} Booking Confirmed`,
-      message: `${bookingDetails.description} (Payment Ref: ${fallbackRef})`,
-      severity: 'success',
-      old_status: 'pending',
-      new_status: 'confirmed',
+      document.head.appendChild(script);
+    }).catch((error) => {
+      loading = undefined;
+      throw error;
+    });
+  return loading;
+}
+const verification = new Map<string, GatewayResponse>();
+export async function checkoutReservation(
+  reservation: Record<string, unknown>,
+): Promise<ConfirmedCheckout> {
+  const session = restoreSession();
+  if (!session) throw new Error("Sign in before paying.");
+  const order = await apiRequest<{
+    completed?: boolean;
+    booking?: UnifiedBooking;
+    trip?: Trip;
+    intentId: string;
+    keyId: string;
+    orderId: string;
+    amount: number;
+    currency: string;
+    provider?: string;
+    demoOtp?: string;
+    expiresAt?: string;
+  }>(
+    "/api/payments/orders",
+    { method: "POST", body: JSON.stringify(reservation) },
+    20000,
+  );
+  if (!order.ok || !order.data)
+    throw new Error(order.error || "Payment order could not be created.");
+  const data = order.data;
+  window.dispatchEvent(new CustomEvent("voyana:booking-changed"));
+  if (data.completed && data.booking && data.trip)
+    return { booking: data.booking, trip: data.trip };
+  if (data.provider === "demo" && data.demoOtp && data.expiresAt) {
+    const { showDemoCheckout } = await import("./demoCheckout");
+    return showDemoCheckout({
+      intentId: data.intentId,
+      amount: data.amount,
+      demoOtp: data.demoOtp,
+      expiresAt: data.expiresAt,
     });
   }
-
-  return {
-    success: true,
-    paymentId,
-    transactionReference: fallbackRef,
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Card Validation & Helper Utilities
-// ---------------------------------------------------------------------------
-export function detectCardBrand(number: string): 'visa' | 'mastercard' | 'amex' | 'discover' | 'generic' {
-  const clean = number.replace(/\s+/g, '');
-  if (/^4/.test(clean)) return 'visa';
-  if (/^5[1-5]/.test(clean)) return 'mastercard';
-  if (/^3[47]/.test(clean)) return 'amex';
-  if (/^6(?:011|5)/.test(clean)) return 'discover';
-  return 'generic';
-}
-
-export function formatCardNumber(value: string): string {
-  const digits = value.replace(/\D/g, '').substring(0, 16);
-  const parts = digits.match(/.{1,4}/g);
-  return parts ? parts.join(' ') : digits;
-}
-
-export function formatExpiryDate(value: string): string {
-  const digits = value.replace(/\D/g, '').substring(0, 4);
-  if (digits.length >= 3) {
-    return `${digits.slice(0, 2)}/${digits.slice(2, 4)}`;
+  let proof = verification.get(data.intentId);
+  if (!proof) {
+    await loadCheckout();
+    proof = await new Promise<GatewayResponse>((resolve, reject) => {
+      let finished = false;
+      const finish = (result?: GatewayResponse) => {
+        if (finished) return;
+        finished = true;
+        if (result) resolve(result);
+        else
+          reject(
+            new Error(
+              "Checkout closed. Your reservation has not been confirmed.",
+            ),
+          );
+      };
+      const Constructor = (window as GatewayWindow).Razorpay!;
+      const gateway = new Constructor({
+        key: data.keyId,
+        order_id: data.orderId,
+        amount: data.amount,
+        currency: data.currency,
+        name: "Voyana",
+        description: `${reservation.destination} travel reservation · Test Mode`,
+        prefill: {
+          name: session.user.name,
+          email: String(reservation.contactEmail || session.user.email),
+        },
+        theme: { color: "#075e45" },
+        handler: (result) => finish(result),
+        modal: { ondismiss: () => finish() },
+      });
+      gateway.on("payment.failed", () => {
+        /* Razorpay keeps the checkout open so the customer can retry. */
+      });
+      gateway.open();
+    });
+    verification.set(data.intentId, proof);
   }
-  return digits;
-}
-
-// ---------------------------------------------------------------------------
-// 3. Transaction History Queries
-// ---------------------------------------------------------------------------
-export async function getTransactionHistory(userId: string = 'usr-demo-01'): Promise<PaymentRecord[]> {
-  if (supabase) {
-    try {
-      const { data, error } = await supabase
-        .from('payments')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-
-      if (!error && data) {
-        return data as PaymentRecord[];
-      }
-    } catch (err) {
-      console.error('[PaymentService] Error retrieving transaction history from Supabase:', err);
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const result = await apiRequest<ConfirmedCheckout>(
+      "/api/payments/verify",
+      {
+        method: "POST",
+        body: JSON.stringify({ intentId: data.intentId, ...proof }),
+      },
+      20000,
+    );
+    if (result.ok && result.data?.booking && result.data.trip) {
+      verification.delete(data.intentId);
+      return result.data;
     }
-  }
-
-  // Fallback demo transaction history
-  return [
-    {
-      id: 'pay-tx-001',
-      booking_id: 'bkg-fl-001',
-      user_id: userId,
-      amount: 850,
-      currency: 'USD',
-      status: 'completed',
-      payment_method: 'credit_card',
-      transaction_reference: 'TXN-20260910-K82M19',
-      created_at: new Date(Date.now() - 86400000 * 10).toISOString(),
-      updated_at: new Date(Date.now() - 86400000 * 10).toISOString(),
-      metadata: { description: 'Roundtrip Flight Booking: CDG -> HND' },
-    },
-    {
-      id: 'pay-tx-002',
-      booking_id: 'bkg-ht-002',
-      user_id: userId,
-      amount: 920,
-      currency: 'USD',
-      status: 'completed',
-      payment_method: 'apple_pay',
-      transaction_reference: 'TXN-20260912-P39Q71',
-      created_at: new Date(Date.now() - 86400000 * 8).toISOString(),
-      updated_at: new Date(Date.now() - 86400000 * 8).toISOString(),
-      metadata: { description: 'Hotel Reservation: Park Hyatt Tokyo (3 Nights)' },
-    },
-    {
-      id: 'pay-tx-003',
-      booking_id: 'bkg-tr-003',
-      user_id: userId,
-      amount: 90,
-      currency: 'USD',
-      status: 'completed',
-      payment_method: 'credit_card',
-      transaction_reference: 'TXN-20260915-Z14L88',
-      created_at: new Date(Date.now() - 86400000 * 5).toISOString(),
-      updated_at: new Date(Date.now() - 86400000 * 5).toISOString(),
-      metadata: { description: 'Airport Executive Transfer (Haneda Airport to Shinjuku)' },
-    },
-  ];
-}
-
-export async function getPaymentById(paymentId: string): Promise<PaymentRecord | null> {
-  if (supabase) {
-    try {
-      const { data, error } = await supabase
-        .from('payments')
-        .select('*')
-        .eq('id', paymentId)
-        .single();
-
-      if (!error && data) return data as PaymentRecord;
-    } catch (err) {
-      console.error('[PaymentService] Error retrieving payment by ID:', err);
+    if (result.status === 409 && attempt < 3) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      continue;
     }
+    throw new Error(
+      result.error ||
+        "Payment verification is pending. Retry verification before paying again.",
+    );
   }
-  return null;
+  throw new Error("Payment verification is pending.");
 }
-
