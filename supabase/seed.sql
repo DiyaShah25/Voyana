@@ -211,3 +211,4 @@ INSERT INTO public.travel_reviews (
     19,
     true
 );
+
