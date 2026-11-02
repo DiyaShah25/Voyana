@@ -3,7 +3,7 @@
 **Project**: Voyana — Collaborative AI Travel Platform  
 **Author / QA Lead**: Bhavika Sainani  
 **Team Members**: Diya Shah, Nigam Sanghvi, Tirth Gandhi, Bhavika Sainani, Megha Lalwani, Manav Vyas, Bhavika Mulani, Jagrat Kumar  
-**Tested Commit Hash**: `19b914a`  
+**Tested Commit Hash**: `13fbf2f` (Updated on `99ca84f`)  
 **Date**: November 2, 2026  
 
 ---
@@ -12,7 +12,7 @@
 
 | Defect ID | Severity | Category | Title | Status | Resolution / Action |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **BUG-01** | Critical | Security | JWT Signature Verification Bypass via Base64 Fallback | **Fixed** | Fixed in commit `2421b1f` |
+| **BUG-01** | Critical | Security | JWT Signature Verification Bypass via Base64 Fallback | **Fixed in Prod (Dev Risk Noted)** | Fixed in commit `2421b1f`; dev-mode mock path documented |
 | **BUG-02** | High | Security | Hardcoded Fallback JWT Secret in `config/env.ts` | **Fixed** | Fixed in commit `25b4c39` |
 | **BUG-03** | Medium | Functional / DB | `BudgetModel` Upsert Fails Validation on Uninitialized Trip IDs | **Fixed** | Resolved in integration test workflow |
 | **BUG-04** | Low | Documentation | Initial Check: `docs/API_DOCUMENTATION.md` Missing in Repo | **Invalid / Closed** | File exists with 1,290 lines documenting REST endpoints |
@@ -43,7 +43,9 @@
   Removed the insecure fallback. Enforced strict `jwt.verify()` with explicit handling:
   - If token expired: HTTP 401 `"Authentication token has expired."`
   - If invalid signature/tampered: HTTP 401 `"Invalid or tampered authentication token."`
-- **Status**: **Fixed in commit `2421b1f`**.
+- **Residual Risk Note (Non-Production Dev Fallback)**:
+  `auth.middleware.ts` retains an explicit bypass for developer convenience when `NODE_ENV !== 'production'`: it permits unsigned mock tokens if prefixed with `mock-token-` or if the decoded JSON contains `iss: 'voyana.travel'`. In production builds (`NODE_ENV === 'production'`), this path is completely ignored and strict cryptographic verification is mandatory. This dev-mode behavior is documented as an accepted residual risk in local testing environments.
+- **Status**: **Fixed in Production (Dev-Mode Residual Risk Documented)** in commit `2421b1f`.
 
 ---
 

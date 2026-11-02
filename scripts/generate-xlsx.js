@@ -20,17 +20,18 @@ async function generateWorkbook() {
     { header: 'Passed', key: 'passed', width: 14 },
     { header: 'Failed', key: 'failed', width: 14 },
     { header: 'Pass Rate (%)', key: 'rate', width: 16 },
-    { header: 'Key Metrics / Notes', key: 'notes', width: 50 },
+    { header: 'Key Metrics / Notes', key: 'notes', width: 55 },
   ];
 
   wsSummary.addRows([
-    { category: 'Frontend Unit & Services (Vitest)', suites: 17, executed: 112, passed: 112, failed: 0, rate: '100.0%', notes: '73.94% Line/Stmt Coverage across src/services' },
+    { category: 'Frontend Unit & Services (Vitest)', suites: 17, executed: 112, passed: 112, failed: 0, rate: '100.0%', notes: '73.94% on tested modules (45.73% across all services)' },
     { category: 'Backend Integration & API (Jest)', suites: 10, executed: 104, passed: 104, failed: 0, rate: '100.0%', notes: 'Supertest full route groups + business flows' },
-    { category: 'E2E & Non-Functional (Playwright)', suites: 2, executed: 6, passed: 6, failed: 0, rate: '100.0%', notes: 'Chromium visual flows, responsive & a11y baseline' },
-    { category: 'TOTAL AUTOMATED TESTS', suites: 29, executed: 222, passed: 222, failed: 0, rate: '100.0%', notes: 'All automated regression tests verified' },
+    { category: 'E2E & Non-Functional (Playwright)', suites: 2, executed: 6, passed: 6, failed: 0, rate: '100.0%', notes: 'Chromium visual flows, responsive views & a11y baseline' },
+    { category: 'TOTAL AUTOMATED TESTS', suites: 29, executed: 222, passed: 222, failed: 0, rate: '100.0%', notes: 'All automated regression tests verified on codebase' },
     {},
-    { category: 'Performance Load Benchmark (Health)', suites: 1, executed: 4510, passed: 4510, failed: 0, rate: '100.0%', notes: '1125.8 req/s throughput; 8.08ms p50; 0 errors' },
-    { category: 'Browser Navigation & Web Vitals', suites: 1, executed: 5, passed: 5, failed: 0, rate: '100.0%', notes: 'TTFB 17.3ms, DOM Loaded 297.6ms, FCP 756ms (Real)' },
+    { category: 'Load Benchmark: GET /health', suites: 1, executed: 2700, passed: 2700, failed: 0, rate: '100.0%', notes: '898.8 req/s throughput; 9.96ms p50; 0 errors (Health ping)' },
+    { category: 'Load Benchmark: GET /api/destinations', suites: 1, executed: 1214, passed: 1214, failed: 0, rate: '100.0%', notes: '403.6 req/s throughput; 23.44ms p50; 0 errors (Mongoose DB query)' },
+    { category: 'Browser Navigation & Web Vitals', suites: 1, executed: 5, passed: 5, failed: 0, rate: '100.0%', notes: 'TTFB 17.3ms, DOM Loaded 297.6ms, FCP 756ms (Real values)' },
     { category: 'Security & Dependency Vulnerabilities', suites: 2, executed: 63, passed: 61, failed: 2, rate: '96.8%', notes: 'BUG-01 & BUG-02 Fixed; BUG-06 Accepted Risk' },
   ]);
 
@@ -39,7 +40,7 @@ async function generateWorkbook() {
   wsSummary.getRow(5).font = { bold: true };
 
   // --------------------------------------------------------------------------
-  // SHEET 2: Test Cases
+  // SHEET 2: Test Cases (All 33 Cases)
   // --------------------------------------------------------------------------
   const wsCases = wb.addWorksheet('Test Cases', { views: [{ showGridLines: true }] });
   wsCases.columns = [
@@ -67,6 +68,7 @@ async function generateWorkbook() {
     { id: 'TC-DST-01', req: 'FR-DST-01', jira: 'VPM-16', module: 'Destinations', title: 'List Curated Destinations', pre: 'DB seeded', data: 'No filter', expected: 'HTTP 200 OK, 15+ items', actual: 'HTTP 200, array of destinations', status: 'Pass', ref: 'all-routes-integration.test.ts' },
     { id: 'TC-DST-02', req: 'FR-DST-01', jira: 'VPM-16', module: 'Destinations', title: 'Filter Destinations by Region', pre: 'DB seeded', data: 'region=Europe', expected: 'HTTP 200, Europe items only', actual: 'HTTP 200, filtered by Europe', status: 'Pass', ref: 'all-routes-integration.test.ts' },
     { id: 'TC-DST-03', req: 'FR-DST-02', jira: 'VPM-16', module: 'Destinations', title: 'Get Destination by Valid ID', pre: 'Item exists', data: 'dst-test-paris', expected: 'HTTP 200 OK', actual: 'HTTP 200, returns destination', status: 'Pass', ref: 'all-routes-integration.test.ts' },
+    { id: 'TC-DST-04', req: 'FR-DST-02', jira: 'VPM-16', module: 'Destinations', title: 'Unknown Destination ID Returns 404', pre: 'Item absent', data: 'unknown-id-999', expected: 'HTTP 404 Not Found', actual: 'HTTP 404 returned cleanly', status: 'Pass', ref: 'all-routes-integration.test.ts' },
     { id: 'TC-AI-01', req: 'FR-AI-01', jira: 'VPM-38', module: 'AI Chat', title: 'AI Itinerary Guidance Generation', pre: 'LLM initialized', data: 'Suggest 3-day Paris itinerary', expected: 'HTTP 200 OK, citations included', actual: 'HTTP 200, day citations included', status: 'Pass', ref: 'chat.test.ts' },
     { id: 'TC-AI-02', req: 'FR-AI-02', jira: 'VPM-46', module: 'AI Chat', title: 'Contextual Day Citations', pre: 'Context active', data: 'What is budget on day 2?', expected: 'Cites itinerary days accurately', actual: 'Accurately cites day 2 and budget', status: 'Pass', ref: 'chat.test.ts' },
     { id: 'TC-AI-03', req: 'FR-AI-01', jira: 'VPM-44', module: 'AI Chat', title: 'Validation on Empty Payload', pre: 'API route', data: 'message: ""', expected: 'HTTP 400 Bad Request', actual: 'HTTP 400, Invalid request payload', status: 'Pass', ref: 'all-routes-integration.test.ts' },
@@ -97,7 +99,7 @@ async function generateWorkbook() {
   wsCases.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0284C7' } };
 
   // --------------------------------------------------------------------------
-  // SHEET 3: Traceability Matrix
+  // SHEET 3: Traceability Matrix (All 24 Rows)
   // --------------------------------------------------------------------------
   const wsTrace = wb.addWorksheet('Traceability', { views: [{ showGridLines: true }] });
   wsTrace.columns = [
@@ -142,7 +144,7 @@ async function generateWorkbook() {
   wsTrace.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0D9488' } };
 
   // --------------------------------------------------------------------------
-  // SHEET 4: Bug Log
+  // SHEET 4: Bug Log (BUG-01 to BUG-06)
   // --------------------------------------------------------------------------
   const wsBug = wb.addWorksheet('Bug Log', { views: [{ showGridLines: true }] });
   wsBug.columns = [
@@ -153,12 +155,12 @@ async function generateWorkbook() {
     { header: 'Steps to Reproduce', key: 'steps', width: 40 },
     { header: 'Expected Result', key: 'expected', width: 32 },
     { header: 'Actual Result', key: 'actual', width: 32 },
-    { header: 'Status', key: 'status', width: 16 },
+    { header: 'Status', key: 'status', width: 22 },
     { header: 'Fixed In / Evidence', key: 'evidence', width: 28 },
   ];
 
   const bugData = [
-    { id: 'BUG-01', severity: 'Critical', category: 'Security', title: 'JWT Signature Verification Bypass via Base64 Fallback', steps: '1. Forge JWT with fake secret.\n2. Send GET /api/auth/me with Bearer token.', expected: 'HTTP 401 Unauthorized', actual: 'HTTP 200 OK (Bypassed check)', status: 'Fixed', evidence: 'Commit 2421b1f' },
+    { id: 'BUG-01', severity: 'Critical', category: 'Security', title: 'JWT Signature Verification Bypass via Base64 Fallback', steps: '1. Forge JWT with fake secret.\n2. Send GET /api/auth/me with Bearer token.', expected: 'HTTP 401 Unauthorized', actual: 'HTTP 200 OK (Bypassed check)', status: 'Fixed (Dev Risk Noted)', evidence: 'Commit 2421b1f' },
     { id: 'BUG-02', severity: 'High', category: 'Security', title: 'Hardcoded Fallback JWT Secret in env.ts', steps: '1. Inspect env.ts in older commit.\n2. Run without JWT_SECRET in production.', expected: 'Crash on startup in production', actual: 'Used hardcoded team fallback', status: 'Fixed', evidence: 'Commit 25b4c39' },
     { id: 'BUG-03', severity: 'Medium', category: 'Functional/DB', title: 'BudgetModel Upsert Fails Validation on Blank Trip', steps: '1. POST /api/budget/:tripId/expenses for uninitialized trip.', expected: 'HTTP 404 or default fields', actual: 'HTTP 500 Mongoose validation error', status: 'Fixed', evidence: 'Integration Test Suite' },
     { id: 'BUG-04', severity: 'Low', category: 'Documentation', title: 'Initial Check: docs/API_DOCUMENTATION.md Missing in Repo', steps: '1. Search for docs/API_DOCUMENTATION.md.\n2. Observe pre-merge absence.', expected: 'OpenAPI/REST doc exists', actual: 'File exists with 1290 lines', status: 'Invalid / Closed', evidence: 'docs/API_DOCUMENTATION.md' },
@@ -178,7 +180,7 @@ async function generateWorkbook() {
 
   const outPath = path.join(outDir, 'Voyana_Test_Cases.xlsx');
   await wb.xlsx.writeFile(outPath);
-  console.log('Successfully generated Excel deliverable at:', outPath);
+  console.log('Successfully regenerated Excel deliverable at:', outPath);
 }
 
 generateWorkbook().catch(console.error);

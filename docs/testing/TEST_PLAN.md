@@ -4,7 +4,7 @@
 **Project**: Voyana — Collaborative AI-Assisted Travel Platform  
 **Author / QA Lead**: Bhavika Sainani  
 **Team Members**: Diya Shah, Nigam Sanghvi, Tirth Gandhi, Bhavika Sainani, Megha Lalwani, Manav Vyas, Bhavika Mulani, Jagrat Kumar  
-**Tested Commit**: `19b914a`  
+**Tested Commit**: `13fbf2f` (Updated on `99ca84f`)  
 **Date**: November 2, 2026  
 
 ---
@@ -33,11 +33,15 @@ The primary objective of this Test Plan is to validate the correctness, security
 - **UI / E2E Automation**: Playwright headless browser flows on Chromium across full booking and navigation paths.
 - **Cross-Browser & Responsiveness**: Viewport verification across Mobile (375px), Tablet (768px), and Desktop (1440px).
 - **Accessibility (a11y)**: Focusability, image alt-attributes, DOM semantic hierarchy, and contrast baseline.
-- **Performance & Load**: Native concurrent load testing (10 parallel clients, throughput, p50/p95/p99 latency) and Core Web Vitals (FCP, TTFB, DOMContentLoaded).
+- **Performance & Load**: Native concurrent load testing covering both lightweight ping (`/health`) and database-backed catalog queries (`/api/destinations`), reporting throughput, p50/p95/p99 latency, and error rate.
 - **Security & Vulnerability Analysis**: Audit for hardcoded secrets, JWT bypass vulnerabilities, dependency CVEs via `npm audit`, NoSQL injection resilience, and IDOR protection.
 - **Resilience / Fault Tolerance**: Backend offline recovery, mock provider fallback, and network failure tolerance.
 
-### 2.3 Known Gaps / Out of Scope (Verified in Codebase)
+### 2.3 Known Gaps, Scope Boundaries & Testing Limitations
+- **Untested Frontend Service Modules (Unit Level)**:
+  - `tripService.ts` (0% unit coverage), `reviewService.ts` (0%), `invitationService.ts` (0%), and `itineraryService.ts` (0%) do not currently possess isolated Vitest unit test suites.
+  - *Mitigation & Coverage Strategy*: `tripService.ts` and core trip workspaces are extensively exercised and validated through backend integration tests (`all-routes-integration.test.ts`) and Playwright E2E browser flows.
+  - Overall frontend services layer coverage sits at **45.73%** across all files in `src/services/`, while the 17 tested modules achieve an average statement coverage of **73.94%**.
 - **Multi-File / Multi-Gigabyte Chunked Video Upload**: Basic single photo/memory upload UI exists; background chunked multi-file video streaming is currently not implemented on the backend.
 - **Live Airline GDS Integration**: Live booking uses internal simulated mock providers and verified schema mappings; direct Sabre/Amadeus GDS network pipes are not configured.
 
@@ -54,7 +58,7 @@ The primary objective of this Test Plan is to validate the correctness, security
 | **Unit Testing (UI)** | Vitest + React Testing Library | Vitest 2.1.9, JSDOM 29.1 | Client service and utility testing |
 | **Unit/API Testing (API)**| Jest + Supertest | Jest 29.7, Supertest 7.0 | Route groups, middleware, and schemas |
 | **E2E & Visual Testing** | Playwright | 1.64.1 (Chromium headless) | End-to-end flows & screenshots |
-| **API Load Testing** | Native Concurrent Node Benchmark | 10 connections, 4500+ requests | Latency percentiles & RPS |
+| **API Load Testing** | Multi-Endpoint Benchmark | Concurrent Node suite (health & DB) | Latency percentiles & RPS |
 | **API Client Documentation**| Postman Collection | v2.1.0 Collection format | Manual & automated regression |
 
 ---
@@ -95,4 +99,3 @@ The primary objective of this Test Plan is to validate the correctness, security
 - **High (P2)**: Core functional feature broken with no immediate workaround (e.g., booking payment fails, JWT validation failure).
 - **Medium (P3)**: Non-critical feature broken or degraded performance, but a functional fallback exists.
 - **Low (P4)**: Cosmetic UI imperfection, minor typo, or documentation mismatch.
-
