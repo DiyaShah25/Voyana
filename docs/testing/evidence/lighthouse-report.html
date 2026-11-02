@@ -1,26 +1,20 @@
 <!DOCTYPE html>
 <html>
-<head><title>Voyana Lighthouse & Web Vitals Audit</title><style>body{font-family:sans-serif;padding:2rem;background:#f8fafc;color:#1e293b}table{border-collapse:collapse;width:100%;margin-top:1rem}th,td{border:1px solid #cbd5e1;padding:8px 12px;text-align:left}th{background:#e2e8f0}</style></head>
+<head><title>Voyana Browser Performance & Navigation Timing Report</title><style>body{font-family:sans-serif;padding:2rem;background:#f8fafc;color:#1e293b}table{border-collapse:collapse;width:100%;margin-top:1rem}th,td{border:1px solid #cbd5e1;padding:8px 12px;text-align:left}th{background:#e2e8f0}</style></head>
 <body>
-<h1>Voyana Frontend Performance & Audit Report</h1>
+<h1>Voyana Frontend Performance & Navigation Timing Report</h1>
 <p><strong>Environment:</strong> Localhost Production Preview (Vite 5)</p>
 <p><strong>Audited URL:</strong> http://localhost:5173/</p>
 <p><strong>Audited At:</strong> 2026-11-02T16:13:51.878Z</p>
-<h2>Synthetic Lighthouse Equivalent Scores</h2>
-<table>
-<tr><th>Category</th><th>Score</th><th>Status</th></tr>
-<tr><td>Performance</td><td>92 / 100</td><td>Good</td></tr>
-<tr><td>Accessibility</td><td>88 / 100</td><td>Good</td></tr>
-<tr><td>Best Practices</td><td>95 / 100</td><td>Excellent</td></tr>
-<tr><td>SEO</td><td>90 / 100</td><td>Good</td></tr>
-</table>
 <h2>Browser Navigation & Core Web Vitals (Real Measurement)</h2>
 <table>
-<tr><th>Metric</th><th>Measured Value</th></tr>
-<tr><td>Time to First Byte (TTFB)</td><td>17.30 ms</td></tr>
-<tr><td>DOM Content Loaded</td><td>297.60 ms</td></tr>
-<tr><td>First Contentful Paint (FCP)</td><td>756.00 ms</td></tr>
-<tr><td>Load Complete</td><td>304.00 ms</td></tr>
-<tr><td>Total Static Resources Loaded</td><td>27</td></tr>
+<tr><th>Metric</th><th>Measured Value</th><th>Threshold</th><th>Status</th></tr>
+<tr><td>Time to First Byte (TTFB)</td><td>17.3 ms</td><td>&lt; 100 ms</td><td style="color:green;font-weight:bold">Pass</td></tr>
+<tr><td>DOM Content Loaded</td><td>297.6 ms</td><td>&lt; 500 ms</td><td style="color:green;font-weight:bold">Pass</td></tr>
+<tr><td>First Contentful Paint (FCP)</td><td>756.0 ms</td><td>&lt; 1800 ms</td><td style="color:green;font-weight:bold">Pass</td></tr>
+<tr><td>Load Complete</td><td>304.0 ms</td><td>&lt; 2000 ms</td><td style="color:green;font-weight:bold">Pass</td></tr>
+<tr><td>Total Static Resources Loaded</td><td>27</td><td>N/A</td><td>Measured</td></tr>
 </table>
+<h2>Lighthouse Composite Scores</h2>
+<p><em>Note: Full synthetic Lighthouse audit categories (Performance, Accessibility, Best Practices, SEO) are marked <strong>Not measured</strong> to ensure full integrity; actual user-centric latency is measured above via W3C Navigation Timing and Paint Timing APIs.</em></p>
 </body></html>

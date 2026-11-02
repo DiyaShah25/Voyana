@@ -204,16 +204,16 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4331,
+                  "duration": 8069,
                   "errors": [],
                   "stdout": [
                     {
-                      "text": "Saved Lighthouse equivalent report to docs/testing/evidence/lighthouse-report.html\n"
+                      "text": "Saved real browser navigation report to docs/testing/evidence/lighthouse-report.html\n"
                     }
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-02T16:13:48.595Z",
+                  "startTime": "2026-11-02T16:46:31.458Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -237,8 +237,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-11-02T16:13:44.713Z",
-    "duration": 9120.223,
+    "startTime": "2026-11-02T16:46:27.737Z",
+    "duration": 12764.098999999998,
     "expected": 1,
     "skipped": 0,
     "unexpected": 0,

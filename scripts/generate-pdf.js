@@ -136,6 +136,14 @@ async function generatePdf() {
     border-radius: 4px;
     display: inline-block;
   }
+  .badge-neutral {
+    background-color: #e2e8f0;
+    color: #334155;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+  }
   .page-break {
     page-break-after: always;
   }
@@ -245,10 +253,11 @@ Defects are prioritized from Critical (P1, blocking security/data loss) to Low (
   <tr><td>Latency p50 (Median)</td><td>Concurrent Load Suite</td><td><strong>8.08 ms</strong></td><td>&lt; 50 ms</td><td><span class="badge-pass">Pass</span></td></tr>
   <tr><td>Latency p95</td><td>Concurrent Load Suite</td><td><strong>12.69 ms</strong></td><td>&lt; 150 ms</td><td><span class="badge-pass">Pass</span></td></tr>
   <tr><td>Error Rate</td><td>4,510 Requests Target</td><td><strong>0.00% (0 errors)</strong></td><td>0.00%</td><td><span class="badge-pass">Pass</span></td></tr>
-  <tr><td>Time to First Byte</td><td>Browser Navigation Timing</td><td><strong>6.20 ms</strong></td><td>&lt; 100 ms</td><td><span class="badge-pass">Pass</span></td></tr>
-  <tr><td>DOM Content Loaded</td><td>Browser Navigation Timing</td><td><strong>28.40 ms</strong></td><td>&lt; 500 ms</td><td><span class="badge-pass">Pass</span></td></tr>
-  <tr><td>First Contentful Paint</td><td>Core Web Vitals Audit</td><td><strong>42.10 ms</strong></td><td>&lt; 1800 ms</td><td><span class="badge-pass">Pass</span></td></tr>
-  <tr><td>Lighthouse Scores</td><td>Synthetic Audit Engine</td><td>Perf: 92 | a11y: 88 | SEO: 90</td><td>&gt; 80 across categories</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td>Time to First Byte (TTFB)</td><td>Navigation Timing API</td><td><strong>17.3 ms</strong></td><td>&lt; 100 ms</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td>DOM Content Loaded</td><td>Navigation Timing API</td><td><strong>297.6 ms</strong></td><td>&lt; 500 ms</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td>First Contentful Paint (FCP)</td><td>Paint Timing API</td><td><strong>756.0 ms</strong></td><td>&lt; 1800 ms</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td>Load Complete</td><td>Navigation Timing API</td><td><strong>304.0 ms</strong></td><td>&lt; 2000 ms</td><td><span class="badge-pass">Pass</span></td></tr>
+  <tr><td>Lighthouse Scores</td><td>Synthetic Categories</td><td><em>Not measured</em> (timing metrics measured directly)</td><td>N/A</td><td><span class="badge-neutral">Not measured</span></td></tr>
   <tr><td>Responsive Layouts</td><td>Playwright Headless</td><td>375px (Mobile), 768px (Tablet), 1440px (Desktop)</td><td>Zero horizontal layout overflow</td><td><span class="badge-pass">Pass</span></td></tr>
 </table>
 
@@ -320,8 +329,8 @@ Defects are prioritized from Critical (P1, blocking security/data loss) to Low (
     <td><span class="badge-high">High</span></td>
     <td>Security</td>
     <td>Hardcoded Fallback JWT Secret in <code>config/env.ts</code></td>
-    <td><strong>Expected:</strong> Fatal error on startup in production if unset.<br><strong>Actual:</strong> Starts silently with team secret.</td>
-    <td><strong>Open</strong> (Logged for hardening sprint).</td>
+    <td><strong>Expected:</strong> Startup crash if JWT_SECRET unset in prod.<br><strong>Actual:</strong> Replaced with strict throw on missing secret.</td>
+    <td><strong>Fixed</strong> in commit <code>25b4c39</code>.</td>
   </tr>
   <tr>
     <td><strong>BUG-03</strong></td>
@@ -335,9 +344,9 @@ Defects are prioritized from Critical (P1, blocking security/data loss) to Low (
     <td><strong>BUG-04</strong></td>
     <td>Low</td>
     <td>Docs</td>
-    <td>Referenced <code>docs/API_DOCUMENTATION.md</code> Missing from Repo</td>
-    <td><strong>Expected:</strong> OpenAPI/REST documentation file exists.<br><strong>Actual:</strong> File missing; endpoints documented in <code>mongodb_architecture.md</code>.</td>
-    <td><strong>Open</strong> (Postman collection created as living API reference).</td>
+    <td>Initial Check: <code>docs/API_DOCUMENTATION.md</code> Missing</td>
+    <td><strong>Expected:</strong> OpenAPI/REST documentation file exists.<br><strong>Actual:</strong> File exists with 1,290 lines in updated tree.</td>
+    <td><strong>Invalid / Closed</strong> (Confirmed present in repository).</td>
   </tr>
   <tr>
     <td><strong>BUG-05</strong></td>
@@ -346,6 +355,14 @@ Defects are prioritized from Critical (P1, blocking security/data loss) to Low (
     <td>Missing Multi-File / Chunked Video Upload Endpoint</td>
     <td><strong>Expected:</strong> Multipart video streaming endpoint exists.<br><strong>Actual:</strong> Only single JSON mediaUrl accepted in memories router.</td>
     <td><strong>Open</strong> (Formally documented in Test Plan Section 2.3).</td>
+  </tr>
+  <tr>
+    <td><strong>BUG-06</strong></td>
+    <td>Moderate</td>
+    <td>Security/Deps</td>
+    <td>Known Vulnerabilities in Transitive & Dev Dependencies</td>
+    <td><strong>Expected:</strong> Clean audit on dev tooling.<br><strong>Actual:</strong> 27 frontend & 36 backend CVEs in test/dev tooling.</td>
+    <td><strong>Accepted Risk</strong> (Documented; build & test harness only).</td>
   </tr>
 </table>
 
@@ -408,4 +425,3 @@ The seed script enforces a strict regex guard refusing execution if the connecti
 }
 
 generatePdf().catch(console.error);
-

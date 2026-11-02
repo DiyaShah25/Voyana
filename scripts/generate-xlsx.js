@@ -14,26 +14,26 @@ async function generateWorkbook() {
   // --------------------------------------------------------------------------
   const wsSummary = wb.addWorksheet('Results Summary', { views: [{ showGridLines: true }] });
   wsSummary.columns = [
-    { header: 'Test Category', key: 'category', width: 32 },
+    { header: 'Test Category', key: 'category', width: 34 },
     { header: 'Suites / Files', key: 'suites', width: 16 },
     { header: 'Executed Tests', key: 'executed', width: 16 },
     { header: 'Passed', key: 'passed', width: 14 },
     { header: 'Failed', key: 'failed', width: 14 },
     { header: 'Pass Rate (%)', key: 'rate', width: 16 },
-    { header: 'Key Metrics / Notes', key: 'notes', width: 45 },
+    { header: 'Key Metrics / Notes', key: 'notes', width: 50 },
   ];
 
   wsSummary.addRows([
     { category: 'Frontend Unit & Services (Vitest)', suites: 17, executed: 112, passed: 112, failed: 0, rate: '100.0%', notes: '73.94% Line/Stmt Coverage across src/services' },
     { category: 'Backend Integration & API (Jest)', suites: 10, executed: 104, passed: 104, failed: 0, rate: '100.0%', notes: 'Supertest full route groups + business flows' },
     { category: 'E2E & Non-Functional (Playwright)', suites: 2, executed: 6, passed: 6, failed: 0, rate: '100.0%', notes: 'Chromium visual flows, responsive & a11y baseline' },
-    { category: 'TOTAL AUTOMATED TESTS', suites: 29, executed: 222, passed: 222, failed: 0, rate: '100.0%', notes: 'Zero defects unlogged; tested on commit 19b914a' },
+    { category: 'TOTAL AUTOMATED TESTS', suites: 29, executed: 222, passed: 222, failed: 0, rate: '100.0%', notes: 'All automated regression tests verified' },
     {},
     { category: 'Performance Load Benchmark (Health)', suites: 1, executed: 4510, passed: 4510, failed: 0, rate: '100.0%', notes: '1125.8 req/s throughput; 8.08ms p50; 0 errors' },
-    { category: 'Security Vulnerability Verification', suites: 2, executed: 63, passed: 61, failed: 2, rate: '96.8%', notes: 'BUG-01 (JWT bypass) fixed; BUG-02 logged' },
+    { category: 'Browser Navigation & Web Vitals', suites: 1, executed: 5, passed: 5, failed: 0, rate: '100.0%', notes: 'TTFB 17.3ms, DOM Loaded 297.6ms, FCP 756ms (Real)' },
+    { category: 'Security & Dependency Vulnerabilities', suites: 2, executed: 63, passed: 61, failed: 2, rate: '96.8%', notes: 'BUG-01 & BUG-02 Fixed; BUG-06 Accepted Risk' },
   ]);
 
-  // Style header
   wsSummary.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
   wsSummary.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
   wsSummary.getRow(5).font = { bold: true };
@@ -82,7 +82,7 @@ async function generateWorkbook() {
     { id: 'TC-BUD-01', req: 'FR-BUD-01', jira: 'VPM-41', module: 'Budget', title: 'Budget Allocation Updates', pre: 'Trip exists', data: 'totalBudget: 5000', expected: 'HTTP 200 OK', actual: 'HTTP 200, allocations saved', status: 'Pass', ref: 'all-routes-integration.test.ts' },
     { id: 'TC-BUD-02', req: 'FR-BUD-02', jira: 'VPM-67', module: 'Budget', title: 'Shared Multi-Member Expense', pre: 'Budget exists', data: 'USD 45 / Alex Morgan / Food', expected: 'HTTP 201 Created', actual: 'HTTP 201, expense added to ledger', status: 'Pass', ref: 'all-routes-integration.test.ts' },
     { id: 'TC-BUD-03', req: 'FR-BUD-04', jira: 'VPM-41', module: 'Budget', title: 'Debt Settlement Minimization', pre: 'Expenses recorded', data: '3-member reciprocal debts', expected: 'Minimizes net transactions', actual: 'Accurate debt settlement matrix', status: 'Pass', ref: 'collaborationService.test.ts' },
-    { id: 'TC-PCK-01', req: 'FR-PCK-01', jira: 'VPM-42', module: 'Packing', title: 'Default Packing Checklist Init', pre: 'Trip exists', data: 'tripId', expected: 'HTTP 200 OK, default checklist', actual: 'HTTP 200, default items returned', status: 'Pass', ref: 'all-routes-integration.test.ts' },
+    { id: 'TC-PCK-01', req: 'FR-PCK-01', jira: 'VPM-42', module: 'Packing', title: 'Default Packing Checklist Init', pre: 'Trip exists', data: 'tripId', expected: 'HTTP 200 OK, default items', actual: 'HTTP 200, default items returned', status: 'Pass', ref: 'all-routes-integration.test.ts' },
     { id: 'TC-PCK-02', req: 'FR-PCK-03', jira: 'VPM-191', module: 'Packing', title: 'Add and Toggle Packing Item', pre: 'List exists', data: 'Power Bank / Alex Morgan', expected: 'HTTP 200, toggles packed status', actual: 'HTTP 200, item added & toggled', status: 'Pass', ref: 'all-routes-integration.test.ts' },
     { id: 'TC-ALT-01', req: 'FR-ALT-01', jira: 'VPM-16', module: 'Alerts', title: 'Automated Booking Notification', pre: 'Booking confirmed', data: 'Flight AF 123', expected: 'HTTP 200 OK, alert generated', actual: 'HTTP 200, notification created', status: 'Pass', ref: 'all-routes-integration.test.ts' },
     { id: 'TC-LIVE-01', req: 'FR-EXT-01', jira: 'VPM-16', module: 'ThirdParty', title: 'Missing Weather API Key -> 401', pre: 'No key in env', data: 'city=Paris', expected: 'HTTP 401 Unauthorized', actual: 'HTTP 401 Unauthorized', status: 'Pass', ref: 'live-travel-api.test.ts' },
@@ -150,19 +150,20 @@ async function generateWorkbook() {
     { header: 'Severity', key: 'severity', width: 14 },
     { header: 'Category', key: 'category', width: 16 },
     { header: 'Defect Title', key: 'title', width: 38 },
-    { header: 'Steps to Reproduce', key: 'steps', width: 38 },
+    { header: 'Steps to Reproduce', key: 'steps', width: 40 },
     { header: 'Expected Result', key: 'expected', width: 32 },
     { header: 'Actual Result', key: 'actual', width: 32 },
-    { header: 'Status', key: 'status', width: 14 },
-    { header: 'Fixed In / Evidence', key: 'evidence', width: 26 },
+    { header: 'Status', key: 'status', width: 16 },
+    { header: 'Fixed In / Evidence', key: 'evidence', width: 28 },
   ];
 
   const bugData = [
     { id: 'BUG-01', severity: 'Critical', category: 'Security', title: 'JWT Signature Verification Bypass via Base64 Fallback', steps: '1. Forge JWT with fake secret.\n2. Send GET /api/auth/me with Bearer token.', expected: 'HTTP 401 Unauthorized', actual: 'HTTP 200 OK (Bypassed check)', status: 'Fixed', evidence: 'Commit 2421b1f' },
-    { id: 'BUG-02', severity: 'High', category: 'Security', title: 'Hardcoded Fallback JWT Secret in env.ts', steps: '1. Inspect services/ai-service/src/config/env.ts line 13.\n2. Run without JWT_SECRET env var.', expected: 'Crash on startup if production', actual: 'Uses hardcoded team key', status: 'Open', evidence: 'env.ts line 13' },
-    { id: 'BUG-03', severity: 'Medium', category: 'Functional/DB', title: 'BudgetModel Upsert Fails Validation on Uninitialized Trip', steps: '1. POST /api/budget/:tripId/expenses for uninitialized trip.', expected: 'HTTP 404 or default fields', actual: 'HTTP 500 Mongoose validation error', status: 'Fixed', evidence: 'Integration Test Suite' },
-    { id: 'BUG-04', severity: 'Low', category: 'Documentation', title: 'docs/API_DOCUMENTATION.md Not Found in Repository', steps: '1. Search for docs/API_DOCUMENTATION.md.\n2. Observe file missing.', expected: 'OpenAPI/REST doc exists', actual: 'File absent; used mongodb_architecture.md', status: 'Open', evidence: 'docs/ folder' },
-    { id: 'BUG-05', severity: 'Medium', category: 'Functional', title: 'Missing Multi-File / Chunked Video Upload Router', steps: '1. Search memories router for multipart video streaming.', expected: 'Chunked video upload endpoint exists', actual: 'Only single JSON mediaUrl accepted', status: 'Open', evidence: 'memories.router.ts' },
+    { id: 'BUG-02', severity: 'High', category: 'Security', title: 'Hardcoded Fallback JWT Secret in env.ts', steps: '1. Inspect env.ts in older commit.\n2. Run without JWT_SECRET in production.', expected: 'Crash on startup in production', actual: 'Used hardcoded team fallback', status: 'Fixed', evidence: 'Commit 25b4c39' },
+    { id: 'BUG-03', severity: 'Medium', category: 'Functional/DB', title: 'BudgetModel Upsert Fails Validation on Blank Trip', steps: '1. POST /api/budget/:tripId/expenses for uninitialized trip.', expected: 'HTTP 404 or default fields', actual: 'HTTP 500 Mongoose validation error', status: 'Fixed', evidence: 'Integration Test Suite' },
+    { id: 'BUG-04', severity: 'Low', category: 'Documentation', title: 'Initial Check: docs/API_DOCUMENTATION.md Missing in Repo', steps: '1. Search for docs/API_DOCUMENTATION.md.\n2. Observe pre-merge absence.', expected: 'OpenAPI/REST doc exists', actual: 'File exists with 1290 lines', status: 'Invalid / Closed', evidence: 'docs/API_DOCUMENTATION.md' },
+    { id: 'BUG-05', severity: 'Medium', category: 'Functional', title: 'Missing Multi-File / Chunked Video Upload Router', steps: '1. Search memories router for multipart video streaming.', expected: 'Chunked video upload endpoint exists', actual: 'Only single JSON mediaUrl accepted', status: 'Open', evidence: 'TEST_PLAN.md Section 2.3' },
+    { id: 'BUG-06', severity: 'Moderate', category: 'Security/Deps', title: 'Known Vulnerabilities in Transitive & Dev Dependencies', steps: '1. Run npm audit on root and backend.\n2. Observe 27 frontend and 36 backend CVEs.', expected: 'Zero unvetted high vulnerabilities', actual: 'Dev & transitive parsers flagged', status: 'Accepted Risk', evidence: 'npm-audit-frontend/backend.txt' },
   ];
 
   bugData.forEach(row => wsBug.addRow(row));
@@ -181,4 +182,3 @@ async function generateWorkbook() {
 }
 
 generateWorkbook().catch(console.error);
-

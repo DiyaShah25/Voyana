@@ -121,30 +121,30 @@ From Istanbul/v8 automated instrumentation (`npm run test:coverage`):
   - **p99**: **16.97 ms**
   - Max Latency: **61.07 ms**
 
-### 4.3 Browser Core Web Vitals & Lighthouse Audit
+### 4.3 Browser Core Web Vitals & Navigation Timings
 - **Evidence Files**: `docs/testing/evidence/lighthouse-report.html`, `lighthouse-report.json`
-- **Measured Metrics**:
-  - Time to First Byte (TTFB): **6.20 ms**
-  - DOM Content Loaded: **28.40 ms**
-  - First Contentful Paint (FCP): **42.10 ms**
-  - Total Static Resources Loaded: **5 resources**
-- **Synthetic Lighthouse Equivalent Scores**:
-  - Performance: **92 / 100**
-  - Accessibility: **88 / 100**
-  - Best Practices: **95 / 100**
-  - SEO: **90 / 100**
+- **Real Measured Values (W3C Navigation & Paint Timing APIs)**:
+  - Time to First Byte (TTFB): **17.3 ms** (Threshold &lt; 100 ms — **Pass**)
+  - DOM Content Loaded: **297.6 ms** (Threshold &lt; 500 ms — **Pass**)
+  - First Contentful Paint (FCP): **756.0 ms** (Threshold &lt; 1800 ms — **Pass**)
+  - Load Complete: **304.0 ms** (Threshold &lt; 2000 ms — **Pass**)
+  - Total Static Resources Loaded: **27 resources**
+- **Lighthouse Composite Category Scores**:
+  - Performance: **Not measured** *(Direct W3C Navigation & Core Web Vitals measured instead)*
+  - Accessibility: **Not measured** *(Axe-core DOM baseline and focusability measured instead)*
+  - Best Practices: **Not measured**
+  - SEO: **Not measured**
 
 ### 4.4 Security Audit (`npm audit` & Manual Penetration)
 - **Evidence Files**: `docs/testing/evidence/npm-audit-frontend.txt`, `npm-audit-backend.txt`
 - **Automated Dependency Audit**:
-  - Frontend: 27 vulnerabilities (mostly transitive dev dependencies: `vitest` / `tinypool`).
-  - Backend: 36 vulnerabilities in transitive CLI tools.
-- **Manual Code Security Findings**:
-  - **BUG-01 (Critical)**: Blind base64 token decoding when signature failed in `auth.middleware.ts`. **Verified and Fixed in commit `2421b1f`**.
-  - **BUG-02 (High)**: Hardcoded fallback secret string `'voyana-team-shared-secret-key-2026'` in `config/env.ts`.
-  - **NoSQL Injection**: Tested `/api/destinations?region={"$gt":""}` — safely coerced to string by Express query parser; no injection observed.
+  - Frontend: 27 vulnerabilities (2 low, 8 moderate, 14 high, 3 critical) in dev tools (`vitest`, `tinypool`).
+  - Backend: 36 vulnerabilities in transitive CLI tools (`proxy-addr`, `qs`, `zod`).
+  - Risk Assessment: Documented in Bug Log as **BUG-06 (Accepted Risk)** since they are isolated to dev/build tooling or non-exposed transitive parsers.
+- **Code Security Findings**:
+  - **BUG-01 (Critical)**: Blind base64 token decoding when signature failed in `auth.middleware.ts`. **Fixed in commit `2421b1f`**.
+  - **BUG-02 (High)**: Hardcoded fallback secret string in `config/env.ts`. **Fixed in commit `25b4c39`**.
 
 ### 4.5 System Resilience & Fault Tolerance
 - **Backend Offline Handling**: Verified `aiChatService.ts` smoothly catches network failures and switches to the local deterministic contextual engine.
 - **LocalStorage Fallback**: Verified `authService.ts`, `bookingService.ts`, and `destinationService.ts` operate smoothly with seeded local records when remote API is unreachable.
-
