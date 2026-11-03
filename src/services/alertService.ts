@@ -5,7 +5,7 @@
  * booking status changes, and real-time subscriptions.
  */
 
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { supabase } from './supabaseClient';
 import { apiRequest } from './apiClient';
 
 export type BookingStatus = 'pending' | 'confirmed' | 'delayed' | 'cancelled' | 'completed';
@@ -42,13 +42,7 @@ export interface NewAlertInput {
 // ---------------------------------------------------------------------------
 // Supabase Client Initialization (Matching authService pattern)
 // ---------------------------------------------------------------------------
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
-let supabase: SupabaseClient | null = null;
-if (supabaseUrl && supabaseAnonKey) {
-  supabase = createClient(supabaseUrl, supabaseAnonKey);
-}
 
 // ---------------------------------------------------------------------------
 // In-Memory & LocalStorage Mock Engine for Preview / Offline Mode
@@ -138,11 +132,11 @@ export async function fetchAlerts(userId?: string): Promise<BookingAlert[]> {
     const apiRes = await apiRequest<{ ok: boolean; alerts: BookingAlert[] }>(
       userId ? `/api/alerts?userId=${encodeURIComponent(userId)}` : '/api/alerts'
     );
-    if (apiRes.ok && apiRes.data?.alerts && apiRes.data.alerts.length > 0) {
+    if (apiRes.ok && apiRes.data?.alerts && Array.isArray(apiRes.data.alerts)) {
       saveStoredMockAlerts(apiRes.data.alerts);
       return apiRes.data.alerts;
     }
-  } catch {}
+  } catch { /* Retain local preview data when remote synchronization fails. */ }
 
   if (supabase) {
     let query = supabase
@@ -174,7 +168,7 @@ export async function markAlertAsRead(alertId: string): Promise<boolean> {
   // Sync to shared MongoDB Atlas backend
   try {
     apiRequest(`/api/alerts/${encodeURIComponent(alertId)}/read`, { method: 'PUT' });
-  } catch {}
+  } catch { /* Retain local preview data when remote synchronization fails. */ }
 
   if (supabase) {
     const { error } = await supabase
@@ -200,6 +194,8 @@ export async function markAlertAsRead(alertId: string): Promise<boolean> {
  * Mark all alerts as read for the user.
  */
 export async function markAllAlertsAsRead(userId?: string): Promise<boolean> {
+  const result = await apiRequest('/api/alerts/read-all', { method: 'PUT', body: JSON.stringify({ userId }) });
+  if (!result.ok && result.status > 0) return false;
   if (supabase) {
     let query = supabase
       .from('booking_alerts')
@@ -243,6 +239,13 @@ export async function createAlert(input: NewAlertInput): Promise<BookingAlert> {
     is_read: false,
     created_at: new Date().toISOString(),
   };
+
+  const response = await apiRequest<{ alert: BookingAlert }>('/api/alerts', { method: 'POST', body: JSON.stringify(newAlert) });
+  if (response.ok && response.data?.alert) {
+    saveStoredMockAlerts([response.data.alert, ...getStoredMockAlerts()]);
+    subscribers.forEach(callback => callback(response.data!.alert));
+    return response.data.alert;
+  }
 
   if (supabase) {
     const { data, error } = await supabase
@@ -350,35 +353,24 @@ export async function updateBookingStatus(
  * Subscribe to realtime alerts via Supabase Realtime channel,
  * with fallback to local event bus in preview mode.
  */
-export function subscribeToAlerts(
-  userId: string | undefined,
-  onAlert: (alert: BookingAlert) => void
-): () => void {
-  if (supabase) {
-    const channel = supabase
-      .channel('booking_alerts_realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'booking_alerts',
-          filter: userId ? `user_id=eq.${userId}` : undefined,
-        },
-        (payload) => {
-          onAlert(payload.new as BookingAlert);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase?.removeChannel(channel);
-    };
-  }
-
-  // Preview mode local subscription
-  subscribers.add(onAlert);
-  return () => {
-    subscribers.delete(onAlert);
+export function subscribeToAlerts(userId: string | undefined, onAlert: (alert: BookingAlert) => void): () => void {
+  if (!userId) return () => {};
+  const seen = new Set<string>();
+  let initialized = false, active = true, fetching = false;
+  const deliver = (alert: BookingAlert) => { if (!active || seen.has(alert.id)) return; seen.add(alert.id); onAlert(alert); };
+  const poll = async () => {
+    if (!active || fetching) return;
+    fetching = true;
+    try {
+      const result = await apiRequest<{alerts: BookingAlert[]}>('/api/alerts');
+      if (!active || !result.ok) return;
+      const incoming = result.data?.alerts || [];
+      if (!initialized) { incoming.forEach(alert => seen.add(alert.id)); initialized = true; }
+      else [...incoming].reverse().forEach(deliver);
+    } finally { fetching = false; }
   };
+  subscribers.add(deliver);
+  void poll();
+  const timer = window.setInterval(() => void poll(), 5000);
+  return () => { active = false; window.clearInterval(timer); subscribers.delete(deliver); };
 }

@@ -31,4 +31,8 @@ dist-ssr
 !**/.env.example
 
 powershell.cmd
+Voyana_Screenshots_*.pdf
 
+
+coverage/
+test-results/

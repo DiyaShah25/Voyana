@@ -1,3 +1,4 @@
+import { toError } from '../utils/errors.js';
 /**
  * MongoDB Data API Router
  * Exposes RESTful endpoints for Trips, Bookings, Expenses,
@@ -34,7 +35,8 @@ apiRouter.get('/trips', async (req: Request, res: Response) => {
   try {
     const trips = await TripModel.find().sort({ updatedAt: -1 }).lean();
     res.json({ success: true, count: trips.length, data: trips });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ success: false, error: err?.message || 'Failed to fetch trips' });
   }
 });
@@ -44,7 +46,8 @@ apiRouter.get('/trips/:tripId', async (req: Request, res: Response) => {
     const trip = await TripModel.findOne({ tripId: req.params.tripId }).lean();
     if (!trip) return res.status(404).json({ success: false, error: 'Trip not found' });
     res.json({ success: true, data: trip });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ success: false, error: err?.message || 'Database error' });
   }
 });
@@ -71,7 +74,8 @@ apiRouter.post('/trips', async (req: Request, res: Response) => {
     );
 
     res.status(201).json({ success: true, data: trip });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(400).json({ success: false, error: err?.message || 'Failed to save trip' });
   }
 });
@@ -80,7 +84,8 @@ apiRouter.delete('/trips/:tripId', async (req: Request, res: Response) => {
   try {
     await TripModel.deleteOne({ tripId: req.params.tripId });
     res.json({ success: true, message: 'Trip deleted' });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ success: false, error: err?.message });
   }
 });
@@ -92,7 +97,8 @@ apiRouter.get('/bookings', async (req: Request, res: Response) => {
     const filter = userId ? { userId } : {};
     const bookings = await BookingModel.find(filter).sort({ createdAt: -1 }).lean();
     res.json({ success: true, count: bookings.length, data: bookings });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ success: false, error: err?.message });
   }
 });
@@ -130,7 +136,8 @@ apiRouter.post('/bookings', async (req: Request, res: Response) => {
     });
 
     res.status(201).json({ success: true, data: booking });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(400).json({ success: false, error: err?.message });
   }
 });
@@ -162,7 +169,8 @@ apiRouter.put('/bookings/:bookingId/status', async (req: Request, res: Response)
     });
 
     res.json({ success: true, data: booking });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ success: false, error: err?.message });
   }
 });
@@ -172,7 +180,8 @@ apiRouter.get('/expenses/:tripId', async (req: Request, res: Response) => {
   try {
     const expenses = await ExpenseModel.find({ tripId: req.params.tripId }).sort({ date: -1 }).lean();
     res.json({ success: true, count: expenses.length, data: expenses });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ success: false, error: err?.message });
   }
 });
@@ -195,7 +204,8 @@ apiRouter.post('/expenses', async (req: Request, res: Response) => {
 
     await expense.save();
     res.status(201).json({ success: true, data: expense });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(400).json({ success: false, error: err?.message });
   }
 });
@@ -204,7 +214,8 @@ apiRouter.delete('/expenses/:expenseId', async (req: Request, res: Response) => 
   try {
     await ExpenseModel.deleteOne({ expenseId: req.params.expenseId });
     res.json({ success: true, message: 'Expense deleted' });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ success: false, error: err?.message });
   }
 });
@@ -214,7 +225,8 @@ apiRouter.get('/packing/:tripId', async (req: Request, res: Response) => {
   try {
     const packing = await PackingListModel.findOne({ tripId: req.params.tripId }).lean();
     res.json({ success: true, data: packing });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ success: false, error: err?.message });
   }
 });
@@ -234,7 +246,8 @@ apiRouter.post('/packing/:tripId', async (req: Request, res: Response) => {
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
     res.json({ success: true, data: packing });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(400).json({ success: false, error: err?.message });
   }
 });
@@ -245,7 +258,8 @@ apiRouter.get('/alerts', async (req: Request, res: Response) => {
     const userId = (req.query.userId as string) || 'usr-demo-01';
     const alerts = await AlertModel.find({ userId }).sort({ createdAt: -1 }).limit(50).lean();
     res.json({ success: true, count: alerts.length, data: alerts });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ success: false, error: err?.message });
   }
 });
@@ -265,7 +279,8 @@ apiRouter.post('/alerts', async (req: Request, res: Response) => {
     });
     await alert.save();
     res.status(201).json({ success: true, data: alert });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(400).json({ success: false, error: err?.message });
   }
 });
@@ -274,7 +289,8 @@ apiRouter.put('/alerts/:alertId/read', async (req: Request, res: Response) => {
   try {
     await AlertModel.updateOne({ alertId: req.params.alertId }, { isRead: true });
     res.json({ success: true, message: 'Alert marked as read' });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ success: false, error: err?.message });
   }
 });
@@ -284,7 +300,8 @@ apiRouter.put('/alerts/read-all', async (req: Request, res: Response) => {
     const userId = (req.body.userId as string) || 'usr-demo-01';
     await AlertModel.updateMany({ userId, isRead: false }, { isRead: true });
     res.json({ success: true, message: 'All alerts marked as read' });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ success: false, error: err?.message });
   }
 });

@@ -9,6 +9,9 @@
     "dev": "tsx watch src/server.ts",
     "test": "jest --runInBand --detectOpenHandles",
     "test:watch": "jest --watch",
+    "test:coverage": "jest --runInBand --detectOpenHandles --coverage",
+    "seed": "tsx src/scripts/seed.ts",
+    "seed:reset": "tsx src/scripts/seed.ts --reset",
     "lint": "eslint src/**/*.ts"
   },
   "dependencies": {
@@ -16,6 +19,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "google-auth-library": "^11.3.2",
     "groq-sdk": "^0.15.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^8.9.5",
@@ -33,6 +37,7 @@
     "@typescript-eslint/parser": "^8.20.0",
     "eslint": "^9.18.0",
     "jest": "^29.7.0",
+    "mongodb-memory-server": "^11.3.0",
     "supertest": "^7.0.0",
     "ts-jest": "^29.2.5",
     "tsx": "^4.19.2",

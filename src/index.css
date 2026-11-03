@@ -4011,4 +4011,97 @@
   text-align: center;
   gap: 4px;
   color: #64748b;
-}
+}
+
+/* Destination-first trip flow */
+.workflow-header { background: rgba(253,252,248,.96); backdrop-filter: blur(16px); border-bottom: 1px solid #e5e7df; }
+.workflow-nav-shell { max-width: 1440px; margin: auto; min-height: 84px; padding: 16px 5%; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.workflow-nav-links { display: flex; align-items: center; gap: 18px; font-size: 13px; color: #33443a; }
+.workflow-nav-links > button { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.workflow-nav-links a:hover,.workflow-nav-links button:hover { color: #047857; }
+.workflow-nav-menu { position: relative; }
+.workflow-nav-menu summary { cursor: pointer; list-style: none; font-weight: 600; }
+.workflow-nav-menu summary::after { content: ' ▾'; }
+.workflow-nav-menu > div { position: absolute; top: 30px; left: 0; min-width: 205px; padding: 8px; border-radius: 16px; background: #fff; border: 1px solid #dbe5dc; box-shadow: 0 15px 45px #123a1920; display: grid; z-index: 80; }
+.workflow-nav-menu button { text-align: left; padding: 11px; border-radius: 10px; }
+.workflow-nav-menu button:hover { background: #edf5ef; }
+.workflow-role { text-transform: uppercase; font-size: 9px; letter-spacing: .08em; color: #64776b; background: #e8efe9; padding: 4px 6px; border-radius: 5px; }
+.workflow-signin,.workflow-primary { background: #075e45; color: white!important; border-radius: 10px; padding: 11px 18px; font-weight: 600; }
+.workflow-menu-toggle { display: none; }
+.workflow-preview-note { text-align: center; padding: 10px 16px; background: #eef3e9; color: #51604b; font-size: 11px; letter-spacing: .04em; }
+.workflow-notice { position: relative; padding: 14px 48px 14px 5%; background: #fef5df; color: #71511e; font-size: 14px; border-bottom: 1px solid #ead9b6; z-index: 5; }
+.workflow-notice button { position: absolute; right: 5%; font-size: 20px; top: 8px; }
+.workflow-suite { max-width: 1320px; margin: 0 auto 84px; padding: 36px 5%; scroll-margin-top: 100px; }
+.workflow-section-heading { display: flex; gap: 48px; justify-content: space-between; align-items: end; }
+.workflow-section-heading h2 { font-family: Georgia,serif; color: #173c2d; font-size: clamp(30px,4vw,46px); line-height: 1.12; margin-top: 12px; }
+.workflow-section-heading > p { max-width: 370px; color: #657469; font-size: 14px; line-height: 1.8; }
+.workflow-steps { display: flex; gap: 28px; padding: 25px 0; margin: 24px 0; border-top: 1px solid #dde5db; border-bottom: 1px solid #dde5db; color: #7b847b; list-style: none; }
+.workflow-steps li { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+.workflow-steps li > span { width: 27px; height: 27px; display: grid; place-items: center; border: 1px solid #ccd7cd; border-radius: 50%; }
+.workflow-steps .complete { color: #075e45; font-weight: 600; }
+.workflow-steps .complete > span { color: white; background: #075e45; border-color: #075e45; }
+.workflow-card-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 18px; }
+.workflow-service-card { padding: 26px; border: 1px solid #dce5d9; background: #fffefb; border-radius: 20px; display: flex; flex-direction: column; align-items: start; transition: box-shadow .2s,transform .2s; }
+.workflow-service-card:hover { box-shadow: 0 14px 34px #193f2510; transform: translateY(-3px); }
+.workflow-service-card > svg { color: #28714f; padding: 10px; width: 46px; height: 46px; border-radius: 13px; background: #edf4e9; margin-bottom: 24px; }
+.workflow-service-card h3 { color: #1c3d2c; font-size: 20px; font-family: Georgia,serif; margin-bottom: 11px; }
+.workflow-service-card p { color: #6a756c; font-size: 13px; line-height: 1.8; margin-bottom: 25px; }
+.workflow-service-card button { margin-top: auto; display: flex; align-items: center; gap: 12px; color: #075e45; font-size: 12px; font-weight: 700; padding-top: 16px; border-top: 1px solid #e5e9df; width: 100%; text-align: left; }
+.workflow-extra-tools { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 24px; }
+.workflow-extra-tools button { display: flex; align-items: center; gap: 8px; border: 1px solid #dce5d9; padding: 11px 15px; border-radius: 10px; font-size: 12px; color: #375643; }
+.workflow-hint { color: #67756b; font-size: 12px; line-height: 1.7; margin-top: 18px; }
+.workflow-hint a { color: #047857; text-decoration: underline; }
+.workflow-footer { background: #143d2d; color: #d6e3d6; padding: 46px 7%; display: flex; flex-wrap: wrap; gap: 30px; justify-content: space-between; font-size: 12px; }
+.workflow-footer > div > svg { display: inline-block; vertical-align: middle; margin-right: 10px; }
+.workflow-footer strong { font-size: 19px; letter-spacing: .12em; }
+.workflow-footer p { margin-top: 12px; opacity: .75; max-width: 340px; line-height: 1.8; }
+.workflow-footer nav { display: grid; gap: 10px; }
+.workflow-bundle-dialog { width: min(680px,100%); max-height: 88vh; overflow: auto; border-radius: 24px; background: #fffdf8; padding: 28px; }
+.workflow-bundle-dialog header,.workflow-bundle-dialog header > div { display: flex; align-items: center; gap: 12px; justify-content: space-between; }
+.workflow-bundle-dialog h2 { font-family: Georgia,serif; font-size: 24px; color: #173c2d; }
+.workflow-bundle-item { display: flex; align-items: center; gap: 14px; border: 1px solid #dde5da; border-radius: 14px; padding: 17px; margin-top: 16px; font-size: 13px; cursor: pointer; }
+.workflow-bundle-item span { flex: 1; }
+.workflow-bundle-item small { display: block; margin-top: 5px; color: #68766b; }
+.workflow-bundle-total { border-top: 1px solid #dce5d9; margin-top: 24px; padding-top: 20px; }
+.workflow-bundle-total p { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px; }
+.workflow-bundle-total button { width: 100%; margin-top: 14px; }
+.workflow-primary:disabled { opacity: .5; cursor: not-allowed; }
+.hero-quick-switch-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.hero-destination-telemetry a { display: inline-block; margin-top: 10px; font-size: 11px; color: #047857; }
+@media (max-width: 1050px) { .workflow-nav-links { gap: 11px; font-size: 12px; } .workflow-role { display: none; } }
+@media (max-width: 800px) {
+  .workflow-nav-shell { min-height: 72px; flex-wrap: wrap; padding: 16px 5%; }
+  .workflow-menu-toggle { display: block; margin-left: auto; }
+  .workflow-nav-links { display: none; width: 100%; flex-wrap: wrap; gap: 16px; padding-top: 12px; }
+  .workflow-nav-links.expanded { display: flex; }
+  .workflow-card-grid { grid-template-columns: 1fr; }
+  .workflow-section-heading { display: block; }
+  .workflow-section-heading > p { margin-top: 18px; }
+  .workflow-steps { gap: 13px; align-items: start; }
+  .workflow-steps li { flex: 1; flex-direction: column; align-items: start; line-height: 1.6; }
+  .workflow-suite { margin-bottom: 36px; }
+}
+
+/* Keep the entire selected place and its pin inside the viewport. */
+.editorial-hero { min-height: 0; padding: 60px 5% 40px; }
+.hero-container { display: grid; grid-template-columns: minmax(0,1.05fr) minmax(0,1fr); gap: 32px; min-height: 560px; }
+.region-filter-tabs { max-width: 100%; flex-wrap: wrap; }
+.hero-copy-column { width: 100%; max-width: 600px; }
+.hero-globe-column { position: relative; right: auto; top: auto; transform: none; width: 100%; height: auto; aspect-ratio: 1; max-width: 620px; margin: 0 auto; }
+.hero-globe-stage { position: absolute; inset: 0; }
+.editorial-globe-label .label-content { max-width: 230px; white-space: normal; }
+@media (max-width: 900px) { .hero-container { grid-template-columns: 1fr; min-height: 0; gap: 12px; } .hero-copy-column { max-width: none; } .hero-globe-column { max-width: 480px; } .editorial-hero { padding-top: 38px; } }
+@media (max-width: 500px) { .hero-globe-column { max-width: 360px; } .hero-editorial-headline { font-size: 40px; } .editorial-eyebrow { font-size: 9px; letter-spacing: .13em; } }
+.razorpay-checkout{border:1px solid #dce8df;background:linear-gradient(140deg,#fff,#f7fbf6);border-radius:24px;padding:25px;max-width:570px;margin:auto;}
+.razorpay-checkout-intro{display:flex;align-items:center;gap:13px;}.razorpay-checkout-icon{padding:13px;background:#e8f3e9;color:#0b6549;border-radius:17px;}.payment-eyebrow{font-size:9px;letter-spacing:.12em;color:#52816b;font-weight:700;}.razorpay-checkout h3{font-size:23px;color:#153a2c;font-weight:650;letter-spacing:-.04em;margin:2px 0;}.razorpay-checkout-intro p{font-size:12px;color:#65736b;}.payment-test-badge{margin-left:auto;padding:5px 8px;background:#fff1cd;border:1px solid #f0dfac;color:#82651e;border-radius:20px;font-size:10px;white-space:nowrap;}.payment-subtitle{color:#758079;font-size:12px;line-height:1.6;margin:17px 0;}.payment-order-lines{padding:17px;border:1px solid #e2e9e3;border-radius:16px;background:#fff;}.payment-order-lines>div{display:flex;justify-content:space-between;gap:15px;font-size:12px;color:#63736b;margin:9px 0;}.payment-order-lines strong{color:#233f30;white-space:nowrap;}.payment-order-lines .payment-grand-total{border-top:1px solid #e6ebe7;padding-top:15px;margin-top:15px;align-items:center;}.payment-grand-total strong{font-size:27px;letter-spacing:-.04em;}.payment-method-strip{display:flex;gap:7px;flex-wrap:wrap;margin:17px 0;}.payment-method-strip span{font-size:10px;border:1px solid #dce5de;border-radius:7px;padding:5px 9px;color:#456453;background:white;}.payment-security-copy{display:flex;gap:10px;align-items:flex-start;font-size:11px;line-height:1.7;color:#62776a;}.payment-security-copy svg{flex-shrink:0;color:#21734c;}.payment-primary{display:flex;align-items:center;justify-content:center;gap:12px;background:#075d43;border:0;color:white;font-weight:650;font-size:14px;border-radius:13px;min-height:50px;padding:12px;width:100%;margin-top:20px;box-shadow:0 7px 18px #075d4325;}.payment-primary:disabled{opacity:.5;cursor:not-allowed;}.payment-test-note{display:flex;align-items:center;justify-content:center;gap:5px;color:#7c887f;font-size:10px;margin:10px 0;}.payment-back{display:block;width:100%;font-size:12px;color:#406b55;margin:18px 0;}.payment-footer-proof{display:flex;align-items:center;justify-content:center;gap:5px;border-top:1px solid #e0e9e2;margin-top:16px;padding-top:14px;color:#7b8b80;font-size:10px;}.payment-setup-message{background:#fff6df;border:1px solid #eadbb3;color:#7d642d;font-size:12px;line-height:1.6;padding:12px;border-radius:10px;margin-top:15px;}.payment-error{font-size:12px;color:#b42318;background:#fff1ee;border-radius:10px;padding:12px;margin-top:12px;}@media(max-width:500px){.razorpay-checkout{padding:16px;}.razorpay-checkout h3{font-size:20px;}.payment-grand-total strong{font-size:22px;}.payment-test-badge{display:none;}}
+.demo-otp-overlay{position:fixed;inset:0;z-index:1600;background:#0c1e22b3;backdrop-filter:blur(9px);display:flex;align-items:center;justify-content:center;padding:20px;}.demo-otp-dialog{width:100%;max-width:450px;max-height:94vh;overflow:auto;background:#fff;border-radius:27px;box-shadow:0 30px 100px #02140e66;}.demo-otp-dialog>header{display:flex;justify-content:space-between;align-items:center;padding:18px 23px;border-bottom:1px solid #e8ede8;}.demo-otp-brand{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.15em;font-weight:750;color:#204533;}.demo-otp-brand>span{display:grid;place-items:center;width:27px;height:27px;border-radius:9px;background:#0b6045;color:white;font:italic 19px Georgia,serif;}.demo-otp-content{padding:26px;text-align:center;background:radial-gradient(ellipse at top,#edf7ee,#fff 55%);}.demo-otp-lock{display:grid;place-items:center;width:64px;height:64px;background:#e7f1e7;border:1px solid #d5e6d7;color:#12644b;border-radius:21px;margin:0 auto 18px;}.demo-otp-content h2{font:29px Georgia,serif;color:#153d2b;letter-spacing:-.04em;margin:10px 0;}.demo-otp-lede{font-size:12px;color:#718074;line-height:1.7;margin-bottom:23px;}.demo-otp-lede strong{color:#23523a;}.demo-otp-content form>label{display:block;font-size:11px;color:#607166;text-align:left;margin-bottom:9px;font-weight:650;}.demo-otp-input{width:100%;font:600 30px ui-monospace,monospace;letter-spacing:.36em;text-align:center;padding:15px 10px;border:1px solid #ccddcf;border-radius:13px;background:white;color:#15412f;outline:none;box-sizing:border-box;}.demo-otp-input:focus{border-color:#16674b;box-shadow:0 0 0 3px #0d64451a;}.demo-otp-sample{display:flex;align-items:center;justify-content:space-between;border:1px dashed #c7dacd;border-radius:12px;padding:12px 14px;background:#f2f8f0;margin:15px 0 10px;}.demo-otp-sample>div{text-align:left;}.demo-otp-sample span{display:block;font-size:10px;color:#63806c;}.demo-otp-sample strong{font:650 19px ui-monospace,monospace;letter-spacing:.18em;color:#25563c;}.demo-otp-sample button{display:flex;gap:5px;align-items:center;font-size:11px;color:#1d6448;padding:8px;background:white;border:1px solid #dbe6da;border-radius:9px;}.demo-otp-explanation{font-size:10px;line-height:1.7;color:#869087;text-align:left;}.demo-otp-resend{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:#21684b;width:100%;margin:16px 0;}.demo-otp-resend:disabled{color:#99a49d;cursor:not-allowed;}@media(max-width:450px){.demo-otp-content{padding:23px 19px;}.demo-otp-content h2{font-size:26px;}}
+
+.journey-control-panel{color:#0f172a;display:grid;gap:14px}.journey-status-line{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:16px;background:#ecfdf5;border-radius:16px}.journey-status-line>span{font-size:13px;color:#475569}.journey-status{margin-left:auto;text-transform:capitalize;border:1px solid #a7f3d0;padding:4px 10px;border-radius:30px}.journey-control-panel details{border:1px solid #e2e8f0;border-radius:16px;padding:16px;background:#fff}.journey-control-panel summary{cursor:pointer;font-size:15px;font-weight:700;margin-bottom:12px}.journey-fields{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px}.journey-control-panel label{font-size:12px;font-weight:600}.journey-control-panel input,.journey-control-panel select{border:1px solid #cbd5e1;border-radius:10px;padding:10px;background:#fff;min-width:0}.journey-fields input{display:block;width:100%;margin-top:5px}.journey-control-panel button{padding:9px 13px;background:#047857;color:#fff;border-radius:10px;font-size:12px;font-weight:600;margin:5px 3px 5px 0}.journey-control-panel button:disabled{opacity:.4;cursor:not-allowed}.journey-inline{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0}.journey-inline input{flex:1;min-width:100px}.journey-control-panel .journey-danger{background:#fff1f2;color:#be123c}.journey-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid #f1f5f9;font-size:12px}.journey-row>span{flex:1;min-width:160px}.journey-row small{display:block;color:#64748b;margin-top:4px}.journey-muted{font-size:12px;color:#64748b;line-height:1.6;margin:8px 0}.journey-members{display:flex;flex-wrap:wrap;gap:8px}.journey-members span{font-size:12px;background:#f1f5f9;border-radius:20px;padding:7px 12px}.journey-error{color:#b91c1c;background:#fef2f2;padding:10px;border-radius:10px;font-size:13px}.journey-notice{color:#065f46;background:#ecfdf5;padding:10px;border-radius:10px;font-size:13px;overflow-wrap:anywhere}.journey-story{padding:20px;background:#fafaf5;border:1px solid #e7e5d4;border-radius:12px;margin-top:16px}.journey-story h3{font-family:Georgia,serif;font-size:22px}.journey-story p{white-space:pre-wrap;line-height:1.9;font-size:14px}.journey-photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:14px}.journey-photo-grid img{width:100%;height:150px;object-fit:cover;border-radius:12px}.journey-photo-grid p{font-size:12px;padding:8px}@media(max-width:600px){.journey-fields{grid-template-columns:1fr}.journey-status-line{align-items:flex-start}.journey-inline{display:grid;grid-template-columns:1fr}.journey-control-panel details{padding:12px}}
+
+.booking-photo{position:relative;overflow:hidden;min-height:64px;background:#e8f1ed}.booking-photo>img{display:block;width:100%;height:100%;object-fit:cover}.booking-photo-label{position:absolute;right:7px;bottom:7px;padding:3px 7px;background:rgba(15,23,42,.7);color:#fff;border-radius:5px;font-size:9px;line-height:1.4;pointer-events:none}.booking-photo-fallback{height:100%;min-height:100px;display:grid;place-items:center;color:#047857;background:linear-gradient(135deg,#e2f3ed,#eef2ff)}
+
+.booking-package-dialog{max-width:850px!important;max-height:92vh;overflow:auto}.booking-package-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}.booking-package-controls label{font-size:12px;font-weight:600;color:#475569}.booking-package-controls select,.booking-package-controls input{display:block;width:100%;padding:10px;margin-top:5px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:#0f172a}.booking-package-items{display:grid;gap:12px}.booking-package-item{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #e2e8f0;border-radius:16px;cursor:pointer}.booking-package-item>input{accent-color:#047857;flex-shrink:0}.booking-package-photo{width:110px;height:90px;border-radius:10px;flex-shrink:0}.booking-package-item-copy{flex:1;min-width:0}.booking-package-item-copy strong,.booking-package-item-copy small{display:block;line-height:1.5}.booking-package-item-copy small{font-size:11px;color:#64748b}.booking-package-item>strong{white-space:nowrap;font-size:15px;color:#065f46}.booking-package-dialog .workflow-bundle-total p{display:flex;justify-content:space-between;gap:16px}.booking-package-dialog .workflow-bundle-total button{width:100%}@media(max-width:600px){.booking-package-controls{grid-template-columns:repeat(2,minmax(0,1fr))}.booking-package-item{flex-wrap:wrap;gap:8px}.booking-package-photo{width:75px;height:75px}.booking-package-item-copy{min-width:100px}.booking-package-item>strong{margin-left:auto}.booking-package-photo .booking-photo-label{font-size:7px;padding:2px;right:3px;bottom:3px}}
+
+.hero-place-details{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:12px 0}.hero-place-details dt{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#64748b}.hero-place-details dd{font-size:13px;font-weight:600;color:#0f172a;margin:4px 0;overflow-wrap:anywhere}.place-attribution{display:block;font-size:9px;color:#64748b;margin-top:8px}.label-state{font-size:10px;color:#64748b;margin-top:3px}.globe-place-status{position:absolute;bottom:8%;left:50%;transform:translateX(-50%);border:1px solid #d1fae5;background:rgba(255,255,255,.95);color:#065f46;border-radius:20px;padding:8px 14px;font-size:12px;white-space:nowrap;pointer-events:none}
+
+.journey-row > span { overflow-wrap: anywhere; min-width: 0; }

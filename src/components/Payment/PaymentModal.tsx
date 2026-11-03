@@ -1,16 +1,10 @@
-/**
- * Payment Modal Component
- * Multi-step payment flow with card input, digital wallet options,
- * UPI QR code, order summary, and transaction confirmation.
- */
-
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from "react";
 import {
+  ArrowRight,
+  CheckCircle2,
   CreditCard,
   Lock,
   ShieldCheck,
-  CheckCircle2,
-  ArrowRight,
   X,
   Sparkles,
   Smartphone,
@@ -30,139 +24,46 @@ import {
   type PaymentMethod,
   type CardDetails,
 } from '@/services/paymentService';
+import { useCurrency } from '@/context/CurrencyContext';
+import OtpVerificationView from './OtpVerificationView';
 
 export interface PaymentSummaryItem {
   label: string;
   amount: number;
 }
-
 export interface PaymentProps {
   bookingId: string;
   bookingReference: string;
-  bookingType: 'flight' | 'hotel' | 'transport' | 'package';
+  bookingType: "flight" | "hotel" | "transport" | "package";
   title: string;
   subtitle: string;
   amount: number;
   currency?: string;
   lineItems?: PaymentSummaryItem[];
-  onPaymentSuccess: (result: { paymentId: string; transactionReference: string }) => void;
+  onPaymentSuccess: () => void | Promise<void>;
   onCancel?: () => void;
   userId?: string;
 }
-
-const PAYMENT_METHODS: { id: PaymentMethod; name: string; icon: string; description: string }[] = [
-  { id: 'upi_qr', name: 'UPI / Dynamic QR', icon: '📱', description: 'GPay, PhonePe, Paytm, BHIM' },
-  { id: 'credit_card', name: 'Credit / Debit Card', icon: '💳', description: 'Visa, Mastercard, Amex' },
-  { id: 'google_pay', name: 'Google Pay', icon: '🌐', description: 'One-tap Google Pay QR & Wallet' },
-  { id: 'apple_pay', name: 'Apple Pay', icon: '🍏', description: 'Touchless Apple Wallet / QR' },
-  { id: 'paypal', name: 'PayPal', icon: '🅿️', description: 'PayPal Instant Checkout' },
-];
-
-/**
- * Procedural Dynamic QR Code Generator Matrix (with corner finder patterns)
- */
-function DynamicQRCode({
-  reference,
-  amount,
-  method,
-}: {
-  reference: string;
-  amount: number;
-  method: PaymentMethod;
-}) {
-  // Deterministic seed matrix for visual authenticity
-  const size = 21; // standard QR version 1 matrix (21x21)
-  const isFinder = (r: number, c: number) => {
-    // Top-left
-    if (r < 7 && c < 7) return true;
-    // Top-right
-    if (r < 7 && c >= size - 7) return true;
-    // Bottom-left
-    if (r >= size - 7 && c < 7) return true;
-    return false;
-  };
-
-  const isFinderFilled = (r: number, c: number) => {
-    // Top-left finder border & center
-    if (r < 7 && c < 7) {
-      if (r === 0 || r === 6 || c === 0 || c === 6) return true;
-      if (r >= 2 && r <= 4 && c >= 2 && c <= 4) return true;
-      return false;
-    }
-    // Top-right finder border & center
-    if (r < 7 && c >= size - 7) {
-      const oc = c - (size - 7);
-      if (r === 0 || r === 6 || oc === 0 || oc === 6) return true;
-      if (r >= 2 && r <= 4 && oc >= 2 && oc <= 4) return true;
-      return false;
-    }
-    // Bottom-left finder border & center
-    if (r >= size - 7 && c < 7) {
-      const or = r - (size - 7);
-      if (or === 0 || or === 6 || c === 0 || c === 6) return true;
-      if (or >= 2 && or <= 4 && c >= 2 && c <= 4) return true;
-      return false;
-    }
-    return false;
-  };
-
-  const charSum = reference.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), amount);
-
-  return (
-    <div className="relative p-3 bg-white rounded-2xl shadow-md border border-slate-200 flex items-center justify-center">
-      {/* Scanning laser beam animation */}
-      <div className="absolute inset-x-3 top-3 h-0.5 bg-gradient-to-r from-transparent via-emerald-500 to-transparent animate-pulse pointer-events-none opacity-80" />
-
-      <div
-        className="grid gap-[2px]"
-        style={{ gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))` }}
-      >
-        {Array.from({ length: size }).map((_, r) =>
-          Array.from({ length: size }).map((_, c) => {
-            let filled = false;
-            if (isFinder(r, c)) {
-              filled = isFinderFilled(r, c);
-            } else {
-              // Center data bits pseudo-random pattern based on ref & coords
-              const val = Math.sin(r * 13 + c * 37 + charSum) * 10000;
-              filled = val - Math.floor(val) > 0.45;
-            }
-            return (
-              <div
-                key={`${r}-${c}`}
-                className={`w-[7px] h-[7px] md:w-[8px] md:h-[8px] rounded-[1px] ${
-                  filled ? 'bg-slate-900' : 'bg-white'
-                }`}
-              />
-            );
-          })
-        )}
-      </div>
-
-      {/* Center Badge Icon */}
-      <div className="absolute inset-0 m-auto w-7 h-7 rounded-lg bg-white shadow-md border border-slate-200 flex items-center justify-center">
-        {method === 'upi_qr' && <Smartphone size={15} className="text-emerald-700" />}
-        {method === 'google_pay' && <span className="font-bold text-xs text-blue-600">G</span>}
-        {method === 'apple_pay' && <span className="font-bold text-xs text-slate-900"></span>}
-        {method === 'paypal' && <span className="font-bold text-xs text-blue-800">P</span>}
-      </div>
-    </div>
-  );
-}
-
-export const PaymentView: React.FC<PaymentProps> = ({
-  bookingId,
-  bookingReference,
-  bookingType,
+const money = (amount: number) =>
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 2,
+  }).format(amount);
+export function PaymentView({
   title,
   subtitle,
   amount,
-  currency = 'USD',
+  currency,
   lineItems = [],
   onPaymentSuccess,
   onCancel,
   userId,
 }) => {
+  const { currency: globalCurrency, convertFromUSD, formatCurrency } = useCurrency();
+  const activeCurrency = currency || globalCurrency;
+  const chargedAmount = convertFromUSD(amount);
+
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('upi_qr');
   const [card, setCard] = useState<CardDetails>({
     cardNumber: '',
@@ -171,6 +72,7 @@ export const PaymentView: React.FC<PaymentProps> = ({
     cvv: '',
     postalCode: '',
   });
+  const [paymentStep, setPaymentStep] = useState<'details' | 'otp'>('details');
   const [copiedUPI, setCopiedUPI] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(299); // 5 min timer
   const [isProcessing, setIsProcessing] = useState(false);
@@ -179,10 +81,18 @@ export const PaymentView: React.FC<PaymentProps> = ({
 
   // Countdown for dynamic QR
   useEffect(() => {
-    const interval = setInterval(() => {
-      setSecondsLeft((s) => (s > 0 ? s - 1 : 300));
-    }, 1000);
-    return () => clearInterval(interval);
+    let cancelled = false;
+    void apiRequest<{ enabled: boolean; provider: string }>(
+      "/api/payments/config",
+    ).then((result) => {
+      if (!cancelled) {
+        setEnabled(Boolean(result.ok && result.data?.enabled));
+        setProvider(result.data?.provider || "demo");
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const formatTimer = (sec: number) => {
@@ -224,9 +134,13 @@ export const PaymentView: React.FC<PaymentProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handlePay = async () => {
+  const handleProceedToOtp = () => {
     if (!validateCard()) return;
+    setErrorMessage(null);
+    setPaymentStep('otp');
+  };
 
+  const handleVerifiedPayment = async () => {
     setIsProcessing(true);
     setErrorMessage(null);
 
@@ -234,20 +148,23 @@ export const PaymentView: React.FC<PaymentProps> = ({
       // Step 1: Initiate Payment
       const initResult = await initiatePayment({
         bookingId,
-        amount,
-        currency,
+        amount: chargedAmount,
+        currency: activeCurrency,
         paymentMethod: selectedMethod,
         userId,
         metadata: {
           booking_reference: bookingReference,
           booking_type: bookingType,
           payment_channel: selectedMethod,
+          base_usd_amount: amount,
+          otp_verified: true,
+          otp_verified_at: new Date().toISOString(),
         },
       });
 
       if (!initResult.success || !initResult.paymentId) {
         setErrorMessage(initResult.error || 'Failed to initiate payment.');
-        setIsProcessing(false);
+        setPaymentStep('details');
         return;
       }
 
@@ -256,13 +173,13 @@ export const PaymentView: React.FC<PaymentProps> = ({
         bookingReference,
         bookingType,
         title: `${title} Payment Received`,
-        description: `Payment of Rs. ${amount.toLocaleString()} for ${bookingReference} successfully authorized via ${selectedMethod}.`,
+        description: `Payment of ${formatCurrency(chargedAmount, activeCurrency)} for ${bookingReference} successfully authorized via ${selectedMethod} with 2FA OTP.`,
         userId,
       });
 
       if (!confirmResult.success || !confirmResult.transactionReference) {
         setErrorMessage(confirmResult.error || 'Payment authorization failed.');
-        setIsProcessing(false);
+        setPaymentStep('details');
         return;
       }
 
@@ -274,10 +191,49 @@ export const PaymentView: React.FC<PaymentProps> = ({
     } catch (err: any) {
       console.error('[PaymentView] Unexpected error:', err);
       setErrorMessage(err.message || 'An unexpected error occurred during payment.');
+      setPaymentStep('details');
     } finally {
-      setIsProcessing(false);
+      setBusy(false);
     }
   };
+
+  if (paymentStep === 'otp') {
+    return (
+      <div className="space-y-4">
+        {/* Compact summary header */}
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 shadow-sm flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-bold border border-emerald-200">
+                {bookingReference}
+              </span>
+              <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">
+                {bookingType} RESERVATION
+              </span>
+            </div>
+            <h3 className="text-sm font-bold text-slate-900 mt-1">{title}</h3>
+            <p className="text-xs text-slate-500">{subtitle}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-xs text-slate-500 font-medium">Authorizing Total</p>
+            <p className="text-lg font-black text-slate-900">
+              {formatCurrency(chargedAmount, activeCurrency)}
+            </p>
+          </div>
+        </div>
+
+        <OtpVerificationView
+          userId={userId || 'usr-demo-01'}
+          amount={chargedAmount}
+          currency={activeCurrency}
+          bookingReference={bookingReference}
+          onVerified={handleVerifiedPayment}
+          onCancel={() => setPaymentStep('details')}
+          isProcessing={isProcessing}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -296,7 +252,7 @@ export const PaymentView: React.FC<PaymentProps> = ({
           </div>
           <div className="text-right">
             <p className="text-xs text-slate-500 font-medium">Total Due</p>
-            <p className="text-xl font-black text-slate-900">Rs. {amount.toLocaleString()}</p>
+            <p className="text-xl font-black text-slate-900">{formatCurrency(chargedAmount, activeCurrency)}</p>
           </div>
         </div>
 
@@ -305,36 +261,39 @@ export const PaymentView: React.FC<PaymentProps> = ({
             {lineItems.map((item) => (
               <div key={item.label} className="flex justify-between text-slate-500">
                 <span>{item.label}</span>
-                <span className="text-slate-800 font-medium">Rs. {item.amount.toLocaleString()}</span>
+                <span className="text-slate-800 font-medium">{formatCurrency(convertFromUSD(item.amount), activeCurrency)}</span>
               </div>
             ))}
           </div>
+        ))}
+        <div className="payment-grand-total">
+          <span>Total to pay</span>
+          <strong>{money(amount)}</strong>
+        </div>
+      </div>
+      <div className="payment-method-strip">
+        {provider === "demo" ? (
+          <>
+            <span>Get demo OTP</span>
+            <span>Enter code</span>
+            <span>Confirm trip</span>
+          </>
+        ) : (
+          <>
+            <span>UPI</span>
+            <span>Cards</span>
+            <span>Netbanking</span>
+            <span>Wallets</span>
+          </>
         )}
       </div>
-
-      {/* Payment Method Selector */}
-      <div className="space-y-1.5">
-        <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
-          Choose Payment Method
-        </label>
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-          {PAYMENT_METHODS.map((method) => (
-            <button
-              key={method.id}
-              type="button"
-              onClick={() => setSelectedMethod(method.id)}
-              className={`p-2.5 rounded-xl border text-left transition-all ${
-                selectedMethod === method.id
-                  ? 'bg-emerald-50 border-emerald-500 text-emerald-900 shadow-sm ring-1 ring-emerald-500/30'
-                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`}
-            >
-              <div className="text-base">{method.icon}</div>
-              <div className="mt-0.5 text-xs font-semibold leading-tight text-slate-900">{method.name}</div>
-              <div className="text-[10px] text-slate-500 leading-tight mt-0.5 truncate">{method.description}</div>
-            </button>
-          ))}
-        </div>
+      <div className="payment-security-copy">
+        <ShieldCheck size={19} />
+        <p>
+          {provider === "demo"
+            ? "Get a demo OTP, enter it to confirm, and your trip workspace will be ready. No PAN, bank account or payment details required."
+            : "Choose your payment method in Razorpay’s secure checkout. Your booking is confirmed after the payment is verified."}
+        </p>
       </div>
 
       {/* ─── DYNAMIC QR CODE SCANNER VIEW (for UPI_QR, Google Pay, Apple Pay, PayPal) ─── */}
@@ -344,7 +303,7 @@ export const PaymentView: React.FC<PaymentProps> = ({
           <div className="flex-shrink-0">
             <DynamicQRCode
               reference={bookingReference}
-              amount={amount}
+              amount={chargedAmount}
               method={selectedMethod}
             />
             <div className="mt-1.5 text-center">
@@ -361,7 +320,7 @@ export const PaymentView: React.FC<PaymentProps> = ({
               <div className="flex items-center gap-1.5">
                 <QrCode size={16} className="text-emerald-700" />
                 <h4 className="text-sm font-bold text-slate-900">
-                  Scan to Pay Rs. {amount.toLocaleString()}
+                  Scan to Pay {formatCurrency(chargedAmount, activeCurrency)}
                 </h4>
               </div>
               <p className="text-xs text-slate-600 mt-1">
@@ -461,24 +420,10 @@ export const PaymentView: React.FC<PaymentProps> = ({
           </div>
         </div>
       )}
-
-      {/* Security Guarantee Badge */}
-      <div className="flex items-center justify-between text-xs text-slate-500 px-1">
-        <div className="flex items-center gap-1.5">
-          <ShieldCheck size={14} className="text-emerald-600" />
-          <span>256-Bit SSL Encrypted & PCI-DSS Compliant</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <Lock size={12} className="text-slate-400" />
-          <span>Voyana Secure Shield</span>
-        </div>
-      </div>
-
-      {errorMessage && (
-        <div className="bg-rose-50 border border-rose-200 rounded-xl p-3 flex items-center gap-2 text-xs text-rose-700">
-          <AlertCircle size={15} className="text-rose-500 flex-shrink-0" />
-          <span>{errorMessage}</span>
-        </div>
+      {error && (
+        <p role="alert" className="payment-error">
+          {error}
+        </p>
       )}
 
       {/* Pay Action CTA */}
@@ -495,7 +440,7 @@ export const PaymentView: React.FC<PaymentProps> = ({
         )}
         <button
           type="button"
-          onClick={handlePay}
+          onClick={handleProceedToOtp}
           disabled={isProcessing}
           className="flex-1 py-3.5 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm tracking-wide transition-all shadow-lg shadow-emerald-700/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
@@ -509,53 +454,42 @@ export const PaymentView: React.FC<PaymentProps> = ({
               <Lock size={15} />
               <span>
                 {selectedMethod === 'credit_card'
-                  ? `Pay Rs. ${amount.toLocaleString()} & Complete Booking`
-                  : `Verify & Approve Rs. ${amount.toLocaleString()} Payment`}
+                  ? `Proceed to OTP Verification (${formatCurrency(chargedAmount, activeCurrency)})`
+                  : `Authorize with OTP (${formatCurrency(chargedAmount, activeCurrency)})`}
               </span>
+              <ArrowRight size={16} />
             </>
           )}
         </button>
+      )}
+      <div className="payment-footer-proof">
+        <CheckCircle2 size={14} />{" "}
+        {provider === "demo"
+          ? "OTP demo checkout · Powered by Voyana"
+          : "Payment protected by Razorpay"}
       </div>
-    </div>
+    </section>
   );
-};
-
-// ─── Standalone Payment Modal ────────────────────────────────────────────────
+}
 export interface StandalonePaymentModalProps extends PaymentProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-export const PaymentModal: React.FC<StandalonePaymentModalProps> = ({
+export function PaymentModal({
   isOpen,
   onClose,
   ...props
-}) => {
+}: StandalonePaymentModalProps) {
   if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-[1300] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-      <div className="absolute inset-0 bg-slate-900/65 backdrop-blur-md" onClick={onClose} />
-      <div className="relative w-full max-w-lg bg-white border border-slate-200/90 rounded-3xl shadow-2xl shadow-slate-950/20 overflow-hidden p-6 my-auto max-h-[88vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-300">
-        <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200">
-              <CreditCard size={18} />
-            </div>
-            <div>
-              <h2 className="text-base font-bold text-slate-900">Complete Payment</h2>
-              <p className="text-xs text-slate-500">Secure checkout for {props.bookingReference}</p>
-            </div>
-          </div>
-          <button onClick={onClose} className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition">
-            <X size={18} />
-          </button>
-        </div>
-
+    <div className="fixed inset-0 z-[1300] bg-slate-900/60 flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl p-6 w-full max-w-lg max-h-[90vh] overflow-auto">
+        <button aria-label="Close payment" onClick={onClose}>
+          <X />
+        </button>
         <PaymentView {...props} onCancel={onClose} />
       </div>
     </div>
   );
-};
-
+}
 export default PaymentModal;
