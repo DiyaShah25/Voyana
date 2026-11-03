@@ -1,0 +1,34 @@
+=================================================================
+VOYANA API LOAD & PERFORMANCE BENCHMARK (MULTI-ENDPOINT SUITE)
+Hardware / Environment: Local Development (Windows 11, Node.js v22.19.0)
+Concurrency: 10 parallel connections per test
+=================================================================
+
+--- 1. Health Check Endpoint (GET /health) ---
+Description:           Lightweight health ping without DB query
+Test Duration:         3.00s
+Requests Total:        2700
+Successful (2xx):      2700
+Failed / Errored:      0
+Average Req/Sec:       898.8 req/s
+Throughput:            0.18 MB/s
+Latency Min:           6.84 ms
+Latency p50 (Median):  9.96 ms
+Latency p95:           15.99 ms
+Latency p99:           22.66 ms
+Latency Max:           68.35 ms
+
+--- 2. Database Catalog Endpoint (GET /api/destinations) ---
+Description:           Full Mongoose database query and JSON serialization
+Test Duration:         3.01s
+Requests Total:        1214
+Successful (2xx):      1214
+Failed / Errored:      0
+Average Req/Sec:       403.6 req/s
+Throughput:            0.15 MB/s
+Latency Min:           7.90 ms
+Latency p50 (Median):  23.44 ms
+Latency p95:           30.85 ms
+Latency p99:           45.36 ms
+Latency Max:           76.51 ms
+=================================================================

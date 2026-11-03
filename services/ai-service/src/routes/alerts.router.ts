@@ -1,3 +1,5 @@
+import type { FilterQuery } from 'mongoose';
+import { toError } from '../utils/errors.js';
 /**
  * Booking Alert & Notification Router
  * Provides REST endpoints for alert generation, unread counts,
@@ -17,7 +19,7 @@ export const alertsRouter = Router();
 alertsRouter.get('/', optionalAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id || (req.query.userId as string);
-    const filter: any = {};
+    const filter: FilterQuery<Record<string, unknown>> = {};
 
     if (userId) {
       filter.user_id = userId;
@@ -27,7 +29,8 @@ alertsRouter.get('/', optionalAuth, async (req: AuthenticatedRequest, res: Respo
     const unreadCount = await AlertModel.countDocuments({ ...filter, is_read: false });
 
     res.status(200).json({ ok: true, count: alerts.length, unreadCount, alerts });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to fetch alerts.', error: err?.message });
   }
 });
@@ -61,7 +64,8 @@ alertsRouter.post('/', optionalAuth, async (req: AuthenticatedRequest, res: Resp
 
     await alert.save();
     res.status(201).json({ ok: true, message: 'Alert created.', alert });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to create alert.', error: err?.message });
   }
 });
@@ -72,7 +76,7 @@ alertsRouter.post('/', optionalAuth, async (req: AuthenticatedRequest, res: Resp
 alertsRouter.put('/:id/read', optionalAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const alert = await AlertModel.findOneAndUpdate({ id }, { $set: { is_read: true } }, { new: true });
+    const alert = await AlertModel.findOneAndUpdate({ id, user_id: req.user!.id }, { $set: { is_read: true } }, { new: true });
 
     if (!alert) {
       res.status(404).json({ ok: false, message: 'Alert not found.' });
@@ -80,7 +84,8 @@ alertsRouter.put('/:id/read', optionalAuth, async (req: AuthenticatedRequest, re
     }
 
     res.status(200).json({ ok: true, message: 'Alert marked as read.', alert });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to update alert.', error: err?.message });
   }
 });
@@ -91,12 +96,13 @@ alertsRouter.put('/:id/read', optionalAuth, async (req: AuthenticatedRequest, re
 alertsRouter.put('/read-all', optionalAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id || (req.body.userId as string);
-    const filter: any = {};
+    const filter: FilterQuery<Record<string, unknown>> = {};
     if (userId) filter.user_id = userId;
 
     await AlertModel.updateMany(filter, { $set: { is_read: true } });
     res.status(200).json({ ok: true, message: 'All alerts marked as read.' });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to mark all alerts as read.', error: err?.message });
   }
 });

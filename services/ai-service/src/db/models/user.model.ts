@@ -1,3 +1,4 @@
+import { toError } from '../../utils/errors.js';
 /**
  * User Mongoose Model
  * Manages user accounts, credentials with secure bcrypt hashing,
@@ -20,6 +21,7 @@ export interface IUser extends Document {
   name: string;
   email: string;
   passwordHash: string;
+  googleSub?: string;
   role: 'traveler' | 'organizer' | 'admin';
   avatarUrl?: string;
   bio?: string;
@@ -32,7 +34,7 @@ export interface IUser extends Document {
 
 const UserPreferencesSchema = new Schema<IUserPreferences>(
   {
-    preferredCurrency: { type: String, default: 'USD' },
+    preferredCurrency: { type: String, default: 'INR' },
     travelStyle: { type: String, default: 'Cultural & Historic' },
     homeAirport: { type: String },
     emailNotifications: { type: Boolean, default: true },
@@ -54,6 +56,7 @@ const UserSchema = new Schema<IUser>(
       index: true,
     },
     passwordHash: { type: String, required: true },
+    googleSub: { type: String, unique: true, sparse: true },
     role: {
       type: String,
       enum: ['traveler', 'organizer', 'admin'],
@@ -67,7 +70,7 @@ const UserSchema = new Schema<IUser>(
   {
     timestamps: true,
     toJSON: {
-      transform(_doc, ret: Record<string, any>) {
+      transform(_doc, ret: Record<string, unknown>) {
         delete ret.passwordHash;
         delete ret._id;
         delete ret.__v;
@@ -97,7 +100,8 @@ UserSchema.pre('save', async function (next) {
       this.passwordHash = await bcrypt.hash(this.passwordHash, salt);
     }
     next();
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     next(err);
   }
 });

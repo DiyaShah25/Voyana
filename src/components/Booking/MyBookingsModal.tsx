@@ -1,3 +1,5 @@
+import { bookingServiceName, bookingStatusLabel } from '@/services/bookingStatus';
+import { formatMoney } from '@/services/money';
 /**
  * My Bookings Modal
  * Displays the user's booking history across flights, hotels,
@@ -5,13 +7,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Briefcase, Plane, Building2, Car, Calendar, Users, MapPin,
-  Clock, ArrowRight, X, CheckCircle2, AlertCircle, Search,
-  Filter, SlidersHorizontal, Trash2, Edit3, ShieldCheck,
-  RefreshCw, ChevronRight, Check, CreditCard, Sparkles,
-  Info, QrCode
-} from 'lucide-react';
+import { Briefcase, Plane, Building2, Car, ArrowRight, X, CheckCircle2, Search, Trash2, Edit3, RefreshCw } from 'lucide-react';
 import {
   getUserBookings,
   modifyBooking,
@@ -22,6 +18,12 @@ import {
   type BookingModificationInput,
 } from '@/services/bookingService';
 import { PaymentView } from '@/components/Payment/PaymentModal';
+import { formatCurrency } from '@/services/currencyService';
+import {
+  downloadFlightTicket,
+  downloadHotelVoucher,
+  downloadTransportVoucher,
+} from '@/services/ticketService';
 
 export interface MyBookingsModalProps {
   isOpen: boolean;
@@ -76,8 +78,8 @@ export default function MyBookingsModal({
   const [pendingDiff, setPendingDiff] = useState<number>(0);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const loadBookings = useCallback(async () => {
-    setIsLoading(true);
+  const loadBookings = useCallback(async (silent = false) => {
+    if (!silent) setIsLoading(true);
     try {
       const data = await getUserBookings(userId);
       setBookings(data);
@@ -90,7 +92,11 @@ export default function MyBookingsModal({
 
   useEffect(() => {
     if (isOpen) {
-      loadBookings();
+      void loadBookings();
+      const timer = window.setInterval(() => { void loadBookings(true); }, 5000);
+      const refresh = () => { void loadBookings(); };
+      window.addEventListener('voyana:booking-changed', refresh);
+      return () => { clearInterval(timer); window.removeEventListener('voyana:booking-changed', refresh); };
     }
   }, [isOpen, loadBookings]);
 
@@ -190,7 +196,7 @@ export default function MyBookingsModal({
     setIsProcessing(true);
     const updates: BookingModificationInput = {};
     if (modifyingBooking.bookingType === 'flight') {
-      updates.cabinClass = modCabinClass as any;
+      updates.cabinClass = modCabinClass as NonNullable<BookingModificationInput['cabinClass']>;
       updates.passengerCount = modPassengers;
       updates.specialRequests = modSpecialRequests;
     } else if (modifyingBooking.bookingType === 'hotel') {
@@ -210,7 +216,11 @@ export default function MyBookingsModal({
     setIsProcessing(false);
     if (res.success) {
       setModifyStep('success');
-      loadBookings();
+      void loadBookings();
+      const timer = window.setInterval(() => { void loadBookings(true); }, 5000);
+      const refresh = () => { void loadBookings(); };
+      window.addEventListener('voyana:booking-changed', refresh);
+      return () => { clearInterval(timer); window.removeEventListener('voyana:booking-changed', refresh); };
     }
   };
 
@@ -219,7 +229,7 @@ export default function MyBookingsModal({
     setIsProcessing(true);
     const updates: BookingModificationInput = {};
     if (modifyingBooking.bookingType === 'flight') {
-      updates.cabinClass = modCabinClass as any;
+      updates.cabinClass = modCabinClass as NonNullable<BookingModificationInput['cabinClass']>;
       updates.passengerCount = modPassengers;
       updates.specialRequests = modSpecialRequests;
     } else if (modifyingBooking.bookingType === 'hotel') {
@@ -251,6 +261,72 @@ export default function MyBookingsModal({
     loadBookings();
   };
 
+  // Download digital voucher PDF
+  const handleDownloadVoucherTarget = () => {
+    if (!voucherTarget) return;
+
+    if (voucherTarget.bookingType === 'flight') {
+      const fl = voucherTarget.flightDetails;
+      downloadFlightTicket({
+        bookingRef: voucherTarget.bookingReference,
+        airline: fl?.airline || 'Voyana Partner Airlines',
+        flightNumber: fl?.flightNumber || 'FL8841',
+        aircraft: 'Boeing 787-9 Dreamliner',
+        originCity: fl?.originCity || 'Departure City',
+        originCode: fl?.originAirport || 'DEP',
+        destinationCity: fl?.destinationCity || 'Destination City',
+        destinationCode: fl?.destinationAirport || 'ARR',
+        departureTime: fl?.departureTime || '10:00 AM',
+        arrivalTime: fl?.arrivalTime || '02:30 PM',
+        cabin: fl?.cabinClass || 'Economy',
+        passengerName: fl?.passengerName || voucherTarget.contactEmail.split('@')[0] || 'Lead Traveler',
+        passengerEmail: voucherTarget.contactEmail,
+        passengerPhone: voucherTarget.contactPhone,
+        totalAmount: voucherTarget.totalAmount,
+        currency: voucherTarget.currency || 'USD',
+        paymentMethod: 'Authorized 2FA Gateway',
+      });
+    } else if (voucherTarget.bookingType === 'hotel') {
+      const ht = voucherTarget.hotelDetails;
+      const inDate = ht?.checkInDate || '2026-10-15';
+      const outDate = ht?.checkOutDate || '2026-10-18';
+      const nights = Math.max(1, Math.round((new Date(outDate).getTime() - new Date(inDate).getTime()) / (1000 * 3600 * 24))) || 3;
+
+      downloadHotelVoucher({
+        bookingRef: voucherTarget.bookingReference,
+        hotelName: ht?.hotelName || 'Luxury Hotel & Spa',
+        address: ht?.address || 'City Center Plaza',
+        city: ht?.city || 'City Center',
+        checkInDate: inDate,
+        checkOutDate: outDate,
+        nights,
+        rooms: ht?.numberOfRooms || 1,
+        roomType: ht?.roomType || 'Deluxe King Room',
+        guestName: ht?.guestName || voucherTarget.contactEmail.split('@')[0] || 'Lead Guest',
+        guestEmail: voucherTarget.contactEmail,
+        guestPhone: voucherTarget.contactPhone,
+        totalAmount: voucherTarget.totalAmount,
+        currency: voucherTarget.currency || 'USD',
+        paymentMethod: 'Authorized 2FA Gateway',
+      });
+    } else {
+      const tr = voucherTarget.transportDetails;
+      downloadTransportVoucher({
+        bookingRef: voucherTarget.bookingReference,
+        providerName: tr?.providerName || 'Executive Ground Mobility',
+        transportType: tr?.transportType || 'Private Transfer',
+        originLocation: tr?.originLocation || 'Airport Terminal',
+        destinationLocation: tr?.destinationLocation || 'City Center',
+        pickupTime: '11:00 AM',
+        passengerName: voucherTarget.contactEmail.split('@')[0] || 'Lead Passenger',
+        passengerPhone: voucherTarget.contactPhone,
+        totalAmount: voucherTarget.totalAmount,
+        currency: voucherTarget.currency || 'USD',
+        paymentMethod: 'Authorized 2FA Gateway',
+      });
+    }
+  };
+
   // Filter Bookings
   const filteredBookings = bookings.filter((b) => {
     if (selectedTab !== 'all' && b.bookingType !== selectedTab) return false;
@@ -273,9 +349,9 @@ export default function MyBookingsModal({
   const getStatusBadge = (status: BookingStatus) => {
     switch (status) {
       case 'confirmed':
-        return <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">Confirmed</span>;
+        return <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">Booked</span>;
       case 'pending':
-        return <span className="bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">Pending</span>;
+        return <span className="bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">Pending payment</span>;
       case 'delayed':
         return <span className="bg-orange-50 text-orange-800 border border-orange-200 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">Schedule Delayed</span>;
       case 'cancelled':
@@ -348,6 +424,12 @@ export default function MyBookingsModal({
               ))}
             </div>
 
+            <select aria-label="Booking status" value={statusFilter} onChange={event => setStatusFilter(event.target.value as StatusFilter)} className="bg-white text-slate-900 border border-slate-300 rounded-xl px-3 py-2 text-xs">
+              <option value="all">All statuses</option>
+              <option value="pending">Pending payment</option>
+              <option value="confirmed">Booked</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
             {/* Search Bar */}
             <div className="relative w-full sm:w-72">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -363,7 +445,7 @@ export default function MyBookingsModal({
         </div>
 
         {/* Bookings List Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-4">
           {isLoading ? (
             <div className="py-16 text-center">
               <RefreshCw size={24} className="animate-spin mx-auto text-emerald-700 mb-2" />
@@ -417,15 +499,17 @@ export default function MyBookingsModal({
 
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2 mb-1">
-                      <span className="font-mono text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
+                      <span className="break-all font-mono text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
                         {b.bookingReference}
                       </span>
                       {getStatusBadge(b.status)}
+                      <span className="text-xs font-semibold text-slate-700">{bookingServiceName(b)} booking: {bookingStatusLabel(b)}</span>
                       <span className="text-[11px] text-slate-500">
-                        Booked {new Date(b.createdAt).toLocaleDateString()}
+                        {b.status === 'pending' ? 'Started' : 'Created'} {new Date(b.createdAt).toLocaleDateString()}
                       </span>
                     </div>
 
+                    {b.status === 'pending' && <p className="text-xs text-amber-800 my-2">Payment has not been confirmed. Start checkout again with the same selection to complete this booking.</p>}
                     {/* Flight Detail */}
                     {b.bookingType === 'flight' && b.flightDetails && (
                       <div>
@@ -477,23 +561,25 @@ export default function MyBookingsModal({
                 </div>
 
                 {/* Right Amount & Actions */}
-                <div className="flex md:flex-col items-center md:items-end justify-between gap-3 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100">
+                <div className="flex flex-wrap md:flex-col items-center md:items-end justify-between gap-3 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100">
                   <div className="text-left md:text-right">
-                    <p className="text-lg font-bold text-slate-900">${b.totalAmount} {b.currency}</p>
+                    <p className="text-lg font-bold text-slate-900">{formatCurrency(b.totalAmount, b.currency)}</p>
                     <span className="text-[10px] text-emerald-700 capitalize font-medium">
                       ● {b.paymentStatus}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    {b.status !== 'cancelled' && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    {b.status !== 'cancelled' && b.status !== 'pending' && b.userId === userId && (
                       <>
                         <button
                           onClick={() => handleOpenModify(b)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-semibold transition-all"
+                          disabled={Boolean(b.paymentReference)}
+                          title={b.paymentReference ? 'Cancel and rebook to change a paid reservation' : 'Modify demo reservation'}
+                          className="disabled:opacity-50 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-semibold transition-all"
                         >
                           <Edit3 size={13} />
-                          <span>Modify</span>
+                          <span>{b.paymentReference ? 'Cancel & rebook to change' : 'Modify'}</span>
                         </button>
 
                         <button
@@ -506,12 +592,12 @@ export default function MyBookingsModal({
                       </>
                     )}
 
-                    <button
+                    {b.status !== 'pending' && <button
                       onClick={() => setVoucherTarget(b)}
                       className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-semibold transition-all"
                     >
                       Voucher
-                    </button>
+                    </button>}
                   </div>
                 </div>
               </div>
@@ -712,17 +798,17 @@ export default function MyBookingsModal({
                   <div>
                     <span className="text-xs text-slate-500 block">Pricing Impact</span>
                     <span className="text-xs font-bold text-slate-900">
-                      Original: ${modifyingBooking.totalAmount} → New: ${modifyingBooking.totalAmount + previewDiff}
+                      Original: {formatCurrency(modifyingBooking.totalAmount, modifyingBooking.currency)} → New: {formatCurrency(modifyingBooking.totalAmount + previewDiff, modifyingBooking.currency)}
                     </span>
                   </div>
                   <div className="text-right">
                     {previewDiff > 0 ? (
                       <span className="text-xs font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg">
-                        +${previewDiff} Upgrade Surcharge
+                        +{formatCurrency(previewDiff, modifyingBooking.currency)} Upgrade Surcharge
                       </span>
                     ) : previewDiff < 0 ? (
                       <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
-                        -${Math.abs(previewDiff)} Refund Credit
+                        -{formatCurrency(Math.abs(previewDiff), modifyingBooking.currency)} Refund Credit
                       </span>
                     ) : (
                       <span className="text-xs text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg font-medium">
@@ -744,7 +830,7 @@ export default function MyBookingsModal({
                     disabled={isProcessing}
                     className="px-6 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-md shadow-emerald-700/20 flex items-center gap-2 transition-all"
                   >
-                    {isProcessing ? 'Saving...' : previewDiff > 0 ? `Proceed to Pay (+$${previewDiff})` : 'Confirm Modification'}
+                    {isProcessing ? 'Saving...' : previewDiff > 0 ? `Proceed to Pay (+${formatMoney(previewDiff,modifyingBooking.currency)})` : 'Confirm Modification'}
                   </button>
                 </div>
               </div>
@@ -809,7 +895,7 @@ export default function MyBookingsModal({
             </div>
             <h3 className="text-base font-bold text-slate-900">Cancel Reservation?</h3>
             <p className="text-xs text-slate-500 mt-1 mb-4">
-              Are you sure you want to cancel <span className="font-mono text-emerald-800 font-bold">{cancelTarget.bookingReference}</span>? A full refund of <span className="text-slate-900 font-bold">${cancelTarget.totalAmount}</span> will be credited.
+              Are you sure you want to cancel <span className="font-mono text-emerald-800 font-bold">{cancelTarget.bookingReference}</span>? A full refund of <span className="text-slate-900 font-bold">{formatCurrency(cancelTarget.totalAmount, cancelTarget.currency)}</span> will be credited.
             </p>
             <div className="flex items-center justify-center gap-3">
               <button
@@ -865,7 +951,7 @@ export default function MyBookingsModal({
               <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200 text-[11px]">
                 <div>
                   <span className="text-slate-400 block font-semibold uppercase">Total Amount</span>
-                  <span className="font-bold text-slate-900">${voucherTarget.totalAmount} {voucherTarget.currency}</span>
+                  <span className="font-bold text-slate-900">{formatCurrency(voucherTarget.totalAmount, voucherTarget.currency)}</span>
                 </div>
                 <div>
                   <span className="text-slate-400 block font-semibold uppercase">Payment</span>
@@ -874,8 +960,17 @@ export default function MyBookingsModal({
               </div>
             </div>
 
-            <div className="mt-5 flex justify-center">
+            <div className="mt-5 flex justify-center gap-3">
               <button
+                type="button"
+                onClick={handleDownloadVoucherTarget}
+                className="px-5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-1.5 transition shadow-sm"
+              >
+                <Sparkles size={14} />
+                <span>Download PDF Voucher</span>
+              </button>
+              <button
+                type="button"
                 onClick={() => setVoucherTarget(null)}
                 className="px-6 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-md shadow-emerald-700/20"
               >

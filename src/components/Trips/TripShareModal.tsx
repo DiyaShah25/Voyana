@@ -1,3 +1,4 @@
+import { formatMoney } from '@/services/money';
 /**
  * Trip Share Modal
  * Handles trip sharing via invite links, email invitations,
@@ -5,10 +6,7 @@
  */
 
 import React, { useState } from 'react';
-import {
-  Share2, Copy, Check, QrCode, Globe2, Lock,
-  Users, Shield, Eye, X, Send, Sparkles, MapPin, Calendar
-} from 'lucide-react';
+import { Share2, Copy, Check, Globe2, Lock, Users, Eye, X, Send, MapPin, Calendar } from 'lucide-react';
 import {
   generateShareLink,
   updateTripVisibility,
@@ -246,7 +244,7 @@ export default function TripShareModal({
                       <span className="text-[10px] text-emerald-800 font-bold">Day {a.dayNumber} · {a.timeSlot}</span>
                       <h6 className="text-xs font-semibold text-slate-900">{a.title}</h6>
                     </div>
-                    {a.cost ? <span className="text-xs font-bold text-slate-900">${a.cost}</span> : null}
+                    {a.cost ? <span className="text-xs font-bold text-slate-900">{formatMoney(a.cost,trip.currency)}</span> : null}
                   </div>
                 ))
               ) : (

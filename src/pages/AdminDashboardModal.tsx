@@ -19,7 +19,7 @@ import {
   Lock,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { getAllUsers, switchUserRole } from '@/services/authService';
+import { getAllUsers } from '@/services/authService';
 import type { UserProfile, UserRole } from '@/types/auth.types';
 
 interface AdminDashboardModalProps {
@@ -34,9 +34,8 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ isOpen
   const [roleFilter, setRoleFilter] = useState<'all' | UserRole>('all');
   const [notification, setNotification] = useState<string | null>(null);
 
-  const refreshUsers = () => {
-    const list = getAllUsers();
-    setUsersList(list);
+  const refreshUsers = async () => {
+    try { setUsersList(await getAllUsers()); } catch { setNotification('The user directory could not be loaded.'); }
   };
 
   useEffect(() => {
@@ -71,13 +70,6 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ isOpen
       </div>
     );
   }
-
-  const handleRoleChange = async (targetUserId: string, newRole: UserRole) => {
-    await switchUserRole(targetUserId, newRole);
-    refreshUsers();
-    setNotification(`User role updated to ${newRole.toUpperCase()}`);
-    window.setTimeout(() => setNotification(null), 2500);
-  };
 
   const filteredUsers = usersList.filter((u) => {
     const matchesSearch =
@@ -183,7 +175,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ isOpen
                 </div>
                 <select
                   value={roleFilter}
-                  onChange={(e) => setRoleFilter(e.target.value as any)}
+                  onChange={(e) => setRoleFilter(e.target.value as typeof roleFilter)}
                   className="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg bg-white focus:outline-none focus:border-emerald-600"
                 >
                   <option value="all">All Roles</option>
@@ -249,20 +241,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ isOpen
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="inline-flex rounded-lg border border-slate-200 overflow-hidden shadow-2xs">
-                          {(['traveler', 'organizer', 'admin'] as UserRole[]).map((r) => (
-                            <button
-                              key={r}
-                              type="button"
-                              onClick={() => handleRoleChange(u.id, r)}
-                              className={`px-2 py-1 text-[11px] font-semibold transition-colors ${
-                                u.role === r
-                                  ? 'bg-emerald-700 text-white font-bold'
-                                  : 'bg-white hover:bg-slate-100 text-slate-700'
-                              }`}
-                            >
-                              {r.charAt(0).toUpperCase() + r.slice(1, 3)}
-                            </button>
-                          ))}
+                          <span className="text-xs text-slate-600">{u.role} · assigned to account</span>
                         </div>
                       </td>
                     </tr>

@@ -1,3 +1,4 @@
+import { toError } from './errors';
 /**
  * Centralized API Client for Voyana
  * Provides robust HTTP client methods to connect the frontend domain services
@@ -5,25 +6,25 @@
  * and seamless fallback handling.
  */
 
-export const API_BASE_URL =
+export const API_BASE_URL = (
   (import.meta.env.VITE_API_URL as string) ||
   (import.meta.env.VITE_AI_SERVICE_URL as string) ||
-  'http://localhost:3001';
+  'http://localhost:3001').replace(/\/+$/, '').replace(/\/api$/, '');
 
-const AUTH_STORAGE_KEY = 'voyana.auth_session';
+const AUTH_STORAGE_KEY = 'voyana.active_session';
 
 export function getStoredAuthToken(): string | null {
   try {
     const raw = localStorage.getItem(AUTH_STORAGE_KEY);
     if (!raw) return null;
     const session = JSON.parse(raw);
-    return session.token || null;
+    return session.expiresAt > Date.now() ? session.token || null : null;
   } catch {
     return null;
   }
 }
 
-export async function apiRequest<T = any>(
+export async function apiRequest<T = Record<string, unknown>>(
   endpoint: string,
   options: RequestInit = {},
   timeoutMs = 6000
@@ -67,7 +68,8 @@ export async function apiRequest<T = any>(
       status: res.status,
       data: json,
     };
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     clearTimeout(timeoutId);
     return {
       ok: false,
