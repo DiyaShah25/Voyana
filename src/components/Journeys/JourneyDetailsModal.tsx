@@ -8,7 +8,7 @@
 import React, { useEffect } from 'react';
 import {
   X, Calendar, Compass, MapPin, Plane, ArrowRight,
-  Sparkles, CheckCircle2, Package, Users, DollarSign,
+  Sparkles, CheckCircle2, Package, Users, IndianRupee,
   Sun
 } from 'lucide-react';
 import type { FeaturedJourney } from './FeaturedJourneys';
@@ -238,11 +238,11 @@ export const JourneyDetailsModal: React.FC<JourneyDetailsModalProps> = ({
 
             <div className="p-3.5 rounded-2xl bg-purple-50 border border-purple-200 rounded-2xl flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-800 flex items-center justify-center flex-shrink-0">
-                <DollarSign size={16} />
+                <IndianRupee size={16} />
               </div>
               <div>
-                <div className="text-xs font-bold text-slate-900">${estimatedCost.toLocaleString()} Estimated</div>
-                <div className="text-[10px] text-purple-700 font-semibold">Save 18% with Bundle</div>
+                <div className="text-xs font-bold text-slate-900">₹{(estimatedCost*80).toLocaleString('en-IN')} Estimated</div>
+                <div className="text-[10px] text-purple-700 font-semibold">Indicative sample budget</div>
               </div>
             </div>
           </div>
@@ -269,8 +269,8 @@ export const JourneyDetailsModal: React.FC<JourneyDetailsModalProps> = ({
                     <Compass size={16} />
                   </div>
                   <div>
-                    <div className="font-bold">Open Workspace</div>
-                    <div className="text-[10px] text-emerald-100">7-tab collaborative schedule</div>
+                    <div className="font-bold">Choose & book</div>
+                    <div className="text-[10px] text-emerald-100">Start with a confirmed reservation</div>
                   </div>
                 </div>
                 <ArrowRight size={14} />

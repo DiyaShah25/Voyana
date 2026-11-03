@@ -20,6 +20,8 @@ import {
   Users,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useCurrency } from '@/context/CurrencyContext';
+import { SUPPORTED_CURRENCIES, type SupportedCurrency } from '@/services/currencyService';
 import type { UserRole } from '@/types/auth.types';
 
 interface ProfileModalProps {
@@ -35,13 +37,11 @@ const AVATAR_OPTIONS = [
   'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
 ];
 
-const CURRENCIES = [
-  { code: 'USD', symbol: '$', label: 'USD ($) - US Dollar' },
-  { code: 'EUR', symbol: '€', label: 'EUR (€) - Euro' },
-  { code: 'GBP', symbol: '£', label: 'GBP (£) - British Pound' },
-  { code: 'JPY', symbol: '¥', label: 'JPY (¥) - Japanese Yen' },
-  { code: 'INR', symbol: '₹', label: 'INR (₹) - Indian Rupee' },
-];
+const CURRENCIES = SUPPORTED_CURRENCIES.map((c) => ({
+  code: c.code,
+  symbol: c.symbol,
+  label: c.label,
+}));
 
 const TRAVEL_STYLES = [
   'Cultural & Historic',
@@ -54,6 +54,7 @@ const TRAVEL_STYLES = [
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
   const { user, updateProfile, switchRole } = useAuth();
+  const { currency: globalCurrency, setCurrency: setGlobalCurrency } = useCurrency();
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -74,13 +75,13 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
       setPhone(user.phone || '');
       setBio(user.bio || '');
       setAvatarUrl(user.avatarUrl || AVATAR_OPTIONS[0]);
-      setCurrency(user.preferences?.preferredCurrency || 'USD');
+      setCurrency(user.preferences?.preferredCurrency || globalCurrency || 'USD');
       setTravelStyle(user.preferences?.travelStyle || 'Cultural & Historic');
       setHomeAirport(user.preferences?.homeAirport || 'JFK');
       setEmailAlerts(user.preferences?.emailNotifications ?? true);
       setSmsAlerts(user.preferences?.smsAlerts ?? false);
     }
-  }, [user, isOpen]);
+  }, [user, isOpen, globalCurrency]);
 
   if (!isOpen || !user) return null;
 
@@ -111,6 +112,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
     setSaving(false);
 
     if (ok) {
+      setGlobalCurrency(currency as SupportedCurrency);
       setSavedSuccess(true);
       window.setTimeout(() => setSavedSuccess(false), 2500);
     } else {
@@ -118,11 +120,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
     }
   };
 
-  const handleRoleChange = async (newRole: UserRole) => {
-    await switchRole(newRole);
-    setSavedSuccess(true);
-    window.setTimeout(() => setSavedSuccess(false), 2000);
-  };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
@@ -208,25 +205,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
               </div>
             </div>
 
-            {/* Role Switcher (for immediate testing) */}
-            <div className="sm:border-l sm:border-slate-200 sm:pl-4 space-y-1.5 text-center sm:text-left">
-              <span className="text-xs font-semibold text-slate-700 block">Switch Active Role:</span>
-              <div className="flex flex-row sm:flex-col gap-1.5">
-                {(['traveler', 'organizer', 'admin'] as UserRole[]).map((r) => (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => handleRoleChange(r)}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors text-left flex items-center gap-1.5 ${
-                      user.role === r
-                        ? 'bg-emerald-700 text-white font-bold'
-                        : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
-                    }`}
-                  >
-                    <span>{r.charAt(0).toUpperCase() + r.slice(1)}</span>
-                  </button>
-                ))}
-              </div>
+            <div className="text-sm text-slate-600 max-w-xs">
+              <p className="font-semibold text-slate-900">Role: {user.role}</p>
+              <p>Your role belongs to your account. Sign out to sign in with a different account; profile edits cannot change access.</p>
             </div>
           </div>
 

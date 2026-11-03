@@ -1,3 +1,5 @@
+import BookingImage from './BookingImage';
+import { getPlanningContext } from '@/services/planningContext';
 /**
  * Flight Booking Modal
  * Full-screen modal for searching, filtering, and booking flights.
@@ -13,7 +15,6 @@ import {
 } from 'lucide-react';
 import {
   generateMockFlights,
-  searchFlightsLive,
   createFlightBooking,
   formatDuration,
   formatTime,
@@ -27,6 +28,8 @@ import {
   type PassengerDetails,
 } from '@/services/flightService';
 import { PaymentView } from '@/components/Payment/PaymentModal';
+import { useCurrency } from '@/context/CurrencyContext';
+import { downloadFlightTicket } from '@/services/ticketService';
 
 // ─── Step types ─────────────────────────────────────────────────────────────
 type Step = 'search' | 'results' | 'passenger' | 'payment' | 'confirming' | 'success';
@@ -75,6 +78,7 @@ function FlightCard({
   passengers: number;
   onSelect: (f: Flight) => void;
 }) {
+  const { formatUSD } = useCurrency();
   const price = flight.prices[cabin] * passengers;
   const perPax = flight.prices[cabin];
 
@@ -83,26 +87,19 @@ function FlightCard({
       onClick={() => onSelect(flight)}
       className="group relative bg-white hover:bg-slate-50 border border-slate-200 hover:border-emerald-500/50 rounded-2xl p-4 cursor-pointer transition-all duration-200 hover:shadow-lg hover:shadow-emerald-950/5"
     >
+      <BookingImage kind="flight" className="w-full h-24 rounded-xl mb-4" />
       {/* Airline info */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <AirlineBadge code={flight.airlineCode} name={flight.airline} />
           <div>
-            <div className="flex items-center gap-2">
-              <p className="text-sm font-bold text-slate-900">{flight.airline}</p>
-              {(flight as any).isLiveGDS && (
-                <span className="bg-sky-50 text-sky-700 border border-sky-200 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
-                  <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
-                  Live GDS
-                </span>
-              )}
-            </div>
+            <p className="text-sm font-bold text-slate-900">{flight.airline}</p>
             <p className="text-xs text-slate-500 font-mono">{flight.flightNumber} · {flight.aircraft}</p>
           </div>
         </div>
         <div className="text-right">
-          <p className="text-xl font-black text-slate-900">Rs. {price.toLocaleString()}</p>
-          {passengers > 1 && <p className="text-xs text-slate-500">Rs. {perPax.toLocaleString()} / person</p>}
+          <p className="text-xl font-black text-slate-900">{formatUSD(price)}</p>
+          {passengers > 1 && <p className="text-xs text-slate-500">{formatUSD(perPax)} / person</p>}
         </div>
       </div>
 
@@ -110,8 +107,7 @@ function FlightCard({
       <div className="mt-4 flex items-center gap-3">
         <div className="text-center flex-shrink-0">
           <p className="text-2xl font-black text-slate-900 font-mono">{formatTime(flight.departureTime)}</p>
-          <p className="text-xs text-slate-800 font-bold">{flight.originAirport.code}</p>
-          <p className="text-[10px] text-slate-400 max-w-[85px] truncate font-medium">{flight.originAirport.city}</p>
+          <p className="text-xs text-slate-500 font-bold">{flight.originAirport.code}</p>
         </div>
 
         <div className="flex-1 flex flex-col items-center gap-1">
@@ -132,8 +128,7 @@ function FlightCard({
 
         <div className="text-center flex-shrink-0">
           <p className="text-2xl font-black text-slate-900 font-mono">{formatTime(flight.arrivalTime)}</p>
-          <p className="text-xs text-slate-800 font-bold">{flight.destinationAirport.code}</p>
-          <p className="text-[10px] text-slate-400 max-w-[85px] truncate font-medium">{flight.destinationAirport.city}</p>
+          <p className="text-xs text-slate-500 font-bold">{flight.destinationAirport.code}</p>
         </div>
       </div>
 
@@ -181,24 +176,22 @@ const CABIN_OPTIONS: { value: CabinClass; label: string; icon: string }[] = [
 
 const POPULAR_ROUTES = [
   { from: 'DEL', to: 'DXB', fromCity: 'New Delhi', toCity: 'Dubai' },
-  { from: 'BOM', to: 'DPS', fromCity: 'Mumbai', toCity: 'Bali' },
   { from: 'BOM', to: 'LHR', fromCity: 'Mumbai', toCity: 'London' },
-  { from: 'DEL', to: 'BLR', fromCity: 'New Delhi', toCity: 'Bengaluru' },
-  { from: 'BOM', to: 'GOI', fromCity: 'Mumbai', toCity: 'Goa' },
-  { from: 'AMD', to: 'DXB', fromCity: 'Ahmedabad', toCity: 'Dubai' },
-  { from: 'CDG', to: 'JFK', fromCity: 'Paris', toCity: 'New York' },
-  { from: 'SIN', to: 'DPS', fromCity: 'Singapore', toCity: 'Bali' },
+  { from: 'CDG', to: 'HND', fromCity: 'Paris', toCity: 'Tokyo' },
+  { from: 'JFK', to: 'LHR', fromCity: 'New York', toCity: 'London' },
+  { from: 'SIN', to: 'SYD', fromCity: 'Singapore', toCity: 'Sydney' },
   { from: 'DXB', to: 'BKK', fromCity: 'Dubai', toCity: 'Bangkok' },
 ];
 
 export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
   isOpen, onClose, initialDestination,
 }) => {
+  const { currency, formatUSD } = useCurrency();
   const [step, setStep] = useState<Step>('search');
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState(initialDestination || '');
   const [departureDate, setDepartureDate] = useState('');
-  const [passengers, setPassengers] = useState(1);
+  const [passengers, setPassengers] = useState(() => getPlanningContext().trip?.travelMode === 'group' ? Math.min(20, Math.max(1, getPlanningContext().members.length)) : 1);
   const [cabin, setCabin] = useState<CabinClass>('economy');
   const [flights, setFlights] = useState<Flight[]>([]);
   const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
@@ -210,7 +203,7 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
     nationality: '', seatPreference: 'window',
     mealPreference: 'standard', contactEmail: '', contactPhone: '',
   });
-  const [isSearching, setIsSearching] = useState(false);
+  const [passengerErrors, setPassengerErrors] = useState<Partial<Record<keyof PassengerDetails, string>>>({});
 
   // Set min date to today
   const today = new Date().toISOString().split('T')[0];
@@ -218,43 +211,29 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
   // Pre-fill destination when initialDestination changes
   useEffect(() => {
     if (initialDestination) {
-      const code = resolveAirportCode(initialDestination) || initialDestination.toUpperCase().slice(0, 3);
+      const code = resolveAirportCode(initialDestination) || '';
       setDestination(code);
     }
   }, [initialDestination]);
 
-  const handleSearch = useCallback(async () => {
+  const handleSearch = useCallback(() => {
     const resolvedOrigin = resolveAirportCode(origin) || origin.toUpperCase().slice(0, 3);
-    const resolvedDest = resolveAirportCode(destination) || destination.toUpperCase().slice(0, 3);
+    const resolvedDest = resolveAirportCode(initialDestination || '') || '';
+    if (!resolvedOrigin || !resolvedDest || resolvedOrigin === resolvedDest) return;
 
-    if (!resolvedOrigin || !resolvedDest) return;
+    if (!AIRPORTS[resolvedOrigin] || !AIRPORTS[resolvedDest]) return;
     if (!departureDate) return;
 
-    setIsSearching(true);
-    try {
-      const results = await searchFlightsLive({
-        originCode: resolvedOrigin,
-        destinationCode: resolvedDest,
-        departureDate,
-        passengers,
-        cabinClass: cabin,
-      });
-      setFlights(results);
-      setStep('results');
-    } catch {
-      const results = generateMockFlights({
-        originCode: resolvedOrigin,
-        destinationCode: resolvedDest,
-        departureDate,
-        passengers,
-        cabinClass: cabin,
-      });
-      setFlights(results);
-      setStep('results');
-    } finally {
-      setIsSearching(false);
-    }
-  }, [origin, destination, departureDate, passengers, cabin]);
+    const results = generateMockFlights({
+      originCode: resolvedOrigin,
+      destinationCode: resolvedDest,
+      departureDate,
+      passengers,
+      cabinClass: cabin,
+    });
+    setFlights(results);
+    setStep('results');
+  }, [origin, initialDestination, departureDate, passengers, cabin]);
 
   const sortedFlights = [...flights]
     .filter(f => filterStops === 'any' || f.stops === 0)
@@ -283,6 +262,31 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
   const handleProceedToPayment = () => {
     if (!selectedFlight || !validatePassenger()) return;
     setStep('payment');
+  };
+
+  const handleDownloadTicket = () => {
+    if (!selectedFlight) return;
+    downloadFlightTicket({
+      bookingRef: bookingRef || `VYN-FL${selectedFlight.flightNumber.replace(/\D/g, '').slice(-4) || '8841'}`,
+      airline: selectedFlight.airline,
+      flightNumber: selectedFlight.flightNumber,
+      aircraft: selectedFlight.aircraft,
+      originCity: selectedFlight.originAirport.city,
+      originCode: selectedFlight.originAirport.code,
+      destinationCity: selectedFlight.destinationAirport.city,
+      destinationCode: selectedFlight.destinationAirport.code,
+      departureTime: `${formatDate(selectedFlight.departureTime)} ${formatTime(selectedFlight.departureTime)}`,
+      arrivalTime: formatTime(selectedFlight.arrivalTime),
+      duration: formatDuration(selectedFlight.durationMinutes),
+      cabin: getCabinLabel(cabin),
+      passengerName: passenger.fullName || 'Lead Passenger',
+      passengerEmail: passenger.contactEmail || 'passenger@voyana.com',
+      seat: passengers > 1 ? `14A - 14${String.fromCharCode(64 + passengers)}` : '14A (Window)',
+      passengersCount: passengers,
+      totalAmount: selectedFlight.prices[cabin] * passengers,
+      currency: currency,
+      paymentMethod: 'Verified 2FA Payment Gateway',
+    });
   };
 
   const handleClose = () => {
@@ -380,7 +384,8 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                   </label>
                   <input
                     value={destination}
-                    onChange={e => setDestination(e.target.value)}
+                    readOnly
+                    aria-label="Selected destination airport"
                     placeholder="City or Airport code"
                     list="destination-list"
                     className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-600 focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition"
@@ -414,7 +419,7 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                   <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 gap-4">
                     <button onClick={() => setPassengers(p => Math.max(1, p - 1))} className="text-slate-500 hover:text-slate-900 text-lg w-7 h-7 rounded-lg hover:bg-slate-200 transition flex items-center justify-center font-bold">−</button>
                     <span className="flex-1 text-center text-sm font-bold text-slate-900">{passengers}</span>
-                    <button onClick={() => setPassengers(p => Math.min(9, p + 1))} className="text-slate-500 hover:text-slate-900 text-lg w-7 h-7 rounded-lg hover:bg-slate-200 transition flex items-center justify-center font-bold">+</button>
+                    <button onClick={() => setPassengers(p => Math.min(20, p + 1))} className="text-slate-500 hover:text-slate-900 text-lg w-7 h-7 rounded-lg hover:bg-slate-200 transition flex items-center justify-center font-bold">+</button>
                   </div>
                 </div>
               </div>
@@ -462,20 +467,11 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
               {/* Search Button */}
               <button
                 onClick={handleSearch}
-                disabled={!origin || !destination || !departureDate || isSearching}
+                disabled={!origin || !destination || !departureDate || origin === destination}
                 className="w-full py-3.5 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm tracking-wide transition-all shadow-lg shadow-emerald-700/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {isSearching ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Searching Live AviationStack GDS...</span>
-                  </>
-                ) : (
-                  <>
-                    <Search size={17} />
-                    <span>Search Flights</span>
-                  </>
-                )}
+                <Search size={17} />
+                Search Flights
               </button>
             </div>
           )}
@@ -539,7 +535,7 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                   <p className="text-xs text-slate-600 font-medium">{selectedFlight.originAirport.code} → {selectedFlight.destinationAirport.code} · {formatTime(selectedFlight.departureTime)} – {formatTime(selectedFlight.arrivalTime)}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-black text-emerald-800">Rs. {(selectedFlight.prices[cabin] * passengers).toLocaleString()}</p>
+                  <p className="text-lg font-black text-emerald-800">{formatUSD(selectedFlight.prices[cabin] * passengers)}</p>
                   <span className={`text-xs px-2.5 py-0.5 rounded-full border ${CABIN_COLORS[cabin]}`}>{getCabinLabel(cabin)}</span>
                 </div>
               </div>
@@ -619,14 +615,16 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                 title={`${selectedFlight.airline} · Flight ${selectedFlight.flightNumber}`}
                 subtitle={`${selectedFlight.originAirport.city} (${selectedFlight.originAirport.code}) → ${selectedFlight.destinationAirport.city} (${selectedFlight.destinationAirport.code}) · ${formatDate(selectedFlight.departureTime)}`}
                 amount={selectedFlight.prices[cabin] * passengers}
-                currency="USD"
+                currency={currency}
                 lineItems={[
                   { label: `${getCabinLabel(cabin)} Fare (${passengers} passenger${passengers > 1 ? 's' : ''})`, amount: selectedFlight.prices[cabin] * passengers },
                   { label: 'Airport Taxes & Passenger Facility Charges', amount: 0 },
                 ]}
                 onCancel={() => setStep('passenger')}
-                onPaymentSuccess={({ transactionReference }) => {
-                  setBookingRef(transactionReference.replace('TXN', 'VYN'));
+                onPaymentSuccess={async () => {
+                  const result = await createFlightBooking(selectedFlight, passenger, cabin, passengers);
+                  if (!result.success || !result.bookingReference) throw new Error(result.error || 'Could not save reservation.');
+                  setBookingRef(result.bookingReference);
                   setStep('success');
                 }}
               />
@@ -728,7 +726,7 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-slate-500 font-semibold">Total Paid</p>
-                      <p className="text-lg font-black text-emerald-800">Rs. {(selectedFlight.prices[cabin] * passengers).toLocaleString()}</p>
+                      <p className="text-lg font-black text-emerald-800">{formatUSD(selectedFlight.prices[cabin] * passengers)}</p>
                     </div>
                   </div>
                 </div>
@@ -738,7 +736,7 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
               <div className="flex gap-3">
                 <button
                   type="button"
-                  onClick={() => alert(`E-Ticket ${bookingRef} downloaded to your device!`)}
+                  onClick={handleDownloadTicket}
                   className="flex-1 py-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm transition flex items-center justify-center gap-2 shadow-md shadow-emerald-700/20"
                 >
                   <Sparkles size={15} />
@@ -747,6 +745,7 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                 <button
                   type="button"
                   onClick={handleClose}
+              aria-label="Close flight booking"
                   className="flex-1 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 font-bold text-sm transition"
                 >
                   Done

@@ -1,3 +1,5 @@
+import type { FilterQuery } from 'mongoose';
+import { toError } from '../utils/errors.js';
 /**
  * Travel Memories & Photo Journal REST API Router
  * Provides complete CRUD, likes, filtering, search, and AI story generation
@@ -6,10 +8,27 @@
 
 import { Router, Response } from 'express';
 import { randomUUID } from 'crypto';
-import { MemoryModel, IMemory } from '../db/models/collaboration.model.js';
+import { MemoryModel } from '../db/models/collaboration.model.js';
 import { optionalAuth, AuthenticatedRequest } from '../middleware/auth.middleware.js';
+import { requireBookedTrip } from '../middleware/booked-trip.middleware.js';
 
 export const memoriesRouter = Router();
+memoriesRouter.use(async (req: AuthenticatedRequest, res, next) => {
+  try {
+    let tripId = req.method === 'GET' ? req.query.tripId : req.body.tripId;
+    const memoryId = req.path.split('/')[1];
+    if (memoryId) {
+      const memory = await MemoryModel.findOne({ id: memoryId });
+      if (!memory) { res.status(404).json({ message: 'Memory not found.' }); return; }
+      tripId = memory.tripId;
+    }
+    if (typeof tripId !== 'string' || tripId === 'all') { res.status(400).json({ message: 'Select a booked trip to view its memories.' }); return; }
+    req.params.tripId = tripId;
+    if (req.body) delete req.body.tripId;
+    if (req.method === 'POST' && !memoryId) req.body.tripId = tripId;
+    await requireBookedTrip(req, res, next);
+  } catch (error) { next(error); }
+});
 
 // ---------------------------------------------------------------------------
 // GET /api/memories - List all travel memories with search, filter, and sort
@@ -17,7 +36,7 @@ export const memoriesRouter = Router();
 memoriesRouter.get('/', optionalAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { tripId, tag, search, sortBy, limit } = req.query;
-    const filter: any = {};
+    const filter: FilterQuery<Record<string, unknown>> = {};
 
     if (tripId && tripId !== 'all') {
       filter.tripId = String(tripId);
@@ -66,7 +85,8 @@ memoriesRouter.get('/', optionalAuth, async (req: AuthenticatedRequest, res: Res
       memories,
       tags: allTags,
     });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to retrieve travel memories.', error: err?.message });
   }
 });
@@ -87,7 +107,8 @@ memoriesRouter.get('/:id', optionalAuth, async (req: AuthenticatedRequest, res: 
     }
 
     res.status(200).json({ ok: true, memory });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to retrieve memory.', error: err?.message });
   }
 });
@@ -130,7 +151,8 @@ memoriesRouter.post('/', optionalAuth, async (req: AuthenticatedRequest, res: Re
       message: 'Travel memory saved successfully to MongoDB Atlas.',
       memory: newMemory,
     });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to save travel memory.', error: err?.message });
   }
 });
@@ -172,7 +194,8 @@ memoriesRouter.post('/:id/like', optionalAuth, async (req: AuthenticatedRequest,
       likes: memory.likes,
       isLiked,
     });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to toggle like.', error: err?.message });
   }
 });
@@ -215,7 +238,8 @@ memoriesRouter.put('/:id', optionalAuth, async (req: AuthenticatedRequest, res: 
       message: 'Travel memory updated successfully.',
       memory,
     });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to update memory.', error: err?.message });
   }
 });
@@ -237,7 +261,8 @@ memoriesRouter.delete('/:id', optionalAuth, async (req: AuthenticatedRequest, re
     }
 
     res.status(200).json({ ok: true, message: 'Travel memory deleted successfully from MongoDB.' });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to delete memory.', error: err?.message });
   }
 });
@@ -276,7 +301,8 @@ memoriesRouter.post('/ai-story', optionalAuth, async (req: AuthenticatedRequest,
 
     const pick = reflections[Math.floor(Math.random() * reflections.length)];
     res.status(200).json({ ok: true, ...pick });
-  } catch (err: any) {
+  } catch (caught) {
+      const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to generate story.', error: err?.message });
   }
 });

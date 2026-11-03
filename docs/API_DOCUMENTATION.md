@@ -4,7 +4,7 @@
 
 **Content-Type:** `application/json`
 
-**Authentication:** Bearer JWT token in `Authorization` header. Most endpoints use `optionalAuth` (works with or without a token). Endpoints marked require a valid token via `requireAuth`.
+**Authentication:** Bearer JWT token in `Authorization` header. Most endpoints use `optionalAuth` (works with or without a token). Endpoints marked 🔒 require a valid token via `requireAuth`.
 
 ---
 
@@ -162,7 +162,7 @@ Sign in with email and password.
 
 ---
 
-### GET /api/auth/me
+### 🔒 GET /api/auth/me
 
 Get the currently authenticated user's profile.
 
@@ -185,7 +185,7 @@ Get the currently authenticated user's profile.
 
 ---
 
-### PUT /api/auth/profile
+### 🔒 PUT /api/auth/profile
 
 Update the authenticated user's profile fields.
 
@@ -1283,7 +1283,7 @@ All endpoints follow a consistent error response format:
 | `NODE_ENV`           | `development`                         | Environment mode                   |
 | `MONGODB_URI`        | `mongodb://localhost:27017/voyana`     | MongoDB connection string          |
 | `MONGODB_DB_NAME`    | `voyana`                              | MongoDB database name              |
-| `JWT_SECRET`         | `voyana-team-shared-secret-key-2026`  | JWT signing secret                 |
+| `JWT_SECRET`         | `replace-with-your-own-long-random-private-secret`  | JWT signing secret                 |
 | `LLM_PROVIDER`       | `mock`                                | LLM provider (`groq` or `mock`)   |
 | `GROQ_API_KEY`       | —                                     | Groq API key                       |
 | `GROQ_MODEL`         | `llama-3.3-70b-versatile`            | Groq model identifier              |

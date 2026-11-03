@@ -1,91 +1,71 @@
-/**
- * Unified Bundle Booking Modal
- * Allows users to combine flight, hotel, and transport bookings
- * into a single discounted bundle checkout with auto trip sync.
- */
-
-import React, { useState } from 'react';
-import {
-  Package, Plane, Hotel, Car, Check, X, ShieldCheck,
-  CreditCard, Sparkles, ArrowRight, DollarSign, Calendar,
-  MapPin, Percent, FileText, CheckCircle2
-} from 'lucide-react';
+import { useEffect, useState } from "react";
+import { X, Check, Package } from "lucide-react";
 import {
   calculateBundlePricing,
   processUnifiedBundleCheckout,
+  searchIntegratedOffers,
   type BundledBookingItem,
   type UnifiedBundleBookingResult
 } from '@/services/bookingIntegrationService';
 import { getStoredTrips } from '@/services/tripService';
+import { useCurrency } from '@/context/CurrencyContext';
+import OtpVerificationView from '@/components/Payment/OtpVerificationView';
 
 export interface UnifiedBundleBookingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  currentUser?: { id?: string; name: string; email: string };
+  destination: string;
+  currentUser: { id?: string; name: string; email: string };
   onBookingConfirmed?: (result: UnifiedBundleBookingResult) => void;
 }
-
-const SAMPLE_BUNDLE_ITEMS: BundledBookingItem[] = [
-  {
-    type: 'flight',
-    id: 'fl-bdl-01',
-    title: 'Air France AF-228 (Economy Direct)',
-    subTitle: 'JFK New York → CDG Paris',
-    price: 680,
-    date: '2026-10-12',
-    referenceCode: 'FLT-AF228',
-    details: { departure: '08:30 PM', arrival: '10:15 AM (+1)', seats: '14A, 14B' }
-  },
-  {
-    type: 'hotel',
-    id: 'ht-bdl-02',
-    title: 'Hotel Ritz Paris (Deluxe Suite)',
-    subTitle: 'Place Vendôme, 1st arr., Paris',
-    price: 1150,
-    date: '2026-10-13 to 2026-10-18',
-    referenceCode: 'HTL-RITZ',
-    details: { nights: 5, roomType: 'Deluxe King Suite', guests: 2 }
-  },
-  {
-    type: 'transport',
-    id: 'tr-bdl-03',
-    title: 'SNCF TGV High-Speed Rail & Airport Transfer',
-    subTitle: 'CDG Airport to Paris Centre + Metro Pass',
-    price: 120,
-    date: '2026-10-13',
-    referenceCode: 'TRP-SNCF',
-    details: { vehicle: 'TGV 1st Class & Unlimited Metro Pass' }
-  }
-];
-
+const bounded = (value: string, max: number) =>
+  Math.min(max, Math.max(1, Math.floor(Number(value) || 1)));
 export default function UnifiedBundleBookingModal({
   isOpen,
   onClose,
-  currentUser = { id: 'usr-demo-01', name: 'Manav Vyas', email: 'manav.vyas@voyana.com' },
-  onBookingConfirmed
+  destination,
+  currentUser,
+  onBookingConfirmed,
 }: UnifiedBundleBookingModalProps) {
+  const { currency, formatUSD } = useCurrency();
   const [selectedItems, setSelectedItems] = useState<BundledBookingItem[]>(SAMPLE_BUNDLE_ITEMS);
   const [selectedTripId, setSelectedTripId] = useState<string>('trip-user-01');
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'upi' | 'wallet' | 'netbanking'>('card');
   const [isProcessing, setIsProcessing] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState<UnifiedBundleBookingResult | null>(null);
+  const [showOtp, setShowOtp] = useState(false);
 
   if (!isOpen) return null;
-
-  const availableTrips = getStoredTrips();
-  const pricing = calculateBundlePricing(selectedItems);
-
-  const toggleItem = (item: BundledBookingItem) => {
-    if (selectedItems.some((i) => i.id === item.id)) {
-      if (selectedItems.length === 1) return; // Keep at least 1
-      setSelectedItems(selectedItems.filter((i) => i.id !== item.id));
-    } else {
-      setSelectedItems([...selectedItems, item]);
+  const chosen = items.filter((item) => selected.includes(item.id));
+  const pricing = calculateBundlePricing(chosen);
+  const checkout = async () => {
+    setProcessing(true);
+    setError("");
+    try {
+      const result = await processUnifiedBundleCheckout({
+        userId: currentUser.id || "",
+        customerName: currentUser.name,
+        customerEmail: currentUser.email,
+        items: chosen,
+        paymentMethod: "card",
+      });
+      if (!result.success)
+        throw new Error(result.error || "The package could not be confirmed.");
+      setSuccess(result);
+      onBookingConfirmed?.(result);
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : "Booking failed.");
+    } finally {
+      setProcessing(false);
     }
   };
 
-  const handleCheckout = async (e: React.FormEvent) => {
+  const handleProceedToOtp = (e: React.FormEvent) => {
     e.preventDefault();
+    setShowOtp(true);
+  };
+
+  const handleCheckoutAfterOtp = async () => {
     setIsProcessing(true);
 
     const result = await processUnifiedBundleCheckout({
@@ -95,42 +75,32 @@ export default function UnifiedBundleBookingModal({
       items: selectedItems,
       tripId: selectedTripId || undefined,
       paymentMethod,
+      currency,
     });
 
     setIsProcessing(false);
     if (result.success) {
+      setShowOtp(false);
       setBookingSuccess(result);
       if (onBookingConfirmed) onBookingConfirmed(result);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 sm:p-6 md:p-8 bg-slate-900/65 backdrop-blur-md animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-4xl bg-white border border-slate-200/90 rounded-3xl shadow-2xl shadow-slate-950/20 overflow-hidden my-auto flex flex-col max-h-[88vh]">
-        {/* Modal Header */}
-        <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/90 via-white to-slate-50/90 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-sm">
-              <Package size={22} />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-slate-900">Unified Trip Bundle Checkout</h3>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
-                  Multi-Service Bundle
-                </span>
-              </div>
-              <p className="text-xs text-slate-500">
-                Book Flights + Stays + Transport together & save up to 15% on cross-service bundles
-              </p>
-            </div>
+    <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+      <section
+        className="workflow-bundle-dialog booking-package-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Destination travel bundle"
+      >
+        <header>
+          <div>
+            <Package />
+            <h2>{destination} travel package</h2>
           </div>
-
-          <button
-            onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-colors"
-          >
-            <X size={20} />
+          <button aria-label="Close bundle" onClick={onClose}>
+            <X />
           </button>
         </div>
 
@@ -160,11 +130,11 @@ export default function UnifiedBundleBookingModal({
                 </div>
                 <div className="flex items-center justify-between text-xs pb-2 border-b border-slate-200">
                   <span className="text-slate-500">Bundle Discount Saved</span>
-                  <span className="font-bold text-emerald-700">-${bookingSuccess.discountAmount} (15% OFF)</span>
+                  <span className="font-bold text-emerald-700">-{formatUSD(bookingSuccess.discountAmount)} (15% OFF)</span>
                 </div>
                 <div className="flex items-center justify-between text-sm pt-1 font-bold">
                   <span className="text-slate-900">Total Amount Paid</span>
-                  <span className="text-slate-900">${bookingSuccess.finalPaidAmount}</span>
+                  <span className="text-slate-900">{formatUSD(bookingSuccess.finalPaidAmount)}</span>
                 </div>
               </div>
 
@@ -175,8 +145,20 @@ export default function UnifiedBundleBookingModal({
                 Back to Dashboard
               </button>
             </div>
+          ) : showOtp ? (
+            <div className="max-w-lg mx-auto py-4">
+              <OtpVerificationView
+                userId={currentUser.id || 'usr-demo-01'}
+                amount={pricing.totalAmount}
+                currency={currency}
+                bookingReference="BDL-CHECKOUT"
+                onVerified={handleCheckoutAfterOtp}
+                onCancel={() => setShowOtp(false)}
+                isProcessing={isProcessing}
+              />
+            </div>
           ) : (
-            <form onSubmit={handleCheckout} className="space-y-6">
+            <form onSubmit={handleProceedToOtp} className="space-y-6">
               {/* Bundle Items Selector */}
               <div>
                 <div className="flex items-center justify-between mb-3">
@@ -211,7 +193,7 @@ export default function UnifiedBundleBookingModal({
                             <div className="p-2 rounded-xl bg-emerald-100/70 text-emerald-800 border border-emerald-200">
                               <Icon size={16} />
                             </div>
-                            <span className="text-xs font-bold text-slate-900">${item.price}</span>
+                            <span className="text-xs font-bold text-slate-900">{formatUSD(item.price)}</span>
                           </div>
                           <h5 className="text-xs font-bold text-slate-900">{item.title}</h5>
                           <p className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
@@ -242,46 +224,142 @@ export default function UnifiedBundleBookingModal({
                   <span className="text-[10px] text-slate-400 font-medium">Optional</span>
                 </div>
                 <select
-                  value={selectedTripId}
-                  onChange={(e) => setSelectedTripId(e.target.value)}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
+                  aria-label="Package departure airport"
+                  value={origin}
+                  onChange={(event) => setOrigin(event.target.value)}
                 >
-                  <option value="">Do not sync (Standalone booking)</option>
-                  {availableTrips.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.title} ({t.destination})
-                    </option>
-                  ))}
+                  {Object.values(AIRPORTS)
+                    .filter(
+                      (airport) =>
+                        airport.code !== resolveAirportCode(destination),
+                    )
+                    .map((airport) => (
+                      <option key={airport.code} value={airport.code}>
+                        {airport.city} ({airport.code})
+                      </option>
+                    ))}
                 </select>
-              </div>
-
-              {/* Payment Method Selector */}
-              <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
-                  Payment Method
-                </h4>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {[
-                    { id: 'card', label: 'Credit/Debit Card', icon: CreditCard },
-                    { id: 'upi', label: 'UPI / QR Scan', icon: Sparkles },
-                    { id: 'wallet', label: 'Voyana Wallet', icon: DollarSign },
-                    { id: 'netbanking', label: 'Net Banking', icon: FileText },
-                  ].map((m) => {
-                    const Icon = m.icon;
+              </label>
+              <label>
+                Travel date
+                <input
+                  aria-label="Package travel date"
+                  type="date"
+                  min={today}
+                  value={date}
+                  onChange={(event) => setDate(event.target.value)}
+                />
+              </label>
+              <label>
+                Package tier
+                <select
+                  aria-label="Package tier"
+                  value={tier}
+                  onChange={(event) =>
+                    setTier(event.target.value as BundleSearchOptions["tier"])
+                  }
+                >
+                  <option value="essential">
+                    Essential · Economy + Standard room
+                  </option>
+                  <option value="comfort">
+                    Comfort · Premium economy + Deluxe
+                  </option>
+                  <option value="premium">Premium · Business + Suite</option>
+                </select>
+              </label>
+              <label>
+                Travelers
+                <input
+                  aria-label="Package travelers"
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={passengers}
+                  onChange={(event) => {
+                    const count = bounded(event.target.value, 20);
+                    setPassengers(count);
+                    setRooms(Math.ceil(count / 2));
+                  }}
+                />
+              </label>
+              <label>
+                Nights
+                <input
+                  aria-label="Package nights"
+                  type="number"
+                  min={1}
+                  max={60}
+                  value={nights}
+                  onChange={(event) =>
+                    setNights(bounded(event.target.value, 60))
+                  }
+                />
+              </label>
+              <label>
+                Rooms
+                <input
+                  aria-label="Package rooms"
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={rooms}
+                  onChange={(event) =>
+                    setRooms(bounded(event.target.value, 20))
+                  }
+                />
+              </label>
+            </fieldset>
+            {loading ? (
+              <p role="status">Updating your package price…</p>
+            ) : !items.length ? (
+              <p role="status">
+                This combination is unavailable. Try a different departure,
+                class or traveler count, or book individual services.
+              </p>
+            ) : (
+              <>
+                <div className="booking-package-items">
+                  {items.map((item) => {
+                    const transport = item.details.transport as
+                      | TransportItem
+                      | undefined;
+                    const hotel = item.details.hotel as Hotel | undefined;
                     return (
-                      <button
-                        key={m.id}
-                        type="button"
-                        onClick={() => setPaymentMethod(m.id as any)}
-                        className={`p-3 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all ${
-                          paymentMethod === m.id
-                            ? 'bg-emerald-700 text-white border-emerald-700 shadow-md shadow-emerald-700/20'
-                            : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-                        }`}
-                      >
-                        <Icon size={15} />
-                        <span>{m.label}</span>
-                      </button>
+                      <label className="booking-package-item" key={item.id}>
+                        <input
+                          aria-label={`Include ${item.type}`}
+                          type="checkbox"
+                          checked={selected.includes(item.id)}
+                          disabled={processing}
+                          onChange={() =>
+                            setSelected((previous) =>
+                              previous.includes(item.id)
+                                ? previous.filter((id) => id !== item.id)
+                                : [...previous, item.id],
+                            )
+                          }
+                        />
+                        <BookingImage
+                          kind={
+                            item.type === "flight"
+                              ? "flight"
+                              : item.type === "hotel"
+                                ? "hotel"
+                                : transport!.transportType
+                          }
+                          src={hotel?.imageUrl || transport?.imageUrl}
+                          className="booking-package-photo"
+                        />
+                        <span className="booking-package-item-copy">
+                          <strong>{item.title}</strong>
+                          <small>{item.subTitle}</small>
+                          <small>{item.priceBasis}</small>
+                        </span>
+                        <strong data-package-price={item.type}>
+                          {formatMoney(item.price, "INR")}
+                        </strong>
+                      </label>
                     );
                   })}
                 </div>
@@ -291,38 +369,43 @@ export default function UnifiedBundleBookingModal({
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-3 shadow-sm">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-slate-500">Total Services Subtotal</span>
-                  <span className="font-bold text-slate-900">${pricing.subtotal}</span>
+                  <span className="font-bold text-slate-900">{formatUSD(pricing.subtotal)}</span>
                 </div>
                 {pricing.discountAmount > 0 && (
                   <div className="flex items-center justify-between text-xs text-emerald-700 font-semibold">
                     <span>Bundle Saver Discount ({pricing.discountPercentage}%)</span>
-                    <span>-${pricing.discountAmount}</span>
+                    <span>-{formatUSD(pricing.discountAmount)}</span>
                   </div>
                 )}
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-slate-500">Taxes & Service GST (5%)</span>
-                  <span className="font-bold text-slate-900">${pricing.taxAmount}</span>
+                  <span className="font-bold text-slate-900">{formatUSD(pricing.taxAmount)}</span>
                 </div>
                 <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
                   <div>
                     <span className="text-xs text-slate-500 block">Final Bundle Total</span>
-                    <span className="text-xl font-black text-slate-900">${pricing.totalAmount}</span>
+                    <span className="text-xl font-black text-slate-900">{formatUSD(pricing.totalAmount)}</span>
                   </div>
 
                   <button
-                    type="submit"
-                    disabled={isProcessing}
-                    className="flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-md shadow-emerald-700/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                    className="workflow-primary"
+                    disabled={processing || !chosen.length}
+                    onClick={() => void checkout()}
                   >
-                    <span>{isProcessing ? 'Processing...' : 'Confirm & Book Bundle'}</span>
+                    <span>{isProcessing ? 'Processing...' : 'Proceed to Security Verification'}</span>
                     <ArrowRight size={14} />
                   </button>
                 </div>
-              </div>
-            </form>
-          )}
-        </div>
-      </div>
+              </>
+            )}
+          </>
+        )}
+        {error && (
+          <p role="alert" className="text-red-700">
+            {error}
+          </p>
+        )}
+      </section>
     </div>
   );
 }

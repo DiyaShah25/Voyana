@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { ArrowRight, Compass } from 'lucide-react';
+
 import type { GlobeLocation } from '@/components/Globe/globe.types';
 
 export interface RailDestination {
@@ -159,7 +159,7 @@ export const DestinationRail: React.FC<DestinationRailProps> = ({
             >
               <div className="rail-card-img-wrap">
                 <img src={dest.image} alt={dest.name} className="rail-card-img" />
-                <span className="rail-card-temp">{dest.temperature}</span>
+
               </div>
               <div className="rail-card-copy">
                 <div className="rail-card-names">

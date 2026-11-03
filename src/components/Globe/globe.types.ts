@@ -10,6 +10,7 @@ export type GlobeLocationType = 'city' | 'state' | 'country' | 'region' | 'landm
 // Geographic point with metadata
 export interface GlobeLocation {
   name: string;
+  bookable?: boolean;
   city?: string;
   state?: string;
   country?: string;
@@ -44,6 +45,7 @@ export interface VoyanaGlobeProps {
   routes?: GlobeRoute[];
   autoRotate?: boolean;
   onLocationSelect?: (location: GlobeLocation) => void;
+  onPlaceLookupChange?: (loading: boolean) => void;
   onGlobeReady?: () => void;
   metadata?: {
     temperature?: string;

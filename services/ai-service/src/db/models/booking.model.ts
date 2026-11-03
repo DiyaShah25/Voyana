@@ -14,6 +14,9 @@ export interface IBooking extends Document {
   id?: string;
   bookingId?: string;
   userId: string;
+  tripId?: string;
+  destination?: string;
+  destinationKey?: string;
   bookingReference: string;
   bookingType: BookingType;
   title?: string;
@@ -27,10 +30,10 @@ export interface IBooking extends Document {
   contactEmail?: string;
   contactPhone?: string;
   specialRequests?: string;
-  details?: Record<string, any>;
-  flightDetails?: Record<string, any>;
-  hotelDetails?: Record<string, any>;
-  transportDetails?: Record<string, any>;
+  details?: Record<string, unknown>;
+  flightDetails?: Record<string, unknown>;
+  hotelDetails?: Record<string, unknown>;
+  transportDetails?: Record<string, unknown>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -40,6 +43,9 @@ const BookingSchema = new Schema<IBooking>(
     id: { type: String, sparse: true, index: true },
     bookingId: { type: String, sparse: true, index: true },
     userId: { type: String, required: true, index: true },
+    tripId: { type: String, index: true },
+    destination: { type: String },
+    destinationKey: { type: String, index: true },
     bookingReference: { type: String, required: true, unique: true, index: true },
     bookingType: {
       type: String,
@@ -73,7 +79,7 @@ const BookingSchema = new Schema<IBooking>(
   {
     timestamps: true,
     toJSON: {
-      transform(_doc, ret: Record<string, any>) {
+      transform(_doc, ret: Record<string, unknown>) {
         delete ret._id;
         delete ret.__v;
         return ret;

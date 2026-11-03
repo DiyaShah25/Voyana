@@ -91,11 +91,11 @@ NODE_ENV=development
 LLM_PROVIDER=mock
 
 # Live MongoDB Atlas Connection String
-MONGODB_URI=mongodb+srv://voyana_app_user:YourSecurePassword123@cluster0.xxxxx.mongodb.net/voyana?retryWrites=true&w=majority
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/voyana?retryWrites=true&w=majority
 MONGODB_DB_NAME=voyana
 
 # Shared JWT Secret for Session Verification
-JWT_SECRET=voyana-team-shared-secret-key-2026
+JWT_SECRET=replace-with-your-own-long-random-private-secret
 ```
 
 > [!CAUTION]
@@ -143,7 +143,7 @@ npm run dev
 ```
 You should see:
 ```
-[Mongo] Connected successfully to database "voyana" via mongodb+srv://voyana_app_user:******@...
+[Mongo] Connected successfully to database "voyana" via mongodb+srv://<username>:<password>@...
 [Data Migration] Seeding completed: 0 users, 0 trips, 0 bookings.
 [Voyana Backend] Running on port 3001
 [Voyana Backend] Health check: http://localhost:3001/health

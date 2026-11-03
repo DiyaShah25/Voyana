@@ -5,7 +5,7 @@
  */
 
 import { type ReactNode } from 'react';
-import { Compass, ArrowLeft, Star, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Star, ShieldCheck } from 'lucide-react';
 import './auth.css';
 
 interface AuthLayoutProps {
@@ -39,7 +39,7 @@ export function AuthLayout({ route, children }: AuthLayoutProps) {
               </div>
               <div className="auth-brand-text-col">
                 <span className="auth-logo-text">VOYANA</span>
-                <span className="auth-submark-text">GLOBAL EXPEDITIONS</span>
+                <span className="auth-submark-text">trip pe aana</span>
               </div>
             </div>
 

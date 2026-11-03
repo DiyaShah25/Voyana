@@ -5,7 +5,7 @@
  * fallback with seeded demo users for role testing.
  */
 
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { supabase } from './supabaseClient';
 import type {
   AuthResult,
   AuthSession,
@@ -17,7 +17,7 @@ import { apiRequest } from './apiClient';
 
 // Validation constants
 export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-export const MIN_PASSWORD_LENGTH = 6;
+export const MIN_PASSWORD_LENGTH = 8;
 
 // LocalStorage keys for persistent state
 const REMEMBER_KEY = 'voyana.rememberedEmail';
@@ -26,17 +26,7 @@ const SESSION_STORAGE_KEY = 'voyana.active_session';
 const TOKEN_STORAGE_KEY = 'voyana.auth_token';
 
 // --- Supabase Client Initialization ---
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
-let supabase: SupabaseClient | null = null;
-if (supabaseUrl && supabaseAnonKey) {
-  try {
-    supabase = createClient(supabaseUrl, supabaseAnonKey);
-  } catch {
-    supabase = null;
-  }
-}
 
 // --- Seeded Demo Users (Admin, Organizer, Traveler) ---
 const SEEDED_USERS: StoredUserRecord[] = [
@@ -50,7 +40,7 @@ const SEEDED_USERS: StoredUserRecord[] = [
     bio: 'Lead system administrator for Voyana global travel services.',
     phone: '+1 (555) 019-2834',
     preferences: {
-      preferredCurrency: 'USD',
+      preferredCurrency: 'INR',
       travelStyle: 'Luxury & Wellness',
       homeAirport: 'JFK',
       emailNotifications: true,
@@ -86,7 +76,7 @@ const SEEDED_USERS: StoredUserRecord[] = [
     bio: 'Independent backpacker, photographer, and alpine enthusiast.',
     phone: '+1 (555) 782-3391',
     preferences: {
-      preferredCurrency: 'USD',
+      preferredCurrency: 'INR',
       travelStyle: 'Adventure & Nature',
       homeAirport: 'SFO',
       emailNotifications: true,
@@ -175,7 +165,7 @@ export async function signIn(email: string, password: string): Promise<AuthResul
 
   // Attempt MongoDB Atlas Backend authentication first
   try {
-    const apiRes = await apiRequest('/api/auth/login', {
+    const apiRes = await apiRequest<{ session: AuthSession; message?: string; fieldErrors?: AuthResult['fieldErrors'] }>('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email: trimmedEmail, password }),
     });
@@ -208,7 +198,7 @@ export async function signIn(email: string, password: string): Promise<AuthResul
         role: (data.user.user_metadata?.role as UserRole) || 'traveler',
         avatarUrl: data.user.user_metadata?.avatar_url,
         preferences: {
-          preferredCurrency: 'USD',
+          preferredCurrency: 'INR',
           travelStyle: 'Cultural & Historic',
           emailNotifications: true,
           smsAlerts: false,
@@ -289,7 +279,7 @@ export async function signUp(
 
   // Attempt MongoDB Atlas Backend registration first
   try {
-    const apiRes = await apiRequest('/api/auth/signup', {
+    const apiRes = await apiRequest<{ session: AuthSession; message?: string; fieldErrors?: AuthResult['fieldErrors'] }>('/api/auth/signup', {
       method: 'POST',
       body: JSON.stringify({ name: trimmedName, email: trimmedEmail, password, role }),
     });
@@ -297,7 +287,7 @@ export async function signUp(
     if (apiRes.ok && apiRes.data?.session) {
       saveSession(apiRes.data.session);
       return { ok: true, message: apiRes.data.message || 'Account created! Welcome to Voyana.', session: apiRes.data.session };
-    } else if (apiRes.status === 400 || apiRes.status === 409) {
+    } else if (apiRes.status >= 400 && apiRes.status < 500) {
       return {
         ok: false,
         message: apiRes.data?.message || 'Registration failed.',
@@ -326,7 +316,7 @@ export async function signUp(
           email: trimmedEmail,
           role,
           preferences: {
-            preferredCurrency: 'USD',
+            preferredCurrency: 'INR',
             travelStyle: 'Cultural & Historic',
             emailNotifications: true,
             smsAlerts: false,
@@ -368,7 +358,7 @@ export async function signUp(
     avatarUrl: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80`,
     bio: 'Explorer curating intentional global journeys with Voyana.',
     preferences: {
-      preferredCurrency: 'USD',
+      preferredCurrency: 'INR',
       travelStyle: 'Cultural & Historic',
       emailNotifications: true,
       smsAlerts: false,
@@ -435,6 +425,16 @@ export function saveSession(session: AuthSession): void {
 
 // Update a user's profile fields and sync active session
 export async function updateUserProfile(userId: string, updates: Partial<UserProfile>): Promise<UserProfile | null> {
+  if (updates.role !== undefined) return null;
+  const response = await apiRequest<{ user: UserProfile }>('/api/auth/profile', {
+    method: 'PUT', body: JSON.stringify(updates),
+  });
+  if (response.ok && response.data?.user) {
+    const current = restoreSession();
+    if (current?.user.id === userId) saveSession({ ...current, user: response.data.user });
+    return response.data.user;
+  }
+  if (response.status > 0) return null;
   const users = loadUserRegistry();
   const idx = users.findIndex((u) => u.id === userId);
   if (idx === -1) return null;
@@ -463,15 +463,11 @@ export async function updateUserProfile(userId: string, updates: Partial<UserPro
   return updatedProfile;
 }
 
-// Switch user's active role (delegates to updateUserProfile)
-export async function switchUserRole(userId: string, newRole: UserRole): Promise<UserProfile | null> {
-  return updateUserProfile(userId, { role: newRole });
-}
-
 // Retrieve all registered users (admin utility)
-export function getAllUsers(): UserProfile[] {
-  const users = loadUserRegistry();
-  return users.map(sanitizeUser);
+export async function getAllUsers(): Promise<UserProfile[]> {
+  const response = await apiRequest<{ users: UserProfile[] }>('/api/auth/users');
+  if (!response.ok) throw new Error(response.error || 'Could not load the user directory.');
+  return response.data?.users || [];
 }
 
 // --- Password Reset ---
@@ -493,15 +489,7 @@ export async function requestPasswordReset(email: string): Promise<AuthResult> {
     }
   }
 
-  await wait(400);
-  const users = loadUserRegistry();
-  const exists = users.some((u) => u.email.toLowerCase() === trimmed);
-  if (!exists) {
-    // Generic message to prevent email enumeration
-    return { ok: true, message: 'If an account exists for this email, password reset instructions have been dispatched.' };
-  }
-
-  return { ok: true, message: 'Password reset instructions have been sent to your email.' };
+  return { ok: false, message: 'Password reset email is not configured. Contact the project administrator.' };
 }
 
 // Confirm password reset with a new password
@@ -525,26 +513,12 @@ export async function confirmPasswordReset(email: string, newPassword: string): 
 
 // --- Social / OAuth Sign-In ---
 
-export type OAuthProvider = 'google' | 'apple';
 
-// Initiate sign-in via a third-party provider
-export async function signInWithProvider(provider: OAuthProvider): Promise<AuthResult | null> {
-  if (supabase) {
-    const { error } = await supabase.auth.signInWithOAuth({ provider });
-    if (error) return { ok: false, message: 'Social sign-in failed. Please try again.' };
-    return null; // Browser redirect handles the rest
-  }
-  // Simulate social sign-in with demo traveler account
-  await wait(500);
-  const alex = SEEDED_USERS[2];
-  const profile = sanitizeUser(alex);
-  const session: AuthSession = {
-    token: generateMockToken(profile.id),
-    user: profile,
-    expiresAt: Date.now() + 7 * 86400 * 1000,
-  };
-  saveSession(session);
-  return { ok: true, message: `Connected with ${provider === 'google' ? 'Google' : 'Apple'}. Welcome back!`, session };
+export async function signInWithGoogleCredential(credential: string, challenge: string): Promise<AuthResult> {
+  const response = await apiRequest<{ session: AuthSession; message?: string }>('/api/auth/google', { method: 'POST', body: JSON.stringify({ credential, challenge }) }, 20000);
+  if (!response.ok || !response.data?.session) return { ok: false, message: response.error || 'Google sign-in failed. Please retry.' };
+  saveSession(response.data.session);
+  return { ok: true, message: response.data.message || 'Signed in with Google.', session: response.data.session };
 }
 
 // --- Remember Me Helpers ---

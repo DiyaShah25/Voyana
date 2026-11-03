@@ -1,3 +1,4 @@
+import { API_BASE_URL } from './apiClient';
 /**
  * Location Search & Geocoding Service
  * Provides location search with a local seed database of popular destinations
@@ -19,17 +20,17 @@ interface LocationSeed {
 }
 
 const locationSeeds: LocationSeed[] = [
-  { name: 'Paris', city: 'Paris', country: 'France', latitude: 48.8566, longitude: 2.3522, type: 'city', aliases: ['paris, france', 'paris france'] },
-  { name: 'Tokyo', city: 'Tokyo', country: 'Japan', latitude: 35.6762, longitude: 139.6503, type: 'city', aliases: ['tokyo, japan', 'tokyo japan'] },
-  { name: 'Dubai', city: 'Dubai', country: 'United Arab Emirates', latitude: 25.2048, longitude: 55.2708, type: 'city', aliases: ['dubai, uae', 'dubai uae'] },
+  { name: 'Paris', city: 'Paris', state: 'Île-de-France', country: 'France', latitude: 48.8566, longitude: 2.3522, type: 'city', aliases: ['paris, france', 'paris france'] },
+  { name: 'Tokyo', city: 'Tokyo', state: 'Tokyo', country: 'Japan', latitude: 35.6762, longitude: 139.6503, type: 'city', aliases: ['tokyo, japan', 'tokyo japan'] },
+  { name: 'Dubai', city: 'Dubai', state: 'Dubai', country: 'United Arab Emirates', latitude: 25.2048, longitude: 55.2708, type: 'city', aliases: ['dubai, uae', 'dubai uae'] },
   { name: 'New York', city: 'New York', state: 'New York', country: 'United States', latitude: 40.7128, longitude: -74.006, type: 'city', aliases: ['new york, usa', 'nyc', 'new york city'] },
   { name: 'Ahmedabad', city: 'Ahmedabad', state: 'Gujarat', country: 'India', latitude: 23.0225, longitude: 72.5714, type: 'city', aliases: ['ahmedabad, india', 'ahmedabad gujarat'] },
   { name: 'Mumbai', city: 'Mumbai', state: 'Maharashtra', country: 'India', latitude: 19.076, longitude: 72.8777, type: 'city', aliases: ['mumbai, india', 'bombay'] },
-  { name: 'London', city: 'London', country: 'United Kingdom', latitude: 51.5074, longitude: -0.1278, type: 'city', aliases: ['london, uk', 'london uk'] },
+  { name: 'London', city: 'London', state: 'England', country: 'United Kingdom', latitude: 51.5074, longitude: -0.1278, type: 'city', aliases: ['london, uk', 'london uk'] },
   { name: 'Sydney', city: 'Sydney', state: 'New South Wales', country: 'Australia', latitude: -33.8688, longitude: 151.2093, type: 'city', aliases: ['sydney, australia'] },
   { name: 'Singapore', city: 'Singapore', country: 'Singapore', latitude: 1.3521, longitude: 103.8198, type: 'city' },
-  { name: 'Rome', city: 'Rome', country: 'Italy', latitude: 41.9028, longitude: 12.4964, type: 'city', aliases: ['rome, italy'] },
-  { name: 'Bangkok', city: 'Bangkok', country: 'Thailand', latitude: 13.7563, longitude: 100.5018, type: 'city' },
+  { name: 'Rome', city: 'Rome', state: 'Lazio', country: 'Italy', latitude: 41.9028, longitude: 12.4964, type: 'city', aliases: ['rome, italy'] },
+  { name: 'Bangkok', city: 'Bangkok', state: 'Bangkok', country: 'Thailand', latitude: 13.7563, longitude: 100.5018, type: 'city' },
   { name: 'Rio de Janeiro', city: 'Rio de Janeiro', state: 'Rio de Janeiro', country: 'Brazil', latitude: -22.9068, longitude: -43.1729, type: 'city', aliases: ['rio', 'rio, brazil'] },
   { name: 'France', country: 'France', latitude: 46.6034, longitude: 1.8883, type: 'country' },
   { name: 'Japan', country: 'Japan', latitude: 36.2048, longitude: 138.2529, type: 'country' },
@@ -39,15 +40,15 @@ const locationSeeds: LocationSeed[] = [
   { name: 'Italy', country: 'Italy', latitude: 41.8719, longitude: 12.5674, type: 'country' },
   { name: 'Switzerland', country: 'Switzerland', latitude: 46.8182, longitude: 8.2275, type: 'country' },
   { name: 'Gujarat', state: 'Gujarat', country: 'India', latitude: 22.2587, longitude: 71.1924, type: 'state' },
-  { name: 'Bali', city: 'Denpasar', country: 'Indonesia', latitude: -8.4095, longitude: 115.1889, type: 'region', aliases: ['bali, indonesia', 'ubud', 'seminyak'] },
-  { name: 'Cairo', city: 'Cairo', country: 'Egypt', latitude: 30.0444, longitude: 31.2357, type: 'city', aliases: ['cairo, egypt', 'giza'] },
-  { name: 'Santorini', city: 'Fira', country: 'Greece', latitude: 36.3932, longitude: 25.4615, type: 'region', aliases: ['santorini, greece', 'thira'] },
-  { name: 'Kyoto', city: 'Kyoto', country: 'Japan', latitude: 35.0116, longitude: 135.7681, type: 'city', aliases: ['kyoto, japan'] },
-  { name: 'Reykjavik', city: 'Reykjavik', country: 'Iceland', latitude: 64.1466, longitude: -21.9426, type: 'city', aliases: ['reykjavik, iceland'] },
-  { name: 'Cape Town', city: 'Cape Town', country: 'South Africa', latitude: -33.9249, longitude: 18.4241, type: 'city', aliases: ['cape town, south africa'] },
-  { name: 'Zurich', city: 'Zurich', country: 'Switzerland', latitude: 47.3769, longitude: 8.5417, type: 'city', aliases: ['zurich, switzerland'] },
-  { name: 'Barcelona', city: 'Barcelona', country: 'Spain', latitude: 41.3879, longitude: 2.1699, type: 'city', aliases: ['barcelona, spain'] },
-  { name: 'Vancouver', city: 'Vancouver', country: 'Canada', latitude: 49.2827, longitude: -123.1207, type: 'city', aliases: ['vancouver, canada'] },
+  { name: 'Bali', state: 'Bali', country: 'Indonesia', latitude: -8.4095, longitude: 115.1889, type: 'region', aliases: ['bali, indonesia'] },
+  { name: 'Cairo', city: 'Cairo', state: 'Cairo Governorate', country: 'Egypt', latitude: 30.0444, longitude: 31.2357, type: 'city', aliases: ['cairo, egypt'] },
+  { name: 'Santorini', state: 'South Aegean', country: 'Greece', latitude: 36.3932, longitude: 25.4615, type: 'region', aliases: ['santorini, greece', 'thira'] },
+  { name: 'Kyoto', city: 'Kyoto', state: 'Kyoto Prefecture', country: 'Japan', latitude: 35.0116, longitude: 135.7681, type: 'city', aliases: ['kyoto, japan'] },
+  { name: 'Reykjavik', city: 'Reykjavik', state: 'Capital Region', country: 'Iceland', latitude: 64.1466, longitude: -21.9426, type: 'city', aliases: ['reykjavik, iceland'] },
+  { name: 'Cape Town', city: 'Cape Town', state: 'Western Cape', country: 'South Africa', latitude: -33.9249, longitude: 18.4241, type: 'city', aliases: ['cape town, south africa'] },
+  { name: 'Zurich', city: 'Zurich', state: 'Zurich', country: 'Switzerland', latitude: 47.3769, longitude: 8.5417, type: 'city', aliases: ['zurich, switzerland'] },
+  { name: 'Barcelona', city: 'Barcelona', state: 'Catalonia', country: 'Spain', latitude: 41.3879, longitude: 2.1699, type: 'city', aliases: ['barcelona, spain'] },
+  { name: 'Vancouver', city: 'Vancouver', state: 'British Columbia', country: 'Canada', latitude: 49.2827, longitude: -123.1207, type: 'city', aliases: ['vancouver, canada'] },
 ];
 
 export async function searchLocations(query: string, signal?: AbortSignal): Promise<GlobeLocation[]> {
@@ -68,10 +69,10 @@ export async function searchLocations(query: string, signal?: AbortSignal): Prom
   // We prioritize exact matches, then other local matches
   const results = [...exactMatches, ...localMatches.filter(m => !exactMatches.includes(m))];
 
-  // 2. Fetch from Nominatim if we need more results
-  if (results.length < 5 && normalized.length > 2) {
+  // 2. Query the cached Photon proxy when local places do not match.
+  if (exactMatches.length === 0 && results.length < 5 && normalized.length > 2) {
     try {
-      const geocodeResults = await fetchNominatim(query, signal);
+      const geocodeResults = await fetchRemotePlaces(query, signal);
       
       // Merge and deduplicate
       for (const loc of geocodeResults) {
@@ -95,74 +96,17 @@ export async function searchLocations(query: string, signal?: AbortSignal): Prom
 }
 
 const geocodeCache = new Map<string, GlobeLocation[]>();
-
-async function fetchNominatim(query: string, signal?: AbortSignal): Promise<GlobeLocation[]> {
-  const normalized = query.toLowerCase().trim();
-  if (geocodeCache.has(normalized)) {
-    return geocodeCache.get(normalized)!;
-  }
-
-  const url = new URL('https://nominatim.openstreetmap.org/search');
-  url.searchParams.set('q', query);
-  url.searchParams.set('format', 'json');
-  url.searchParams.set('limit', '5');
-  url.searchParams.set('addressdetails', '1');
-
-  const response = await fetch(url.toString(), {
-    headers: { 'Accept-Language': 'en' },
-    signal
-  });
-
-  if (!response.ok) {
-    throw new Error(`Nominatim error: ${response.statusText}`);
-  }
-
-  const data = (await response.json()) as Array<Record<string, unknown>>;
-  const results: GlobeLocation[] = data.map((item) => normalizeNominatimResult(item)).filter((r): r is GlobeLocation => r !== null);
-  
-  geocodeCache.set(normalized, results);
-  return results;
+async function fetchRemotePlaces(query:string,signal?:AbortSignal):Promise<GlobeLocation[]>{
+ const key=query.trim().toLowerCase();if(geocodeCache.has(key))return geocodeCache.get(key)!;
+ const response=await fetch(`${API_BASE_URL}/api/places/search?q=${encodeURIComponent(query)}`,{signal});if(!response.ok)throw new Error('Place search is unavailable.');const data=await response.json() as {locations:GlobeLocation[]};geocodeCache.set(key,data.locations);return data.locations;
 }
-
-function normalizeNominatimResult(item: Record<string, unknown>): GlobeLocation | null {
-  const lat = Number(item.lat);
-  const lon = Number(item.lon);
-  if (isNaN(lat) || isNaN(lon)) return null;
-
-  const address = (item.address || {}) as Record<string, string>;
-  const typeStr = String(item.type || item.addresstype || '');
-  
-  let type: GlobeLocationType = 'region';
-  
-  // Map Nominatim types to GlobeLocationType
-  if (['city', 'town', 'municipality', 'village'].includes(typeStr)) {
-    type = 'city';
-  } else if (['state', 'province'].includes(typeStr)) {
-    type = 'state';
-  } else if (['country'].includes(typeStr)) {
-    type = 'country';
-  } else if (['landmark', 'tourism', 'historic', 'attraction'].includes(typeStr)) {
-    type = 'landmark';
-  }
-
-  const city = address.city || address.town || address.village || address.municipality;
-  const state = address.state || address.province;
-  const country = address.country;
-  
-  const name = String(item.name || city || state || country || typeStr);
-
-  // Sometimes item.name is a full address string we want to avoid if possible, 
-  // but if it's a specific landmark or place, we use it.
-  
-  return {
-    name,
-    city,
-    state,
-    country,
-    latitude: lat,
-    longitude: lon,
-    type
-  };
+export function formatPlaceName(location:GlobeLocation):string{return [...new Set([location.name.includes('°')?'Finding place…':location.name,location.city,location.state,location.country].filter(Boolean))].join(', ');}
+const reverseCache=new Map<string,GlobeLocation>();
+export async function reverseLocation(latitude:number,longitude:number,signal?:AbortSignal):Promise<GlobeLocation>{
+ const known=locationSeeds.find(place=>place.type==='city'&&Math.hypot(place.latitude-latitude,(place.longitude-longitude)*Math.cos(latitude*Math.PI/180))<0.009);
+ if(known)return {...known,latitude,longitude};
+ const key=`${latitude.toFixed(4)},${longitude.toFixed(4)}`;const cached=reverseCache.get(key);if(cached)return {...cached,latitude,longitude};
+ const response=await fetch(`${API_BASE_URL}/api/places/reverse?lat=${latitude}&lon=${longitude}`,{signal});if(!response.ok)throw new Error('Place-name lookup is unavailable.');const data=await response.json() as {location:GlobeLocation};reverseCache.set(key,data.location);return data.location;
 }
 
 export async function resolveLocation(query: string, signal?: AbortSignal): Promise<GlobeLocation | null> {

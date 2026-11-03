@@ -1,6 +1,7 @@
+import { toError } from '../utils/errors.js';
 import express from 'express';
 import request from 'supertest';
-import { LlmClient, LlmMessage, LlmOptions, LlmResponse } from '../llm/types.js';
+import { LlmClient, LlmResponse } from '../llm/types.js';
 import { ChatService } from '../services/chat.service.js';
 import { ChatRequestSchema } from '../schemas/chat.schema.js';
 import { AiRequestService } from '../services/ai-request.service.js';
@@ -11,14 +12,14 @@ class FailingLlmClient implements LlmClient {
     private errorType: 'rate_limit' | 'timeout' | 'generic'
   ) {}
 
-  async generate(_messages: LlmMessage[], _options?: LlmOptions): Promise<LlmResponse> {
+  async generate(): Promise<LlmResponse> {
     if (this.errorType === 'rate_limit') {
-      const err: any = new Error('Groq LLM rate limit reached (429). Service temporarily unavailable.');
+      const err: Error & { statusCode?: number } = new Error('Groq LLM rate limit reached (429). Service temporarily unavailable.');
       err.statusCode = 503;
       throw err;
     }
     if (this.errorType === 'timeout') {
-      const err: any = new Error('Groq LLM request timed out after 30000ms.');
+      const err: Error & { statusCode?: number } = new Error('Groq LLM request timed out after 30000ms.');
       err.statusCode = 503;
       throw err;
     }
@@ -36,7 +37,8 @@ function createTestAppWithCustomClient(client: LlmClient) {
       const validated = ChatRequestSchema.parse(req.body);
       const result = await chatService.processChat(validated);
       res.status(200).json(result);
-    } catch (err: any) {
+    } catch (caught) {
+      const err = toError(caught);
       if (err?.statusCode === 503) {
         res.status(503).json({
           error: 'AI Service Unavailable',

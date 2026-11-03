@@ -1,3 +1,5 @@
+import BookingImage from './BookingImage';
+import { getPlanningContext } from '@/services/planningContext';
 /**
  * Hotel Booking Modal
  * Full-screen modal for searching and booking hotel accommodations.
@@ -6,11 +8,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Building2, MapPin, Calendar, Users, ArrowRight, Search,
-  Filter, X, CheckCircle2, Star, Wifi, Coffee, Sparkles,
-  BedDouble, BedSingle, ShieldCheck, Heart, Bath,
-} from 'lucide-react';
+import { Building2, MapPin, Calendar, Users, ArrowRight, Search, Filter, X, CheckCircle2, Star, Sparkles, BedDouble } from 'lucide-react';
 import {
   searchHotels,
   bookHotel,
@@ -23,6 +21,8 @@ import {
   type GuestDetails,
 } from '@/services/hotelService';
 import { PaymentView } from '@/components/Payment/PaymentModal';
+import { useCurrency } from '@/context/CurrencyContext';
+import { downloadHotelVoucher } from '@/services/ticketService';
 
 // ─── Step types ─────────────────────────────────────────────────────────────
 type Step = 'search' | 'results' | 'guest' | 'payment' | 'confirming' | 'success';
@@ -36,25 +36,12 @@ const ROOM_TYPES: { value: RoomType; label: string; icon: string; desc: string }
 ];
 
 const POPULAR_DESTINATIONS = [
-  { city: 'Paris', country: 'France', hotelCount: 'Luxury stays' },
-  { city: 'Bali', country: 'Indonesia', hotelCount: 'Villas & Resorts' },
-  { city: 'Dubai', country: 'UAE', hotelCount: '5-Star Luxury' },
-  { city: 'Tokyo', country: 'Japan', hotelCount: 'City Center' },
-  { city: 'New York', country: 'USA', hotelCount: 'Manhattan & Brooklyn' },
-  { city: 'London', country: 'UK', hotelCount: 'Historic & Modern' },
-  { city: 'Goa', country: 'India', hotelCount: 'Beach Resorts' },
-  { city: 'Ahmedabad', country: 'India', hotelCount: 'Heritage & Modern' },
-  { city: 'Mumbai', country: 'India', hotelCount: 'Sea-View Stays' },
-  { city: 'Rome', country: 'Italy', hotelCount: 'Colosseum & Vatican' },
-  { city: 'Barcelona', country: 'Spain', hotelCount: 'Mediterranean' },
-  { city: 'Maldives', country: 'Maldives', hotelCount: 'Overwater Bungalows' },
-];
-
-const SUGGESTED_HOTEL_CITIES = [
-  'Paris', 'Bali', 'Dubai', 'Tokyo', 'New York', 'London', 'Rome', 'Barcelona',
-  'Amsterdam', 'Berlin', 'Zurich', 'Istanbul', 'San Francisco', 'Los Angeles',
-  'Bangkok', 'Singapore', 'Sydney', 'Maldives', 'Seoul', 'Hong Kong',
-  'Mumbai', 'New Delhi', 'Bengaluru', 'Ahmedabad', 'Goa', 'Jaipur', 'Udaipur', 'Kochi', 'Kolkata', 'Chennai', 'Hyderabad'
+  { city: 'Paris', country: 'France', hotelCount: '4 luxury properties' },
+  { city: 'Tokyo', country: 'Japan', hotelCount: '3 prime stays' },
+  { city: 'Dubai', country: 'UAE', hotelCount: '3 iconic resorts' },
+  { city: 'New York', country: 'USA', hotelCount: '3 landmark hotels' },
+  { city: 'Ahmedabad', country: 'India', hotelCount: '3 heritage & modern stays' },
+  { city: 'London', country: 'UK', hotelCount: 'River Thames luxury' },
 ];
 
 // ─── Hotel Card Component ───────────────────────────────────────────────────
@@ -63,7 +50,6 @@ function HotelCard({
   roomType,
   nights,
   rooms,
-  guests,
   onSelect,
 }: {
   hotel: Hotel;
@@ -73,6 +59,7 @@ function HotelCard({
   guests: number;
   onSelect: (h: Hotel) => void;
 }) {
+  const { formatUSD } = useCurrency();
   const nightlyRate = hotel.roomRates[roomType] || hotel.baseNightlyRate;
   const totalPrice = nightlyRate * nights * rooms;
 
@@ -83,11 +70,7 @@ function HotelCard({
     >
       {/* Hotel Image */}
       <div className="relative md:w-56 h-48 md:h-auto flex-shrink-0 overflow-hidden">
-        <img
-          src={hotel.imageUrl}
-          alt={hotel.name}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
+        <BookingImage kind="hotel" src={hotel.imageUrl} className="w-full h-full" />
         <div className="absolute top-3 left-3 flex items-center gap-1 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full border border-slate-200 text-xs font-semibold text-amber-700 shadow-sm">
           <Star size={12} className="fill-amber-500 text-amber-500" />
           <span>{hotel.starRating.toFixed(1)}</span>
@@ -102,17 +85,9 @@ function HotelCard({
         <div>
           <div className="flex items-start justify-between gap-2">
             <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-base font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">
-                  {hotel.name}
-                </h3>
-                {(hotel as any).isLiveBookingCom && (
-                  <span className="bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
-                    Booking.com Live
-                  </span>
-                )}
-              </div>
+              <h3 className="text-base font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">
+                {hotel.name}
+              </h3>
               <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
                 <MapPin size={12} className="text-emerald-700 flex-shrink-0" />
                 <span className="truncate">{hotel.address}</span>
@@ -153,10 +128,10 @@ function HotelCard({
         <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
           <div>
             <p className="text-xs text-slate-500 font-medium">
-              <span className="text-slate-900 font-bold text-lg">Rs. {nightlyRate.toLocaleString()}</span> / night
+              <span className="text-slate-900 font-bold text-lg">{formatUSD(nightlyRate)}</span> / night
             </p>
             <p className="text-[11px] text-emerald-800 font-medium">
-              Rs. {totalPrice.toLocaleString()} total for {nights} night{nights > 1 ? 's' : ''}, {rooms} room{rooms > 1 ? 's' : ''}
+              {formatUSD(totalPrice)} total for {nights} night{nights > 1 ? 's' : ''}, {rooms} room{rooms > 1 ? 's' : ''}
             </p>
           </div>
 
@@ -187,12 +162,13 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
   onClose,
   initialDestination,
 }) => {
+  const { currency, formatUSD } = useCurrency();
   const [step, setStep] = useState<Step>('search');
   const [location, setLocation] = useState(initialDestination || 'Paris');
   const [checkInDate, setCheckInDate] = useState('');
   const [checkOutDate, setCheckOutDate] = useState('');
-  const [guests, setGuests] = useState(2);
-  const [rooms, setRooms] = useState(1);
+  const [guests, setGuests] = useState(() => getPlanningContext().trip?.travelMode === 'group' ? Math.min(20, Math.max(1, getPlanningContext().members.length)) : 1);
+  const [rooms, setRooms] = useState(() => getPlanningContext().trip?.travelMode === 'group' ? Math.max(1, Math.ceil(getPlanningContext().members.length / 2)) : 1);
   const [roomType, setRoomType] = useState<RoomType>('Standard');
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
@@ -227,20 +203,14 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
     }
   }, [initialDestination]);
 
-  const [isSearching, setIsSearching] = useState(false);
   const nights = calculateNights(checkInDate, checkOutDate);
   const today = new Date().toISOString().split('T')[0];
 
   const handleSearch = useCallback(async () => {
     if (!location.trim() || !checkInDate || !checkOutDate) return;
-    setIsSearching(true);
-    try {
-      const results = await searchHotels(location, checkInDate, checkOutDate, guests, rooms, roomType);
-      setHotels(results);
-      setStep('results');
-    } finally {
-      setIsSearching(false);
-    }
+    const results = await searchHotels(location, checkInDate, checkOutDate, guests, rooms, roomType);
+    setHotels(results);
+    setStep('results');
   }, [location, checkInDate, checkOutDate, guests, rooms, roomType]);
 
   const sortedHotels = [...hotels]
@@ -276,6 +246,28 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
   const handleProceedToPayment = () => {
     if (!selectedHotel || !validateGuest()) return;
     setStep('payment');
+  };
+
+  const handleDownloadVoucher = () => {
+    if (!selectedHotel) return;
+    downloadHotelVoucher({
+      bookingRef: bookingRef || `VYN-HTL${Math.floor(1000 + Math.random() * 9000)}`,
+      hotelName: selectedHotel.name,
+      stars: Math.round(selectedHotel.starRating || 5),
+      address: selectedHotel.address,
+      city: selectedHotel.city,
+      checkInDate: checkInDate || '2026-10-14',
+      checkOutDate: checkOutDate || '2026-10-18',
+      nights: nights || 4,
+      rooms: rooms || 1,
+      roomType: roomType,
+      guestName: guest.fullName || 'Lead Guest',
+      guestEmail: guest.contactEmail || 'guest@voyana.com',
+      guestPhone: guest.contactPhone || '+91 98765 43210',
+      totalAmount: (selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate) * nights * rooms,
+      currency: currency,
+      paymentMethod: 'Verified 2FA Payment Gateway',
+    });
   };
 
   const handleClose = () => {
@@ -336,6 +328,7 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
             )}
             <button
               onClick={handleClose}
+              aria-label="Close hotel booking"
               className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition"
             >
               <X size={18} />
@@ -357,13 +350,14 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                 <div className="relative">
                   <input
                     value={location}
-                    onChange={(e) => setLocation(e.target.value)}
+                    readOnly
+                    aria-label="Selected hotel destination"
                     placeholder="Enter city name (e.g. Paris, Tokyo, Dubai, New York, Ahmedabad)"
                     list="hotel-dest-list"
                     className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-600 focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition"
                   />
                   <datalist id="hotel-dest-list">
-                    {SUGGESTED_HOTEL_CITIES.map((city) => (
+                    {Object.keys(SEED_HOTELS).map((city) => (
                       <option key={city} value={city} />
                     ))}
                   </datalist>
@@ -488,7 +482,7 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                   Popular Hotel Destinations
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {POPULAR_DESTINATIONS.map((d) => (
+                  {POPULAR_DESTINATIONS.filter(d => d.city.toLowerCase() === initialDestination?.toLowerCase()).map((d) => (
                     <button
                       key={d.city}
                       type="button"
@@ -506,20 +500,11 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
               <button
                 type="button"
                 onClick={handleSearch}
-                disabled={!location.trim() || !checkInDate || !checkOutDate || isSearching}
+                disabled={!location.trim() || !checkInDate || !checkOutDate}
                 className="w-full py-3.5 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm tracking-wide transition-all shadow-lg shadow-emerald-700/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {isSearching ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Searching Live Booking.com...</span>
-                  </>
-                ) : (
-                  <>
-                    <Search size={17} />
-                    <span>Search Hotels ({nights} night{nights > 1 ? 's' : ''})</span>
-                  </>
-                )}
+                <Search size={17} />
+                Search Hotels ({nights} night{nights > 1 ? 's' : ''})
               </button>
             </div>
           )}
@@ -589,11 +574,7 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
             <div className="p-5 space-y-4">
               {/* Selected Hotel Summary Card */}
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 flex items-center gap-3 shadow-sm">
-                <img
-                  src={selectedHotel.imageUrl}
-                  alt={selectedHotel.name}
-                  className="w-16 h-16 rounded-xl object-cover border border-slate-200"
-                />
+                <BookingImage kind="hotel" src={selectedHotel.imageUrl} className="w-20 h-20 rounded-xl flex-shrink-0" />
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-slate-900">{selectedHotel.name}</p>
                   <p className="text-xs text-slate-600">
@@ -605,10 +586,10 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                 </div>
                 <div className="text-right">
                   <p className="text-lg font-bold text-slate-900">
-                    Rs. {((selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate) * nights * rooms).toLocaleString()}
+                    {formatUSD((selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate) * nights * rooms)}
                   </p>
                   <span className="text-[11px] px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200 font-medium">
-                    Rs. {(selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate).toLocaleString()} / night
+                    {formatUSD(selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate)} / night
                   </span>
                 </div>
               </div>
@@ -690,17 +671,18 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                 title={selectedHotel.name}
                 subtitle={`${roomType} · ${formatDateRange(checkInDate, checkOutDate)} (${nights} night${nights > 1 ? 's' : ''}, ${rooms} room${rooms > 1 ? 's' : ''})`}
                 amount={(selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate) * nights * rooms}
-                currency="USD"
+                currency={currency}
                 lineItems={[
                   {
                     label: `${roomType} (${nights} night${nights > 1 ? 's' : ''} × ${rooms} room${rooms > 1 ? 's' : ''})`,
                     amount: (selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate) * nights * rooms,
                   },
-                  { label: 'City Occupancy Tax & Service Charges', amount: 0 },
                 ]}
                 onCancel={() => setStep('guest')}
-                onPaymentSuccess={({ transactionReference }) => {
-                  setBookingRef(transactionReference.replace('TXN', 'VYN'));
+                onPaymentSuccess={async () => {
+                  const result = await bookHotel(selectedHotel, guest, checkInDate, checkOutDate, roomType, rooms, guests);
+                  if (!result.success || !result.bookingReference) throw new Error(result.error || 'Could not save reservation.');
+                  setBookingRef(result.bookingReference);
                   setStep('success');
                 }}
               />
@@ -797,7 +779,7 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                     <div className="text-right">
                       <p className="text-xs text-slate-500">Total Paid</p>
                       <p className="text-lg font-black text-emerald-800">
-                        Rs. {((selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate) * nights * rooms).toLocaleString()}
+                        {formatUSD((selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate) * nights * rooms)}
                       </p>
                     </div>
                   </div>
@@ -808,7 +790,7 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
               <div className="flex gap-3">
                 <button
                   type="button"
-                  onClick={() => alert(`Hotel Voucher ${bookingRef} downloaded to your device!`)}
+                  onClick={handleDownloadVoucher}
                   className="flex-1 py-3 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-semibold text-sm transition flex items-center justify-center gap-2"
                 >
                   <Sparkles size={15} />
