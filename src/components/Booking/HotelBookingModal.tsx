@@ -153,10 +153,10 @@ function HotelCard({
         <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
           <div>
             <p className="text-xs text-slate-500 font-medium">
-              <span className="text-slate-900 font-bold text-lg">${nightlyRate.toLocaleString()}</span> / night
+              <span className="text-slate-900 font-bold text-lg">Rs. {nightlyRate.toLocaleString()}</span> / night
             </p>
             <p className="text-[11px] text-emerald-800 font-medium">
-              ${totalPrice.toLocaleString()} total for {nights} night{nights > 1 ? 's' : ''}, {rooms} room{rooms > 1 ? 's' : ''}
+              Rs. {totalPrice.toLocaleString()} total for {nights} night{nights > 1 ? 's' : ''}, {rooms} room{rooms > 1 ? 's' : ''}
             </p>
           </div>
 
@@ -605,10 +605,10 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                 </div>
                 <div className="text-right">
                   <p className="text-lg font-bold text-slate-900">
-                    ${((selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate) * nights * rooms).toLocaleString()}
+                    Rs. {((selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate) * nights * rooms).toLocaleString()}
                   </p>
                   <span className="text-[11px] px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200 font-medium">
-                    ${(selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate).toLocaleString()} / night
+                    Rs. {(selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate).toLocaleString()} / night
                   </span>
                 </div>
               </div>
@@ -797,7 +797,7 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
                     <div className="text-right">
                       <p className="text-xs text-slate-500">Total Paid</p>
                       <p className="text-lg font-black text-emerald-800">
-                        ${((selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate) * nights * rooms).toLocaleString()}
+                        Rs. {((selectedHotel.roomRates[roomType] || selectedHotel.baseNightlyRate) * nights * rooms).toLocaleString()}
                       </p>
                     </div>
                   </div>

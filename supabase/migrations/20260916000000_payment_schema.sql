@@ -65,6 +65,11 @@ CREATE TRIGGER trg_payments_updated_at
 
 ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
 
+-- Policies are dropped and recreated so this migration can be re-run safely.
+DROP POLICY IF EXISTS "Users can view their own payments" ON public.payments;
+DROP POLICY IF EXISTS "Users can create their own payments" ON public.payments;
+DROP POLICY IF EXISTS "Users can update their own payments" ON public.payments;
+
 CREATE POLICY "Users can view their own payments"
     ON public.payments FOR SELECT
     USING (auth.uid() = user_id);

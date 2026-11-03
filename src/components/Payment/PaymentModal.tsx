@@ -256,7 +256,7 @@ export const PaymentView: React.FC<PaymentProps> = ({
         bookingReference,
         bookingType,
         title: `${title} Payment Received`,
-        description: `Payment of $${amount.toLocaleString()} for ${bookingReference} successfully authorized via ${selectedMethod}.`,
+        description: `Payment of Rs. ${amount.toLocaleString()} for ${bookingReference} successfully authorized via ${selectedMethod}.`,
         userId,
       });
 
@@ -296,7 +296,7 @@ export const PaymentView: React.FC<PaymentProps> = ({
           </div>
           <div className="text-right">
             <p className="text-xs text-slate-500 font-medium">Total Due</p>
-            <p className="text-xl font-black text-slate-900">${amount.toLocaleString()}</p>
+            <p className="text-xl font-black text-slate-900">Rs. {amount.toLocaleString()}</p>
           </div>
         </div>
 
@@ -305,7 +305,7 @@ export const PaymentView: React.FC<PaymentProps> = ({
             {lineItems.map((item) => (
               <div key={item.label} className="flex justify-between text-slate-500">
                 <span>{item.label}</span>
-                <span className="text-slate-800 font-medium">${item.amount.toLocaleString()}</span>
+                <span className="text-slate-800 font-medium">Rs. {item.amount.toLocaleString()}</span>
               </div>
             ))}
           </div>
@@ -361,7 +361,7 @@ export const PaymentView: React.FC<PaymentProps> = ({
               <div className="flex items-center gap-1.5">
                 <QrCode size={16} className="text-emerald-700" />
                 <h4 className="text-sm font-bold text-slate-900">
-                  Scan to Pay ${amount.toLocaleString()} {currency}
+                  Scan to Pay Rs. {amount.toLocaleString()}
                 </h4>
               </div>
               <p className="text-xs text-slate-600 mt-1">
@@ -509,8 +509,8 @@ export const PaymentView: React.FC<PaymentProps> = ({
               <Lock size={15} />
               <span>
                 {selectedMethod === 'credit_card'
-                  ? `Pay $${amount.toLocaleString()} & Complete Booking`
-                  : `Verify & Approve $${amount.toLocaleString()} Payment`}
+                  ? `Pay Rs. ${amount.toLocaleString()} & Complete Booking`
+                  : `Verify & Approve Rs. ${amount.toLocaleString()} Payment`}
               </span>
             </>
           )}

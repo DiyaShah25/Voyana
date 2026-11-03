@@ -349,6 +349,20 @@ ALTER TABLE public.transport_bookings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.booking_status_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.booking_alerts ENABLE ROW LEVEL SECURITY;
 
+-- Policies are dropped and recreated so this migration can be re-run safely.
+DROP POLICY IF EXISTS "Users can view their own bookings" ON public.bookings;
+DROP POLICY IF EXISTS "Users can create their own bookings" ON public.bookings;
+DROP POLICY IF EXISTS "Users can update their own bookings" ON public.bookings;
+DROP POLICY IF EXISTS "Anyone can view flight catalog" ON public.flights;
+DROP POLICY IF EXISTS "Anyone can view hotel catalog" ON public.hotels;
+DROP POLICY IF EXISTS "Anyone can view transport catalog" ON public.transport;
+DROP POLICY IF EXISTS "Users can view their own flight bookings" ON public.flight_bookings;
+DROP POLICY IF EXISTS "Users can view their own hotel bookings" ON public.hotel_bookings;
+DROP POLICY IF EXISTS "Users can view their own transport bookings" ON public.transport_bookings;
+DROP POLICY IF EXISTS "Users can view their own alerts" ON public.booking_alerts;
+DROP POLICY IF EXISTS "Users can update their own alert read status" ON public.booking_alerts;
+DROP POLICY IF EXISTS "Users can view their own booking status history" ON public.booking_status_history;
+
 -- 9.1 Bookings RLS
 CREATE POLICY "Users can view their own bookings"
     ON public.bookings FOR SELECT

@@ -112,9 +112,9 @@ function TransportCard({
               </h3>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold text-slate-900">${totalPrice.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-slate-900">Rs. {totalPrice.toLocaleString()}</p>
               <p className="text-[11px] text-slate-500">
-                {item.transportType === 'car_rental' ? 'per day' : (item.transportType === 'train' || item.transportType === 'bus' ? (passengers > 1 ? `$${item.basePrice}/pax` : 'total fare') : 'all-inclusive')}
+                {item.transportType === 'car_rental' ? 'per day' : (item.transportType === 'train' || item.transportType === 'bus' ? (passengers > 1 ? `Rs. ${item.basePrice}/pax` : 'total fare') : 'all-inclusive')}
               </p>
             </div>
           </div>
@@ -553,7 +553,7 @@ export default function TransportBookingModal({
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-bold text-slate-900">${computedTotal.toLocaleString()}</p>
+                  <p className="text-lg font-bold text-slate-900">Rs. {computedTotal.toLocaleString()}</p>
                   <p className="text-[11px] text-slate-500">{passengers} {passengers === 1 ? 'passenger' : 'passengers'}</p>
                 </div>
               </div>

@@ -96,7 +96,7 @@ liveTravelRouter.get('/flights', async (req: Request, res: Response): Promise<vo
       const arrDate = new Date(arrTime);
       const durationMinutes = Math.max(45, Math.round((arrDate.getTime() - depDate.getTime()) / 60000)) || 180;
       
-      const baseEcoPrice = 180 + ((idx * 37) % 250);
+      const baseEcoPrice = (180 + ((idx * 37) % 250)) * 85;
 
       return {
         id: `av-${f.flight?.iata || f.flight?.number || idx}-${Date.now()}`,
@@ -129,7 +129,7 @@ liveTravelRouter.get('/flights', async (req: Request, res: Response): Promise<vo
           business: Math.round(baseEcoPrice * 2.8),
           first: Math.round(baseEcoPrice * 4.2),
         },
-        currency: 'USD',
+        currency: 'INR',
         seatsAvailable: {
           economy: 42 - (idx % 15),
           premium_economy: 12 - (idx % 5),
@@ -207,7 +207,8 @@ liveTravelRouter.get('/hotels', async (req: Request, res: Response): Promise<voi
     // Map Booking.com format into Voyana Hotel format
     const hotels = rawHotels.map((item: any) => {
       const p = item.property || {};
-      const grossPrice = Math.round(p.priceBreakdown?.grossPrice?.value || 190);
+      const rawPrice = p.priceBreakdown?.grossPrice?.value || 190;
+      const grossPrice = Math.round(rawPrice * 85);
       const starRating = p.qualityClass || p.starRating || 4;
       const reviewScore = p.reviewScore || 8.5;
       const reviewCount = p.reviewCount || 450;
@@ -234,7 +235,7 @@ liveTravelRouter.get('/hotels', async (req: Request, res: Response): Promise<voi
           'Executive Suite': Math.round(grossPrice * 1.8),
           'Presidential Suite': Math.round(grossPrice * 2.7),
         },
-        currency: p.priceBreakdown?.grossPrice?.currency || 'USD',
+        currency: 'INR',
         amenities: ['Free High-Speed Wi-Fi', 'Air Conditioning', 'Ensuite Bathroom', '24h Concierge', 'Breakfast Included'],
         description: `Authentic verified property listed on Booking.com in ${location}. Rated ${reviewScore}/10 by ${reviewCount} travelers.`,
         isLiveBookingCom: true,

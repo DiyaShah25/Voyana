@@ -101,8 +101,8 @@ function FlightCard({
           </div>
         </div>
         <div className="text-right">
-          <p className="text-xl font-black text-slate-900">${price.toLocaleString()}</p>
-          {passengers > 1 && <p className="text-xs text-slate-500">${perPax.toLocaleString()} / person</p>}
+          <p className="text-xl font-black text-slate-900">Rs. {price.toLocaleString()}</p>
+          {passengers > 1 && <p className="text-xs text-slate-500">Rs. {perPax.toLocaleString()} / person</p>}
         </div>
       </div>
 
@@ -539,7 +539,7 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                   <p className="text-xs text-slate-600 font-medium">{selectedFlight.originAirport.code} → {selectedFlight.destinationAirport.code} · {formatTime(selectedFlight.departureTime)} – {formatTime(selectedFlight.arrivalTime)}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-black text-emerald-800">${(selectedFlight.prices[cabin] * passengers).toLocaleString()}</p>
+                  <p className="text-lg font-black text-emerald-800">Rs. {(selectedFlight.prices[cabin] * passengers).toLocaleString()}</p>
                   <span className={`text-xs px-2.5 py-0.5 rounded-full border ${CABIN_COLORS[cabin]}`}>{getCabinLabel(cabin)}</span>
                 </div>
               </div>
@@ -728,7 +728,7 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-slate-500 font-semibold">Total Paid</p>
-                      <p className="text-lg font-black text-emerald-800">${(selectedFlight.prices[cabin] * passengers).toLocaleString()}</p>
+                      <p className="text-lg font-black text-emerald-800">Rs. {(selectedFlight.prices[cabin] * passengers).toLocaleString()}</p>
                     </div>
                   </div>
                 </div>
