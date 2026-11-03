@@ -596,7 +596,11 @@ export async function searchTransport(
     }
   }
 
-  return results;
+  return results.map((item) => ({
+    ...item,
+    basePrice: item.currency === 'USD' ? Math.round(item.basePrice * 85) : item.basePrice,
+    currency: 'INR',
+  }));
 }
 
 // ---------------------------------------------------------------------------

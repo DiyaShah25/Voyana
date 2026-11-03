@@ -5,40 +5,58 @@
 -- Date: September 2026
 -- ==============================================================================
 
--- 1. Ensure Table Structure & Constraints for Transport Catalog
+-- 1. Ensure ENUM type exists (booking schema normally creates it first)
+DO $$ BEGIN
+    CREATE TYPE transport_type AS ENUM ('train', 'bus', 'private_transfer', 'car_rental', 'ferry');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+-- 2. Ensure Table Structure & Constraints for Transport Catalog
+-- The booking schema (20260908000000) already creates a minimal public.transport
+-- table, so CREATE TABLE IF NOT EXISTS is a no-op on an existing database.
 CREATE TABLE IF NOT EXISTS public.transport (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     provider_name VARCHAR(150) NOT NULL,
     transport_type transport_type NOT NULL,
     origin_location VARCHAR(200) NOT NULL,
     destination_location VARCHAR(200) NOT NULL,
-    origin_city VARCHAR(100),
-    destination_city VARCHAR(100),
     scheduled_departure TIMESTAMPTZ NOT NULL,
     scheduled_arrival TIMESTAMPTZ,
-    duration_minutes INTEGER,
     vehicle_model VARCHAR(100),
-    vehicle_class VARCHAR(50) DEFAULT 'Standard',
-    max_passengers INTEGER DEFAULT 4,
-    baggage_capacity INTEGER DEFAULT 2,
     base_price NUMERIC(10, 2) NOT NULL CHECK (base_price >= 0),
-    currency VARCHAR(3) NOT NULL DEFAULT 'USD',
-    operator_rating NUMERIC(2, 1) DEFAULT 4.8 CHECK (operator_rating >= 0 AND operator_rating <= 5),
-    amenities TEXT[] DEFAULT ARRAY['Air Conditioning', 'Luggage Assistance'],
-    image_url TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Extend the catalog with the richer columns this domain needs.
+ALTER TABLE public.transport
+    ADD COLUMN IF NOT EXISTS origin_city VARCHAR(100),
+    ADD COLUMN IF NOT EXISTS destination_city VARCHAR(100),
+    ADD COLUMN IF NOT EXISTS duration_minutes INTEGER,
+    ADD COLUMN IF NOT EXISTS vehicle_class VARCHAR(50) DEFAULT 'Standard',
+    ADD COLUMN IF NOT EXISTS max_passengers INTEGER DEFAULT 4,
+    ADD COLUMN IF NOT EXISTS baggage_capacity INTEGER DEFAULT 2,
+    ADD COLUMN IF NOT EXISTS currency VARCHAR(3) NOT NULL DEFAULT 'USD',
+    ADD COLUMN IF NOT EXISTS operator_rating NUMERIC(2, 1) DEFAULT 4.8
+        CHECK (operator_rating >= 0 AND operator_rating <= 5),
+    ADD COLUMN IF NOT EXISTS amenities TEXT[] DEFAULT ARRAY['Air Conditioning', 'Luggage Assistance'],
+    ADD COLUMN IF NOT EXISTS image_url TEXT;
+
 COMMENT ON TABLE public.transport IS 'Master catalog of ground transport routes (trains, shuttles, car rentals, transfers).';
 
--- 2. Performance Indexes for Transport Queries
+-- 3. Performance Indexes for Transport Queries
 CREATE INDEX IF NOT EXISTS idx_transport_origin_city ON public.transport(origin_city);
 CREATE INDEX IF NOT EXISTS idx_transport_dest_city ON public.transport(destination_city);
 CREATE INDEX IF NOT EXISTS idx_transport_type ON public.transport(transport_type);
 CREATE INDEX IF NOT EXISTS idx_transport_departure ON public.transport(scheduled_departure);
 CREATE INDEX IF NOT EXISTS idx_transport_price ON public.transport(base_price);
 
--- 3. Seed Comprehensive Transport Catalog
+-- 4. Seed Comprehensive Transport Catalog (idempotent: skipped when already seeded)
+DO $$ BEGIN
+IF EXISTS (SELECT 1 FROM public.transport) THEN
+    RETURN;
+END IF;
+
 INSERT INTO public.transport (
     provider_name, transport_type, origin_location, destination_location,
     origin_city, destination_city, scheduled_departure, scheduled_arrival,
@@ -136,3 +154,5 @@ INSERT INTO public.transport (
     'https://images.pexels.com/photos/116675/pexels-photo-116675.jpeg?auto=compress&cs=tinysrgb&w=800'
 )
 ON CONFLICT DO NOTHING;
+
+END $$;
