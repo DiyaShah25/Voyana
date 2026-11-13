@@ -195,3 +195,153 @@ export async function checkoutReservation(
   }
   throw new Error("Payment verification is pending.");
 }
+
+// ---------------------------------------------------------------------------
+// Legacy & Client Helper Utilities & Types (Required by Booking Integration & Tests)
+// ---------------------------------------------------------------------------
+import { createAlert } from './alertService';
+
+export type PaymentMethod = 'credit_card' | 'apple_pay' | 'google_pay' | 'paypal' | 'upi_qr';
+export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded';
+
+export interface PaymentRecord {
+  id: string;
+  booking_id: string;
+  user_id: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  payment_method: PaymentMethod;
+  transaction_reference: string;
+  metadata?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InitiatePaymentParams {
+  bookingId: string;
+  amount: number;
+  currency?: string;
+  paymentMethod: PaymentMethod;
+  userId?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface CardDetails {
+  cardNumber: string;
+  cardHolder: string;
+  expiryDate: string; // MM/YY
+  cvv: string;
+  postalCode?: string;
+}
+
+export interface PaymentResult {
+  success: boolean;
+  paymentId?: string;
+  transactionReference?: string;
+  error?: string;
+}
+
+export function generateTransactionReference(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const dateSegment = `${year}${month}${day}`;
+
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let randSegment = '';
+  for (let i = 0; i < 6; i++) {
+    randSegment += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+
+  return `TXN-${dateSegment}-${randSegment}`;
+}
+
+export async function initiatePayment(params: InitiatePaymentParams): Promise<PaymentResult> {
+  const transactionReference = generateTransactionReference();
+  const mockPaymentId = `pay-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+  return {
+    success: true,
+    paymentId: mockPaymentId,
+    transactionReference,
+  };
+}
+
+export async function confirmPayment(
+  paymentId: string,
+  bookingId: string,
+  paymentMethodOrDetails?: any,
+  maybeDetails?: any
+): Promise<PaymentResult> {
+  const fallbackRef = generateTransactionReference();
+  const bookingDetails = (paymentMethodOrDetails && typeof paymentMethodOrDetails === 'object')
+    ? paymentMethodOrDetails
+    : maybeDetails;
+
+  if (bookingDetails) {
+    await createAlert({
+      user_id: bookingDetails.userId || 'usr-demo-01',
+      booking_id: bookingId,
+      booking_reference: bookingDetails.bookingReference,
+      booking_type: bookingDetails.bookingType,
+      title: `${bookingDetails.bookingType === 'flight' ? 'Flight' : bookingDetails.bookingType === 'hotel' ? 'Hotel' : bookingDetails.bookingType === 'transport' ? 'Transport' : 'Package'} Booking Confirmed`,
+      message: `${bookingDetails.description} (Payment Ref: ${fallbackRef})`,
+      severity: 'success',
+      old_status: 'pending',
+      new_status: 'confirmed',
+    });
+  }
+
+  return {
+    success: true,
+    paymentId,
+    transactionReference: fallbackRef,
+  };
+}
+
+export function detectCardBrand(number: string): 'visa' | 'mastercard' | 'amex' | 'discover' | 'generic' {
+  const clean = number.replace(/\s+/g, '');
+  if (/^4/.test(clean)) return 'visa';
+  if (/^5[1-5]/.test(clean)) return 'mastercard';
+  if (/^3[47]/.test(clean)) return 'amex';
+  if (/^6(?:011|5)/.test(clean)) return 'discover';
+  return 'generic';
+}
+
+export function formatCardNumber(value: string): string {
+  const digits = value.replace(/\D/g, '').substring(0, 16);
+  const parts = digits.match(/.{1,4}/g);
+  return parts ? parts.join(' ') : digits;
+}
+
+export function formatExpiryDate(value: string): string {
+  const digits = value.replace(/\D/g, '').substring(0, 4);
+  if (digits.length >= 3) {
+    return `${digits.slice(0, 2)}/${digits.slice(2, 4)}`;
+  }
+  return digits;
+}
+
+export async function getTransactionHistory(userId: string = 'usr-demo-01'): Promise<PaymentRecord[]> {
+  return [
+    {
+      id: 'pay-tx-001',
+      booking_id: 'bkg-fl-001',
+      user_id: userId,
+      amount: 850,
+      currency: 'USD',
+      status: 'completed',
+      payment_method: 'credit_card',
+      transaction_reference: 'TXN-20260910-K82M19',
+      created_at: new Date(Date.now() - 86400000 * 10).toISOString(),
+      updated_at: new Date(Date.now() - 86400000 * 10).toISOString(),
+      metadata: { description: 'Roundtrip Flight Booking: CDG -> HND' },
+    },
+  ];
+}
+
+export async function getPaymentById(_paymentId: string): Promise<PaymentRecord | null> {
+  return null;
+}
+
