@@ -1,7 +1,7 @@
 /**
  * Express Application Setup for Voyana Backend
  * Configures CORS, JSON parsing, routes mounting (AI chat, health, auth, trips,
- * bookings, budget, collaboration, packing, alerts, destinations), and error handling.
+ * bookings, budget, collaboration, packing, alerts, destinations, live/external), and error handling.
  */
 
 import express, { Express, Request, Response, NextFunction } from 'express';
@@ -19,6 +19,7 @@ import { alertsRouter } from './routes/alerts.router.js';
 import { reviewsRouter } from './routes/reviews.router.js';
 import { destinationsRouter } from './routes/destinations.router.js';
 import { memoriesRouter } from './routes/memories.router.js';
+import { liveTravelRouter } from './routes/live-travel.router.js';
 import { runDataMigration } from './services/migration.service.js';
 
 export function createApp(): Express {
@@ -48,6 +49,10 @@ export function createApp(): Express {
   app.use('/api/alerts', alertsRouter);
   app.use('/api/reviews', reviewsRouter);
   app.use('/api/data', apiRouter);
+
+  // External & Live Travel Integration Endpoints
+  app.use('/api/live', liveTravelRouter);
+  app.use('/api/external', liveTravelRouter);
 
   // Data migration / seeding trigger endpoint
   app.post('/api/migrate', async (_req: Request, res: Response) => {
