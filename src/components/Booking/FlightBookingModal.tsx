@@ -7,11 +7,11 @@ import { getPlanningContext } from '@/services/planningContext';
  * and integration with payment processing.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Plane, MapPin, Calendar, Users, ArrowRight, Search,
   Filter, X, CheckCircle2,
-  Luggage, Wifi, Coffee, Sparkles,
+  Luggage, Wifi, Coffee, Sparkles, Train, Bus,
 } from 'lucide-react';
 import {
   generateMockFlights,
@@ -27,6 +27,12 @@ import {
   type CabinClass,
   type PassengerDetails,
 } from '@/services/flightService';
+import {
+  getAvailableModes,
+  getGroundTransportOptions,
+  type GroundTransportItem,
+  type TransportMode,
+} from '@/services/groundTransportService';
 import { PaymentView } from '@/components/Payment/PaymentModal';
 import { useCurrency } from '@/context/CurrencyContext';
 import { downloadFlightTicket } from '@/services/ticketService';
@@ -66,94 +72,330 @@ function AirlineBadge({ code }: { code: string; name?: string }) {
   );
 }
 
-// ─── Flight Card ─────────────────────────────────────────────────────────────
-function FlightCard({
-  flight,
+// ─── Unified Transport Option Item ──────────────────────────────────────────
+export type UnifiedOptionItem =
+  | { type: 'flight'; data: Flight; priceBase: number; durationMinutes: number; departureTimeRaw: string }
+  | { type: 'train'; data: GroundTransportItem; priceBase: number; durationMinutes: number; departureTimeRaw: string }
+  | { type: 'bus'; data: GroundTransportItem; priceBase: number; durationMinutes: number; departureTimeRaw: string };
+
+// ─── Transport Card (Flights, Trains, Buses) ─────────────────────────────────
+function TransportCard({
+  item,
   cabin,
   passengers,
-  onSelect,
+  onSelectFlight,
+  isCheapest,
+  isFastest,
 }: {
-  flight: Flight;
+  item: UnifiedOptionItem;
   cabin: CabinClass;
   passengers: number;
-  onSelect: (f: Flight) => void;
+  onSelectFlight: (f: Flight) => void;
+  isCheapest?: boolean;
+  isFastest?: boolean;
 }) {
-  const { formatUSD } = useCurrency();
-  const price = flight.prices[cabin] * passengers;
-  const perPax = flight.prices[cabin];
+  const { currency, formatUSD } = useCurrency();
+
+  if (item.type === 'flight') {
+    const flight = item.data;
+    const price = flight.prices[cabin] * passengers;
+    const perPax = flight.prices[cabin];
+
+    return (
+      <div
+        onClick={() => onSelectFlight(flight)}
+        className="group relative bg-white hover:bg-slate-50 border border-slate-200 hover:border-emerald-500/50 rounded-2xl p-4 cursor-pointer transition-all duration-200 hover:shadow-lg hover:shadow-emerald-950/5"
+      >
+        <BookingImage kind="flight" className="w-full h-24 rounded-xl mb-3" />
+
+        {/* Badges & Mode Row */}
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+            <Plane size={11} /> Flight
+          </span>
+          {isCheapest && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1 shadow-sm">
+              🏷️ Cheapest
+            </span>
+          )}
+          {isFastest && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1 shadow-sm">
+              ⚡ Fastest
+            </span>
+          )}
+        </div>
+
+        {/* Airline info */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <AirlineBadge code={flight.airlineCode} name={flight.airline} />
+            <div>
+              <p className="text-sm font-bold text-slate-900">{flight.airline}</p>
+              <p className="text-xs text-slate-500 font-mono">{flight.flightNumber} · {flight.aircraft}</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-xl font-black text-slate-900">{formatUSD(price)}</p>
+            {passengers > 1 && <p className="text-xs text-slate-500">{formatUSD(perPax)} / person</p>}
+          </div>
+        </div>
+
+        {/* Route timeline */}
+        <div className="mt-4 flex items-center gap-3">
+          <div className="text-center flex-shrink-0">
+            <p className="text-2xl font-black text-slate-900 font-mono">{formatTime(flight.departureTime)}</p>
+            <p className="text-xs text-slate-500 font-bold">{flight.originAirport.code}</p>
+          </div>
+
+          <div className="flex-1 flex flex-col items-center gap-1">
+            <p className="text-xs text-slate-500 font-medium">{formatDuration(flight.durationMinutes)}</p>
+            <div className="w-full flex items-center gap-1">
+              <div className="h-px bg-slate-200 flex-1" />
+              <Plane size={14} className="text-emerald-700 flex-shrink-0" />
+              <div className="h-px bg-slate-200 flex-1" />
+            </div>
+            <p className="text-xs text-slate-500">
+              {flight.stops === 0 ? (
+                <span className="text-emerald-700 font-semibold">Nonstop</span>
+              ) : (
+                <span className="text-amber-700 font-medium">{flight.stops} stop</span>
+              )}
+            </p>
+          </div>
+
+          <div className="text-center flex-shrink-0">
+            <p className="text-2xl font-black text-slate-900 font-mono">{formatTime(flight.arrivalTime)}</p>
+            <p className="text-xs text-slate-500 font-bold">{flight.destinationAirport.code}</p>
+          </div>
+        </div>
+
+        {/* Cabin + Seats + Amenities */}
+        <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-2.5">
+          <div className="flex items-center gap-2">
+            <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${CABIN_COLORS[cabin]}`}>
+              {getCabinLabel(cabin)}
+            </span>
+            <span className="text-xs text-slate-500 flex items-center gap-1 font-medium">
+              <Luggage size={11} />
+              {cabin === 'economy' ? '23kg' : cabin === 'premium_economy' ? '32kg' : '50kg'}
+            </span>
+            {cabin !== 'economy' && (
+              <span className="text-xs text-slate-500 flex items-center gap-1 font-medium"><Wifi size={11} />WiFi</span>
+            )}
+            {(cabin === 'business' || cabin === 'first') && (
+              <span className="text-xs text-slate-500 flex items-center gap-1 font-medium"><Coffee size={11} />Meal</span>
+            )}
+          </div>
+          <button
+            onClick={e => { e.stopPropagation(); onSelectFlight(flight); }}
+            className="text-xs font-bold text-emerald-700 group-hover:text-emerald-800 flex items-center gap-1 transition px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100"
+          >
+            Select <ArrowRight size={13} />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Train card
+  if (item.type === 'train') {
+    const train = item.data;
+    const priceDisplay = currency === 'INR'
+      ? `₹${(train.price * passengers).toLocaleString()}`
+      : formatUSD(Math.round(train.price / 86.5) * passengers);
+    const perPaxDisplay = currency === 'INR'
+      ? `₹${train.price.toLocaleString()}`
+      : formatUSD(Math.round(train.price / 86.5));
+
+    const handleOpenIRCTC = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      window.open(train.bookingUrl || 'https://www.irctc.co.in/nget/train-search', '_blank', 'noopener,noreferrer');
+    };
+
+    return (
+      <div
+        onClick={handleOpenIRCTC}
+        className="group relative bg-white hover:bg-amber-50/30 border border-slate-200 hover:border-amber-500/50 rounded-2xl p-4 cursor-pointer transition-all duration-200 hover:shadow-lg hover:shadow-amber-950/5"
+      >
+        <BookingImage kind="train" className="w-full h-24 rounded-xl mb-3" />
+
+        {/* Badges & Mode Row */}
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+            <Train size={11} /> Train
+          </span>
+          {isCheapest && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1 shadow-sm">
+              🏷️ Cheapest
+            </span>
+          )}
+          {isFastest && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1 shadow-sm">
+              ⚡ Fastest
+            </span>
+          )}
+        </div>
+
+        {/* Train operator info */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-amber-600 to-red-800 text-white text-xs font-bold shadow-lg flex-shrink-0">
+              IR
+            </div>
+            <div>
+              <p className="text-sm font-bold text-slate-900">{train.name}</p>
+              <p className="text-xs text-slate-500 font-mono">{train.operator}</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-xl font-black text-slate-900">{priceDisplay}</p>
+            {passengers > 1 && <p className="text-xs text-slate-500">{perPaxDisplay} / person</p>}
+          </div>
+        </div>
+
+        {/* Route timeline */}
+        <div className="mt-4 flex items-center gap-3">
+          <div className="text-center flex-shrink-0">
+            <p className="text-2xl font-black text-slate-900 font-mono">{train.departureTime}</p>
+            <p className="text-xs text-slate-500 font-bold">{train.originCode || train.origin}</p>
+          </div>
+
+          <div className="flex-1 flex flex-col items-center gap-1">
+            <p className="text-xs text-slate-500 font-medium">{train.duration}</p>
+            <div className="w-full flex items-center gap-1">
+              <div className="h-px bg-slate-200 flex-1" />
+              <Train size={14} className="text-amber-700 flex-shrink-0" />
+              <div className="h-px bg-slate-200 flex-1" />
+            </div>
+            <p className="text-xs text-emerald-700 font-semibold">Direct Rail Link</p>
+          </div>
+
+          <div className="text-center flex-shrink-0">
+            <p className="text-2xl font-black text-slate-900 font-mono">{train.arrivalTime}</p>
+            <p className="text-xs text-slate-500 font-bold">{train.destinationCode || train.destination}</p>
+          </div>
+        </div>
+
+        {/* Class + Amenities + IRCTC Button */}
+        <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-2.5">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full border bg-amber-50 text-amber-800 border-amber-200">
+              {train.classType}
+            </span>
+            <span className="text-xs text-slate-500 flex items-center gap-1 font-medium">
+              🚆 Reserved Berth
+            </span>
+            <span className="text-xs text-slate-500 flex items-center gap-1 font-medium">
+              🍱 Pantry
+            </span>
+          </div>
+          <button
+            onClick={handleOpenIRCTC}
+            className="text-xs font-bold text-amber-800 hover:text-amber-900 flex items-center gap-1 transition px-3 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 border border-amber-300 shadow-sm"
+          >
+            Book on IRCTC <ArrowRight size={13} />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Bus card
+  const bus = item.data;
+  const priceDisplay = currency === 'INR'
+    ? `₹${(bus.price * passengers).toLocaleString()}`
+    : formatUSD(Math.round(bus.price / 86.5) * passengers);
+  const perPaxDisplay = currency === 'INR'
+    ? `₹${bus.price.toLocaleString()}`
+    : formatUSD(Math.round(bus.price / 86.5));
+
+  const handleOpenRedBus = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    window.open(bus.bookingUrl || `https://www.redbus.in/bus-tickets/${encodeURIComponent(bus.origin.toLowerCase())}-to-${encodeURIComponent(bus.destination.toLowerCase())}`, '_blank', 'noopener,noreferrer');
+  };
 
   return (
     <div
-      onClick={() => onSelect(flight)}
-      className="group relative bg-white hover:bg-slate-50 border border-slate-200 hover:border-emerald-500/50 rounded-2xl p-4 cursor-pointer transition-all duration-200 hover:shadow-lg hover:shadow-emerald-950/5"
+      onClick={handleOpenRedBus}
+      className="group relative bg-white hover:bg-rose-50/30 border border-slate-200 hover:border-rose-400/50 rounded-2xl p-4 cursor-pointer transition-all duration-200 hover:shadow-lg hover:shadow-rose-950/5"
     >
-      <BookingImage kind="flight" className="w-full h-24 rounded-xl mb-4" />
-      {/* Airline info */}
+      <BookingImage kind="bus" className="w-full h-24 rounded-xl mb-3" />
+
+      {/* Badges & Mode Row */}
+      <div className="flex items-center gap-2 mb-2 flex-wrap">
+        <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-800 border border-rose-200">
+          <Bus size={11} /> Bus
+        </span>
+        {isCheapest && (
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1 shadow-sm">
+            🏷️ Cheapest
+          </span>
+        )}
+        {isFastest && (
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1 shadow-sm">
+            ⚡ Fastest
+          </span>
+        )}
+      </div>
+
+      {/* Bus operator info */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <AirlineBadge code={flight.airlineCode} name={flight.airline} />
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-rose-600 to-orange-700 text-white text-xs font-bold shadow-lg flex-shrink-0">
+            BUS
+          </div>
           <div>
-            <p className="text-sm font-bold text-slate-900">{flight.airline}</p>
-            <p className="text-xs text-slate-500 font-mono">{flight.flightNumber} · {flight.aircraft}</p>
+            <p className="text-sm font-bold text-slate-900">{bus.name}</p>
+            <p className="text-xs text-slate-500 font-mono">{bus.operator}</p>
           </div>
         </div>
         <div className="text-right">
-          <p className="text-xl font-black text-slate-900">{formatUSD(price)}</p>
-          {passengers > 1 && <p className="text-xs text-slate-500">{formatUSD(perPax)} / person</p>}
+          <p className="text-xl font-black text-slate-900">{priceDisplay}</p>
+          {passengers > 1 && <p className="text-xs text-slate-500">{perPaxDisplay} / person</p>}
         </div>
       </div>
 
       {/* Route timeline */}
       <div className="mt-4 flex items-center gap-3">
         <div className="text-center flex-shrink-0">
-          <p className="text-2xl font-black text-slate-900 font-mono">{formatTime(flight.departureTime)}</p>
-          <p className="text-xs text-slate-500 font-bold">{flight.originAirport.code}</p>
+          <p className="text-2xl font-black text-slate-900 font-mono">{bus.departureTime}</p>
+          <p className="text-xs text-slate-500 font-bold">{bus.originCode || bus.origin}</p>
         </div>
 
         <div className="flex-1 flex flex-col items-center gap-1">
-          <p className="text-xs text-slate-500 font-medium">{formatDuration(flight.durationMinutes)}</p>
+          <p className="text-xs text-slate-500 font-medium">{bus.duration}</p>
           <div className="w-full flex items-center gap-1">
             <div className="h-px bg-slate-200 flex-1" />
-            <Plane size={14} className="text-emerald-700 -rotate-0 flex-shrink-0" />
+            <Bus size={14} className="text-rose-600 flex-shrink-0" />
             <div className="h-px bg-slate-200 flex-1" />
           </div>
-          <p className="text-xs text-slate-500">
-            {flight.stops === 0 ? (
-              <span className="text-emerald-700 font-semibold">Nonstop</span>
-            ) : (
-              <span className="text-amber-700 font-medium">{flight.stops} stop</span>
-            )}
-          </p>
+          <p className="text-xs text-emerald-700 font-semibold">Highway Express</p>
         </div>
 
         <div className="text-center flex-shrink-0">
-          <p className="text-2xl font-black text-slate-900 font-mono">{formatTime(flight.arrivalTime)}</p>
-          <p className="text-xs text-slate-500 font-bold">{flight.destinationAirport.code}</p>
+          <p className="text-2xl font-black text-slate-900 font-mono">{bus.arrivalTime}</p>
+          <p className="text-xs text-slate-500 font-bold">{bus.destinationCode || bus.destination}</p>
         </div>
       </div>
 
-      {/* Cabin + Seats + Amenities */}
+      {/* Class + Amenities + RedBus Button */}
       <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-2.5">
         <div className="flex items-center gap-2">
-          <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${CABIN_COLORS[cabin]}`}>
-            {getCabinLabel(cabin)}
+          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full border bg-rose-50 text-rose-800 border-rose-200">
+            {bus.classType}
           </span>
           <span className="text-xs text-slate-500 flex items-center gap-1 font-medium">
-            <Luggage size={11} />
-            {cabin === 'economy' ? '23kg' : cabin === 'premium_economy' ? '32kg' : '50kg'}
+            💺 AC Sleeper
           </span>
-          {cabin !== 'economy' && (
-            <span className="text-xs text-slate-500 flex items-center gap-1 font-medium"><Wifi size={11} />WiFi</span>
-          )}
-          {(cabin === 'business' || cabin === 'first') && (
-            <span className="text-xs text-slate-500 flex items-center gap-1 font-medium"><Coffee size={11} />Meal</span>
-          )}
+          <span className="text-xs text-slate-500 flex items-center gap-1 font-medium">
+            ⚡ USB Port
+          </span>
         </div>
         <button
-          onClick={e => { e.stopPropagation(); onSelect(flight); }}
-          className="text-xs font-bold text-emerald-700 group-hover:text-emerald-800 flex items-center gap-1 transition"
+          onClick={handleOpenRedBus}
+          className="text-xs font-bold text-rose-700 hover:text-rose-800 flex items-center gap-1 transition px-3 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 shadow-sm"
         >
-          Select <ArrowRight size={13} />
+          Book on RedBus <ArrowRight size={13} />
         </button>
       </div>
     </div>
@@ -175,12 +417,12 @@ const CABIN_OPTIONS: { value: CabinClass; label: string; icon: string }[] = [
 ];
 
 const POPULAR_ROUTES = [
+  { from: 'AMD', to: 'SXR', fromCity: 'Ahmedabad', toCity: 'Srinagar' },
+  { from: 'AMD', to: 'IXZ', fromCity: 'Ahmedabad', toCity: 'Port Blair' },
   { from: 'DEL', to: 'DXB', fromCity: 'New Delhi', toCity: 'Dubai' },
   { from: 'BOM', to: 'LHR', fromCity: 'Mumbai', toCity: 'London' },
   { from: 'CDG', to: 'HND', fromCity: 'Paris', toCity: 'Tokyo' },
   { from: 'JFK', to: 'LHR', fromCity: 'New York', toCity: 'London' },
-  { from: 'SIN', to: 'SYD', fromCity: 'Singapore', toCity: 'Sydney' },
-  { from: 'DXB', to: 'BKK', fromCity: 'Dubai', toCity: 'Bangkok' },
 ];
 
 export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
@@ -193,7 +435,11 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
   const [departureDate, setDepartureDate] = useState('');
   const [passengers, setPassengers] = useState(() => getPlanningContext().trip?.travelMode === 'group' ? Math.min(20, Math.max(1, getPlanningContext().members.length)) : 1);
   const [cabin, setCabin] = useState<CabinClass>('economy');
+  const [availableModes, setAvailableModes] = useState<TransportMode[]>(['flight', 'train', 'bus']);
+  const [selectedMode, setSelectedMode] = useState<'all' | 'flight' | 'train' | 'bus'>('all');
   const [flights, setFlights] = useState<Flight[]>([]);
+  const [trains, setTrains] = useState<GroundTransportItem[]>([]);
+  const [buses, setBuses] = useState<GroundTransportItem[]>([]);
   const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
   const [bookingRef, setBookingRef] = useState('');
   const [sortBy, setSortBy] = useState<'price' | 'duration' | 'departure'>('price');
@@ -211,37 +457,116 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
   // Pre-fill destination when initialDestination changes
   useEffect(() => {
     if (initialDestination) {
-      const code = resolveAirportCode(initialDestination) || '';
-      setDestination(code);
+      setDestination(initialDestination);
     }
   }, [initialDestination]);
 
   const handleSearch = useCallback(() => {
-    const resolvedOrigin = resolveAirportCode(origin) || origin.toUpperCase().slice(0, 3);
-    const resolvedDest = resolveAirportCode(initialDestination || '') || '';
-    if (!resolvedOrigin || !resolvedDest || resolvedOrigin === resolvedDest) return;
-
-    if (!AIRPORTS[resolvedOrigin] || !AIRPORTS[resolvedDest]) return;
+    const rawOrigin = origin.trim();
+    const rawDest = destination.trim();
+    if (!rawOrigin || !rawDest || rawOrigin.toLowerCase() === rawDest.toLowerCase()) return;
     if (!departureDate) return;
 
-    const results = generateMockFlights({
-      originCode: resolvedOrigin,
-      destinationCode: resolvedDest,
-      departureDate,
-      passengers,
-      cabinClass: cabin,
-    });
-    setFlights(results);
-    setStep('results');
-  }, [origin, initialDestination, departureDate, passengers, cabin]);
+    const resolvedOriginCode = resolveAirportCode(rawOrigin) || rawOrigin.toUpperCase().slice(0, 3);
+    const resolvedDestCode = resolveAirportCode(rawDest) || rawDest.toUpperCase().slice(0, 3);
 
-  const sortedFlights = [...flights]
-    .filter(f => filterStops === 'any' || f.stops === 0)
-    .sort((a, b) => {
-      if (sortBy === 'price') return a.prices[cabin] - b.prices[cabin];
+    const originCity = AIRPORTS[resolvedOriginCode]?.city || rawOrigin;
+    const destCity = AIRPORTS[resolvedDestCode]?.city || rawDest;
+
+    // 1. Determine available transport modes
+    const modes = getAvailableModes(originCity, destCity);
+    setAvailableModes(modes);
+    setSelectedMode('all');
+
+    // 2. Flights
+    if (AIRPORTS[resolvedOriginCode] && AIRPORTS[resolvedDestCode]) {
+      const results = generateMockFlights({
+        originCode: resolvedOriginCode,
+        destinationCode: resolvedDestCode,
+        departureDate,
+        passengers,
+        cabinClass: cabin,
+      });
+      setFlights(results);
+    } else {
+      setFlights([]);
+    }
+
+    // 3. Ground transport (trains & buses)
+    const ground = getGroundTransportOptions(originCity, destCity, departureDate, passengers);
+    setTrains(ground.trains);
+    setBuses(ground.buses);
+
+    setStep('results');
+  }, [origin, destination, departureDate, passengers, cabin]);
+
+  // Overall min price & min duration across all modes for the route (for Fastest/Cheapest badges)
+  const allAvailableList = useMemo(() => {
+    const list: Array<{ priceBase: number; durationMinutes: number }> = [];
+    flights.forEach(f => list.push({ priceBase: f.prices[cabin], durationMinutes: f.durationMinutes }));
+    trains.forEach(t => list.push({ priceBase: Math.round(t.price / 86.5), durationMinutes: t.durationMinutes }));
+    buses.forEach(b => list.push({ priceBase: Math.round(b.price / 86.5), durationMinutes: b.durationMinutes }));
+    return list;
+  }, [flights, trains, buses, cabin]);
+
+  const minOverallPrice = useMemo(() => {
+    if (allAvailableList.length === 0) return 0;
+    return Math.min(...allAvailableList.map(o => o.priceBase));
+  }, [allAvailableList]);
+
+  const minOverallDuration = useMemo(() => {
+    if (allAvailableList.length === 0) return 0;
+    return Math.min(...allAvailableList.map(o => o.durationMinutes));
+  }, [allAvailableList]);
+
+  // Unified list of transport options filtered by selected mode and sort criteria
+  const unifiedOptions = useMemo(() => {
+    const list: UnifiedOptionItem[] = [];
+
+    if (selectedMode === 'all' || selectedMode === 'flight') {
+      flights
+        .filter(f => filterStops === 'any' || f.stops === 0)
+        .forEach(f => {
+          list.push({
+            type: 'flight',
+            data: f,
+            priceBase: f.prices[cabin],
+            durationMinutes: f.durationMinutes,
+            departureTimeRaw: f.departureTime,
+          });
+        });
+    }
+
+    if (selectedMode === 'all' || selectedMode === 'train') {
+      trains.forEach(t => {
+        list.push({
+          type: 'train',
+          data: t,
+          priceBase: Math.round(t.price / 86.5),
+          durationMinutes: t.durationMinutes,
+          departureTimeRaw: t.departureTime,
+        });
+      });
+    }
+
+    if (selectedMode === 'all' || selectedMode === 'bus') {
+      buses.forEach(b => {
+        list.push({
+          type: 'bus',
+          data: b,
+          priceBase: Math.round(b.price / 86.5),
+          durationMinutes: b.durationMinutes,
+          departureTimeRaw: b.departureTime,
+        });
+      });
+    }
+
+    return list.sort((a, b) => {
+      if (sortBy === 'price') return a.priceBase - b.priceBase;
       if (sortBy === 'duration') return a.durationMinutes - b.durationMinutes;
-      return new Date(a.departureTime).getTime() - new Date(b.departureTime).getTime();
+      return a.departureTimeRaw.localeCompare(b.departureTimeRaw);
     });
+  }, [flights, trains, buses, selectedMode, filterStops, sortBy, cabin]);
 
   const handleFlightSelect = (f: Flight) => {
     setSelectedFlight(f);
@@ -314,16 +639,16 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
             </div>
             <div>
               <h2 className="text-base font-bold text-slate-900 tracking-wide">
-                {step === 'search' && 'Search Flights'}
-                {step === 'results' && 'Available Flights'}
+                {step === 'search' && 'Search Transport & Flights'}
+                {step === 'results' && 'Available Transport Options'}
                 {step === 'passenger' && 'Passenger Details'}
                 {step === 'payment' && 'Payment & Checkout'}
                 {step === 'confirming' && 'Confirming Booking...'}
                 {step === 'success' && 'Booking Confirmed!'}
               </h2>
               <p className="text-xs text-slate-500">
-                {step === 'search' && 'Find the best fares worldwide'}
-                {step === 'results' && `${sortedFlights.length} flights found · ${formatDate(departureDate)}`}
+                {step === 'search' && 'Find flights, trains, and buses worldwide'}
+                {step === 'results' && `${unifiedOptions.length} options found · ${formatDate(departureDate)}`}
                 {step === 'passenger' && `${selectedFlight?.airline} ${selectedFlight?.flightNumber}`}
                 {step === 'payment' && `Pay securely for ${selectedFlight?.airline} ${selectedFlight?.flightNumber}`}
                 {step === 'confirming' && 'Securing your reservation...'}
@@ -384,7 +709,7 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                   </label>
                   <input
                     value={destination}
-                    readOnly
+                    onChange={e => setDestination(e.target.value)}
                     aria-label="Selected destination airport"
                     placeholder="City or Airport code"
                     list="destination-list"
@@ -452,7 +777,15 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                   {POPULAR_ROUTES.map(r => (
                     <button
                       key={`${r.from}-${r.to}`}
-                      onClick={() => { setOrigin(r.fromCity); setDestination(r.toCity); }}
+                      onClick={() => {
+                        setOrigin(r.fromCity);
+                        setDestination(r.toCity);
+                        if (!departureDate) {
+                          const tomorrow = new Date();
+                          tomorrow.setDate(tomorrow.getDate() + 1);
+                          setDepartureDate(tomorrow.toISOString().split('T')[0]);
+                        }
+                      }}
                       className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition text-left"
                     >
                       <span className="text-xs font-mono text-emerald-700 font-bold">{r.from}</span>
@@ -467,11 +800,11 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
               {/* Search Button */}
               <button
                 onClick={handleSearch}
-                disabled={!origin || !destination || !departureDate || origin === destination}
+                disabled={!origin || !destination || !departureDate || origin.trim().toLowerCase() === destination.trim().toLowerCase()}
                 className="w-full py-3.5 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm tracking-wide transition-all shadow-lg shadow-emerald-700/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 <Search size={17} />
-                Search Flights
+                Search Transport Options
               </button>
             </div>
           )}
@@ -479,6 +812,67 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
           {/* ─── STEP: RESULTS ─── */}
           {step === 'results' && (
             <div className="flex flex-col h-full">
+              {/* Transport Mode Tabs */}
+              <div className="flex items-center gap-2 px-5 pt-3 pb-2 border-b border-slate-100 bg-white flex-shrink-0">
+                <span className="text-xs font-semibold text-slate-500 mr-1">Modes:</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedMode('all')}
+                  className={`text-xs px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 ${
+                    selectedMode === 'all'
+                      ? 'bg-emerald-700 text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900 bg-slate-100 border border-slate-200'
+                  }`}
+                >
+                  All ({flights.length + trains.length + buses.length})
+                </button>
+
+                {availableModes.includes('flight') && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedMode('flight')}
+                    className={`text-xs px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 ${
+                      selectedMode === 'flight'
+                        ? 'bg-emerald-700 text-white shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900 bg-slate-100 border border-slate-200'
+                    }`}
+                  >
+                    <Plane size={13} />
+                    Flight ({flights.length})
+                  </button>
+                )}
+
+                {availableModes.includes('train') && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedMode('train')}
+                    className={`text-xs px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 ${
+                      selectedMode === 'train'
+                        ? 'bg-emerald-700 text-white shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900 bg-slate-100 border border-slate-200'
+                    }`}
+                  >
+                    <Train size={13} />
+                    Train ({trains.length})
+                  </button>
+                )}
+
+                {availableModes.includes('bus') && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedMode('bus')}
+                    className={`text-xs px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 ${
+                      selectedMode === 'bus'
+                        ? 'bg-emerald-700 text-white shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900 bg-slate-100 border border-slate-200'
+                    }`}
+                  >
+                    <Bus size={13} />
+                    Bus ({buses.length})
+                  </button>
+                )}
+              </div>
+
               {/* Filter / Sort Bar */}
               <div className="flex items-center gap-3 px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex-shrink-0">
                 <Filter size={13} className="text-slate-500" />
@@ -502,21 +896,23 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                 </div>
               </div>
 
-              {/* Flight List */}
+              {/* Transport Options List */}
               <div className="p-4 space-y-3 overflow-y-auto bg-slate-50/40">
-                {sortedFlights.length === 0 ? (
+                {unifiedOptions.length === 0 ? (
                   <div className="py-12 text-center text-slate-500">
                     <Plane size={36} className="mx-auto mb-3 opacity-30 text-slate-400" />
-                    <p className="font-medium">No flights found for this route on the selected date.</p>
+                    <p className="font-medium">No transport options found for this route on the selected date.</p>
                   </div>
                 ) : (
-                  sortedFlights.map(f => (
-                    <FlightCard
-                      key={f.id}
-                      flight={f}
+                  unifiedOptions.map(item => (
+                    <TransportCard
+                      key={`${item.type}-${item.data.id}`}
+                      item={item}
                       cabin={cabin}
                       passengers={passengers}
-                      onSelect={handleFlightSelect}
+                      onSelectFlight={handleFlightSelect}
+                      isCheapest={Math.abs(item.priceBase - minOverallPrice) < 0.01}
+                      isFastest={item.durationMinutes === minOverallDuration}
                     />
                   ))
                 )}
