@@ -5,12 +5,15 @@ import {
   processUnifiedBundleCheckout,
   searchIntegratedOffers,
   type BundledBookingItem,
-  type UnifiedBundleBookingResult
-} from '@/services/bookingIntegrationService';
-import { getStoredTrips } from '@/services/tripService';
-import { useCurrency } from '@/context/CurrencyContext';
-import OtpVerificationView from '@/components/Payment/OtpVerificationView';
-
+  type UnifiedBundleBookingResult,
+  type BundleSearchOptions,
+} from "@/services/bookingIntegrationService";
+import { AIRPORTS, resolveAirportCode } from "@/services/flightService";
+import { getPlanningContext } from "@/services/planningContext";
+import { formatMoney } from "@/services/money";
+import type { TransportItem } from "@/services/transportService";
+import type { Hotel } from "@/services/hotelService";
+import BookingImage from "./BookingImage";
 export interface UnifiedBundleBookingModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -27,14 +30,61 @@ export default function UnifiedBundleBookingModal({
   currentUser,
   onBookingConfirmed,
 }: UnifiedBundleBookingModalProps) {
-  const { currency, formatUSD } = useCurrency();
-  const [selectedItems, setSelectedItems] = useState<BundledBookingItem[]>(SAMPLE_BUNDLE_ITEMS);
-  const [selectedTripId, setSelectedTripId] = useState<string>('trip-user-01');
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'upi' | 'wallet' | 'netbanking'>('card');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [bookingSuccess, setBookingSuccess] = useState<UnifiedBundleBookingResult | null>(null);
-  const [showOtp, setShowOtp] = useState(false);
-
+  const today = new Date().toISOString().slice(0, 10);
+  const context = getPlanningContext();
+  const [date, setDate] = useState(
+    context.trip?.startDate && context.trip.startDate >= today
+      ? context.trip.startDate
+      : new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10),
+  );
+  const [origin, setOrigin] = useState(
+    resolveAirportCode(destination) === "DEL" ? "BOM" : "DEL",
+  );
+  const [passengers, setPassengers] = useState(
+    context.trip?.travelMode === "group"
+      ? Math.min(20, Math.max(1, context.members.length))
+      : 1,
+  );
+  const [rooms, setRooms] = useState(Math.ceil(passengers / 2));
+  const [nights, setNights] = useState(3);
+  const [tier, setTier] = useState<BundleSearchOptions["tier"]>("essential");
+  const [items, setItems] = useState<BundledBookingItem[]>([]);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState<UnifiedBundleBookingResult | null>(
+    null,
+  );
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError("");
+    void searchIntegratedOffers(destination, date, {
+      originCode: origin,
+      passengers,
+      rooms,
+      nights,
+      tier,
+    })
+      .then((offers) => {
+        if (!cancelled) {
+          const result = offers[0]?.items || [];
+          setItems(result);
+          setSelected(result.map((item) => item.id));
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setError("Could not price this package. Please try again.");
+          setLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [destination, date, origin, passengers, rooms, nights, tier]);
   if (!isOpen) return null;
   const chosen = items.filter((item) => selected.includes(item.id));
   const pricing = calculateBundlePricing(chosen);
@@ -59,33 +109,6 @@ export default function UnifiedBundleBookingModal({
       setProcessing(false);
     }
   };
-
-  const handleProceedToOtp = (e: React.FormEvent) => {
-    e.preventDefault();
-    setShowOtp(true);
-  };
-
-  const handleCheckoutAfterOtp = async () => {
-    setIsProcessing(true);
-
-    const result = await processUnifiedBundleCheckout({
-      userId: currentUser.id || 'usr-demo-01',
-      customerName: currentUser.name,
-      customerEmail: currentUser.email,
-      items: selectedItems,
-      tripId: selectedTripId || undefined,
-      paymentMethod,
-      currency,
-    });
-
-    setIsProcessing(false);
-    if (result.success) {
-      setShowOtp(false);
-      setBookingSuccess(result);
-      if (onBookingConfirmed) onBookingConfirmed(result);
-    }
-  };
-
   return (
     <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
       <section
@@ -102,127 +125,33 @@ export default function UnifiedBundleBookingModal({
           <button aria-label="Close bundle" onClick={onClose}>
             <X />
           </button>
-        </div>
-
-        {/* Modal Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {bookingSuccess ? (
-            <div className="text-center py-8 space-y-5 animate-fade-in">
-              <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center mx-auto shadow-sm">
-                <CheckCircle2 size={36} />
-              </div>
-
-              <div>
-                <h3 className="text-xl font-bold text-slate-900">Unified Travel Bundle Confirmed!</h3>
-                <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
-                  All selected reservations have been booked together and auto-synced with your Trip Workspace itinerary & split ledger.
-                </p>
-              </div>
-
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 max-w-lg mx-auto text-left space-y-3 shadow-sm">
-                <div className="flex items-center justify-between text-xs pb-2 border-b border-slate-200">
-                  <span className="text-slate-500">Bundle Booking Reference</span>
-                  <span className="font-mono font-bold text-emerald-800">{bookingSuccess.bundleReference}</span>
-                </div>
-                <div className="flex items-center justify-between text-xs pb-2 border-b border-slate-200">
-                  <span className="text-slate-500">Total Services Booked</span>
-                  <span className="font-bold text-slate-900">{bookingSuccess.bookedItems.length} Services</span>
-                </div>
-                <div className="flex items-center justify-between text-xs pb-2 border-b border-slate-200">
-                  <span className="text-slate-500">Bundle Discount Saved</span>
-                  <span className="font-bold text-emerald-700">-{formatUSD(bookingSuccess.discountAmount)} (15% OFF)</span>
-                </div>
-                <div className="flex items-center justify-between text-sm pt-1 font-bold">
-                  <span className="text-slate-900">Total Amount Paid</span>
-                  <span className="text-slate-900">{formatUSD(bookingSuccess.finalPaidAmount)}</span>
-                </div>
-              </div>
-
-              <button
-                onClick={onClose}
-                className="px-6 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-md shadow-emerald-700/20"
-              >
-                Back to Dashboard
-              </button>
-            </div>
-          ) : showOtp ? (
-            <div className="max-w-lg mx-auto py-4">
-              <OtpVerificationView
-                userId={currentUser.id || 'usr-demo-01'}
-                amount={pricing.totalAmount}
-                currency={currency}
-                bookingReference="BDL-CHECKOUT"
-                onVerified={handleCheckoutAfterOtp}
-                onCancel={() => setShowOtp(false)}
-                isProcessing={isProcessing}
-              />
-            </div>
-          ) : (
-            <form onSubmit={handleProceedToOtp} className="space-y-6">
-              {/* Bundle Items Selector */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-600">
-                    Included Travel Services ({selectedItems.length} selected)
-                  </h4>
-                  {pricing.discountPercentage > 0 && (
-                    <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
-                      <Percent size={12} />
-                      <span>{pricing.discountPercentage}% Multi-Service Bundle Discount Applied</span>
-                    </span>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {SAMPLE_BUNDLE_ITEMS.map((item) => {
-                    const isSelected = selectedItems.some((i) => i.id === item.id);
-                    const Icon = item.type === 'flight' ? Plane : item.type === 'hotel' ? Hotel : Car;
-
-                    return (
-                      <div
-                        key={item.id}
-                        onClick={() => toggleItem(item)}
-                        className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
-                          isSelected
-                            ? 'bg-emerald-50/70 border-emerald-500 shadow-md ring-1 ring-emerald-500/30'
-                            : 'bg-slate-50/80 border-slate-200 opacity-60 hover:opacity-100'
-                        }`}
-                      >
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="p-2 rounded-xl bg-emerald-100/70 text-emerald-800 border border-emerald-200">
-                              <Icon size={16} />
-                            </div>
-                            <span className="text-xs font-bold text-slate-900">{formatUSD(item.price)}</span>
-                          </div>
-                          <h5 className="text-xs font-bold text-slate-900">{item.title}</h5>
-                          <p className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
-                            <MapPin size={10} className="text-emerald-700 flex-shrink-0" />
-                            <span className="truncate">{item.subTitle}</span>
-                          </p>
-                        </div>
-
-                        <div className="mt-3 pt-2 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-500">
-                          <span>{item.date}</span>
-                          <span className={`px-2 py-0.5 rounded font-bold ${isSelected ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}`}>
-                            {isSelected ? 'Included' : '+ Add'}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Workspace Sync Dropdown */}
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                    <Sparkles size={14} className="text-emerald-700" />
-                    <span>Auto-Sync Itinerary to Trip Workspace</span>
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-medium">Optional</span>
-                </div>
+        </header>
+        {success ? (
+          <div role="status">
+            <Check />
+            <h3>Package confirmed</h3>
+            <p>{success.bundleReference}</p>
+            <p>
+              Paid {formatMoney(success.finalPaidAmount, "INR")}. Your trip and
+              expense ledger are ready.
+            </p>
+            <button className="workflow-primary" onClick={onClose}>
+              Continue to my trip
+            </button>
+          </div>
+        ) : (
+          <>
+            <p className="workflow-hint">
+              Build your package for {destination}. Prices below reflect your
+              selected dates, class and quantities. Sample inventory; payments
+              use test money.
+            </p>
+            <fieldset
+              disabled={processing}
+              className="booking-package-controls"
+            >
+              <label>
+                Departure airport
                 <select
                   aria-label="Package departure airport"
                   value={origin}
@@ -363,37 +292,35 @@ export default function UnifiedBundleBookingModal({
                     );
                   })}
                 </div>
-              </div>
-
-              {/* Cost Summary & Pay Button */}
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-3 shadow-sm">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500">Total Services Subtotal</span>
-                  <span className="font-bold text-slate-900">{formatUSD(pricing.subtotal)}</span>
-                </div>
-                {pricing.discountAmount > 0 && (
-                  <div className="flex items-center justify-between text-xs text-emerald-700 font-semibold">
-                    <span>Bundle Saver Discount ({pricing.discountPercentage}%)</span>
-                    <span>-{formatUSD(pricing.discountAmount)}</span>
-                  </div>
-                )}
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500">Taxes & Service GST (5%)</span>
-                  <span className="font-bold text-slate-900">{formatUSD(pricing.taxAmount)}</span>
-                </div>
-                <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
-                  <div>
-                    <span className="text-xs text-slate-500 block">Final Bundle Total</span>
-                    <span className="text-xl font-black text-slate-900">{formatUSD(pricing.totalAmount)}</span>
-                  </div>
-
+                <div className="workflow-bundle-total">
+                  <p>
+                    Selected services subtotal
+                    <strong>{formatMoney(pricing.subtotal, "INR")}</strong>
+                  </p>
+                  <p>
+                    Package savings ({pricing.discountPercentage}%)
+                    <strong>
+                      −{formatMoney(pricing.discountAmount, "INR")}
+                    </strong>
+                  </p>
+                  <p>
+                    Demo service charge (5%)
+                    <strong>{formatMoney(pricing.taxAmount, "INR")}</strong>
+                  </p>
+                  <p>
+                    Total for your package
+                    <strong data-testid="package-total">
+                      {formatMoney(pricing.totalAmount, "INR")}
+                    </strong>
+                  </p>
                   <button
                     className="workflow-primary"
                     disabled={processing || !chosen.length}
                     onClick={() => void checkout()}
                   >
-                    <span>{isProcessing ? 'Processing...' : 'Proceed to Security Verification'}</span>
-                    <ArrowRight size={14} />
+                    {processing
+                      ? "Opening checkout…"
+                      : `Continue to payment · ${formatMoney(pricing.totalAmount, "INR")}`}
                   </button>
                 </div>
               </>
