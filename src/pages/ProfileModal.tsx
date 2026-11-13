@@ -53,7 +53,7 @@ const TRAVEL_STYLES = [
 ];
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
-  const { user, updateProfile, switchRole } = useAuth();
+  const { user, updateProfile } = useAuth();
   const { currency: globalCurrency, setCurrency: setGlobalCurrency } = useCurrency();
 
   const [name, setName] = useState('');

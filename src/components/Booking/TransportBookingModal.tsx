@@ -7,7 +7,7 @@ import { getPlanningContext } from '@/services/planningContext';
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Car, MapPin, Calendar, Users, ArrowRight, Search, X, CheckCircle2, Star, ShieldCheck, Clock, Navigation, Shield, Luggage, SlidersHorizontal, RefreshCw } from 'lucide-react';
+import { Car, MapPin, Calendar, Users, ArrowRight, Search, X, CheckCircle2, Star, ShieldCheck, Clock, Navigation, Shield, Luggage, SlidersHorizontal, RefreshCw, Sparkles } from 'lucide-react';
 import { searchTransport, bookTransport, getTransportTypeLabel, getTransportIcon, formatTransportDuration, type TransportItem, type TransportType, type TransportModeFilter, type TransportBookingDetails } from '@/services/transportService';
 import { PaymentView } from '@/components/Payment/PaymentModal';
 import { useCurrency } from '@/context/CurrencyContext';
