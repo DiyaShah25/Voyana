@@ -75,6 +75,8 @@ export const AIRPORTS: Record<string, Airport> = {
   BKK: { code: 'BKK', city: 'Bangkok', country: 'Thailand', name: 'Suvarnabhumi Airport' },
   GIG: { code: 'GIG', city: 'Rio de Janeiro', country: 'Brazil', name: 'Galeão International Airport' },
   DEL: { code: 'DEL', city: 'New Delhi', country: 'India', name: 'Indira Gandhi International Airport' },
+  SXR: { code: 'SXR', city: 'Srinagar', country: 'India', name: 'Sheikh ul-Alam International Airport' },
+  IXZ: { code: 'IXZ', city: 'Port Blair', country: 'India', name: 'Veer Savarkar International Airport' },
 };
 
 // City name to primary airport mapping
@@ -94,6 +96,10 @@ export const CITY_TO_AIRPORT: Record<string, string> = {
   'rio': 'GIG',
   'new delhi': 'DEL',
   'delhi': 'DEL',
+  'srinagar': 'SXR',
+  'kashmir': 'SXR',
+  'port blair': 'IXZ',
+  'andaman': 'IXZ',
 };
 
 // ---------------------------------------------------------------------------
