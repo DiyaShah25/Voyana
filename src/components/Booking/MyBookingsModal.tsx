@@ -7,7 +7,7 @@ import { formatMoney } from '@/services/money';
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Briefcase, Plane, Building2, Car, ArrowRight, X, CheckCircle2, Search, Trash2, Edit3, RefreshCw } from 'lucide-react';
+import { Briefcase, Plane, Building2, Car, ArrowRight, X, CheckCircle2, Search, Trash2, Edit3, RefreshCw, Sparkles } from 'lucide-react';
 import {
   getUserBookings,
   modifyBooking,
