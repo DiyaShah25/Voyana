@@ -10,6 +10,7 @@ import {
   Camera, X, Heart, MapPin, Calendar, Tag, Search, ZoomIn, Download,
   Trash2, Plus, Clock, Grid3X3, Image as ImageIcon, Sparkles, ChevronDown,
   Upload, CheckCircle2, Video, FolderOpen, Play, Film, Filter,
+  ChevronLeft, ChevronRight, FolderPlus,
 } from 'lucide-react';
 import { getAllMemories, uploadTripMemory, likeTripMemory, deleteTripMemory, generateAiJournalStory, type TripMemory } from '@/services/collaborationService';
 import { getUserTrips, type Trip } from '@/services/tripService';
@@ -47,6 +48,9 @@ export default function TravelMemoriesModal({
 
   // ── Albums ────────────────────────────────────────────────────────────
   const [selectedAlbum, setSelectedAlbum] = useState<string | null>(null);
+  const [showNewFolderModal, setShowNewFolderModal] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [newFolderDestination, setNewFolderDestination] = useState('');
 
   // ── Lightbox ──────────────────────────────────────────────────────────
   const [lightboxMemory, setLightboxMemory] = useState<TripMemory | null>(null);
@@ -488,14 +492,74 @@ export default function TravelMemoriesModal({
             /* ── Albums View ──────────────────────────────────────── */
             selectedAlbum ? (
               <div>
-                <button onClick={() => setSelectedAlbum(null)}
-                  className="mb-5 flex items-center gap-2 text-xs font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl transition">
-                  ← Back to Albums
-                </button>
+                {/* Album Header Banner */}
+                {(() => {
+                  const albumItems = allMemories.filter(m => m.tripId === selectedAlbum);
+                  const trip = userTrips.find(t => t.id === selectedAlbum);
+                  const tripName = trip?.title || (
+                    selectedAlbum === 'trip-user-01' ? 'Autumn in Paris & Provence' :
+                    selectedAlbum === 'trip-user-02' ? 'Tokyo Cyberpunk & Ancient Temples' :
+                    selectedAlbum === 'trip-user-03' ? 'Swiss Alps & Scenic Lakes' : selectedAlbum
+                  );
+                  const tripDest = trip?.destination || (
+                    selectedAlbum === 'trip-user-01' ? 'Paris, France' :
+                    selectedAlbum === 'trip-user-02' ? 'Tokyo, Japan' :
+                    selectedAlbum === 'trip-user-03' ? 'Zermatt, Switzerland' : ''
+                  );
+                  const vids = albumItems.filter(m => (m as any).mediaType === 'video').length;
+                  const photos = albumItems.length - vids;
+
+                  return (
+                    <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-slate-50 border border-emerald-200/80 shadow-sm flex flex-wrap items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => setSelectedAlbum(null)}
+                          className="flex items-center gap-1 text-xs font-bold text-emerald-800 bg-white border border-emerald-300 px-3 py-1.5 rounded-xl shadow-sm hover:bg-emerald-50 transition"
+                        >
+                          <ChevronLeft size={14} /> Back to Folders
+                        </button>
+                        <div>
+                          <h3 className="text-base font-bold text-slate-900">{tripName}</h3>
+                          <div className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
+                            {tripDest && <span className="flex items-center gap-1"><MapPin size={11} className="text-rose-500" />{tripDest}</span>}
+                            <span>·</span>
+                            <span>{photos} photos</span>
+                            <span>·</span>
+                            <span className="text-violet-700 font-semibold">{vids} videos</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {albumItems.length > 0 && (
+                          <button
+                            onClick={() => setLightboxMemory(albumItems[0])}
+                            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 text-xs font-bold shadow-sm hover:bg-slate-50 hover:text-emerald-700 transition"
+                          >
+                            <Play size={12} className="text-emerald-600 fill-emerald-600" /> Slideshow
+                          </button>
+                        )}
+                        <button
+                          onClick={() => { setUploadTripTarget(selectedAlbum); setShowUploadForm(true); }}
+                          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold shadow-md shadow-emerald-700/20 transition-all hover:scale-105"
+                        >
+                          <Upload size={13} /> Add Media to Folder
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {allMemories.filter(m => m.tripId === selectedAlbum).length === 0 ? (
-                  <div className="text-center py-16 text-slate-400">
-                    <FolderOpen size={36} className="mx-auto mb-3 opacity-30" />
-                    <p className="font-medium">This album is empty</p>
+                  <div className="text-center py-16 text-slate-400 border-2 border-dashed border-slate-200 rounded-3xl">
+                    <FolderOpen size={36} className="mx-auto mb-3 opacity-30 text-slate-400" />
+                    <p className="font-medium text-slate-600">This folder has no memories yet</p>
+                    <button
+                      onClick={() => { setUploadTripTarget(selectedAlbum); setShowUploadForm(true); }}
+                      className="mt-3 px-4 py-2 rounded-xl bg-emerald-700 text-white text-xs font-bold shadow"
+                    >
+                      Upload First Memory
+                    </button>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -507,10 +571,19 @@ export default function TravelMemoriesModal({
               </div>
             ) : (
               <div>
-                <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
-                  <FolderOpen size={16} className="text-amber-600" />
-                  Trip Albums ({albumCount})
-                </h3>
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                    <FolderOpen size={16} className="text-amber-600" />
+                    Trip Albums & Folders ({albumCount})
+                  </h3>
+                  <button
+                    onClick={() => setShowNewFolderModal(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 text-xs font-bold shadow-sm transition"
+                  >
+                    <FolderPlus size={14} className="text-emerald-700" />
+                    <span>New Album Folder</span>
+                  </button>
+                </div>
                 {albumCount === 0 ? (
                   <div className="text-center py-16 border-2 border-dashed border-slate-200 rounded-3xl">
                     <FolderOpen size={36} className="mx-auto mb-3 opacity-30 text-slate-400" />
@@ -654,6 +727,35 @@ export default function TravelMemoriesModal({
                 <video src={lightboxMemory.imageUrl} className="w-full h-full object-contain" controls autoPlay muted />
               ) : (
                 <img src={lightboxMemory.imageUrl} alt={lightboxMemory.title} className="w-full h-full object-contain" />
+              )}
+              {/* Prev / Next buttons */}
+              {sortedMemories.length > 1 && (
+                <>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const curIdx = sortedMemories.findIndex(m => m.id === lightboxMemory.id);
+                      const prevIdx = curIdx > 0 ? curIdx - 1 : sortedMemories.length - 1;
+                      setLightboxMemory(sortedMemories[prevIdx]);
+                    }}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/60 hover:bg-black/90 text-white shadow-xl transition"
+                    title="Previous memory"
+                  >
+                    <ChevronLeft size={22} />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const curIdx = sortedMemories.findIndex(m => m.id === lightboxMemory.id);
+                      const nextIdx = curIdx < sortedMemories.length - 1 ? curIdx + 1 : 0;
+                      setLightboxMemory(sortedMemories[nextIdx]);
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/60 hover:bg-black/90 text-white shadow-xl transition"
+                    title="Next memory"
+                  >
+                    <ChevronRight size={22} />
+                  </button>
+                </>
               )}
               <button onClick={() => setLightboxMemory(null)} className="absolute top-4 right-4 p-2 rounded-full bg-white/90 text-slate-800 hover:bg-white shadow-lg transition-all">
                 <X size={18} />
@@ -894,6 +996,79 @@ export default function TravelMemoriesModal({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── CREATE NEW ALBUM FOLDER MODAL ───────────────────────── */}
+      {showNewFolderModal && (
+        <div className="fixed inset-0 z-[1260] flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-sm bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700">
+                  <FolderPlus size={18} />
+                </div>
+                <h3 className="text-base font-bold text-slate-900">New Album Folder</h3>
+              </div>
+              <button onClick={() => setShowNewFolderModal(false)} className="p-1 text-slate-400 hover:text-slate-700">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Trip / Album Title *</label>
+                <input
+                  type="text"
+                  value={newFolderName}
+                  onChange={e => setNewFolderName(e.target.value)}
+                  placeholder="e.g. Summer Vacation in Bali"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 shadow-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Destination</label>
+                <input
+                  type="text"
+                  value={newFolderDestination}
+                  onChange={e => setNewFolderDestination(e.target.value)}
+                  placeholder="e.g. Bali, Indonesia"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 shadow-sm"
+                />
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowNewFolderModal(false)}
+                className="px-3.5 py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={!newFolderName.trim()}
+                onClick={() => {
+                  const newTripId = `trip-${Date.now()}`;
+                  const createdTrip: Trip = {
+                    id: newTripId,
+                    title: newFolderName.trim(),
+                    destination: newFolderDestination.trim() || newFolderName.trim(),
+                  } as any;
+                  setUserTrips(prev => [createdTrip, ...prev]);
+                  setUploadTripTarget(newTripId);
+                  setShowNewFolderModal(false);
+                  setNewFolderName('');
+                  setNewFolderDestination('');
+                  setSelectedAlbum(newTripId);
+                }}
+                className="px-4 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow disabled:opacity-40 transition"
+              >
+                Create Folder
+              </button>
+            </div>
           </div>
         </div>
       )}
