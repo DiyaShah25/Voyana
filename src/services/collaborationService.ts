@@ -1024,6 +1024,21 @@ export async function updateTripMemory(
   } catch (err) {
     console.warn('[collaborationService] updateTripMemory API failed:', err);
   }
+
+  // Fallback update in local storage
+  try {
+    const raw = localStorage.getItem(MEMORIES_KEY);
+    const store = raw ? JSON.parse(raw) : INITIAL_MEMORIES;
+    for (const tripId of Object.keys(store)) {
+      const idx = store[tripId].findIndex((m: TripMemory) => m.id === memoryId);
+      if (idx > -1) {
+        store[tripId][idx] = { ...store[tripId][idx], ...updates };
+        localStorage.setItem(MEMORIES_KEY, JSON.stringify(store));
+        return { success: true, memory: store[tripId][idx] };
+      }
+    }
+  } catch {}
+
   return { success: false };
 }
 

@@ -10,10 +10,13 @@ import {
   Camera, X, Heart, MapPin, Calendar, Tag, Search, ZoomIn, Download,
   Trash2, Plus, Clock, Grid3X3, Image as ImageIcon, Sparkles, ChevronDown,
   Upload, CheckCircle2, Video, FolderOpen, Play, Film, Filter,
-  ChevronLeft, ChevronRight, FolderPlus,
+  ChevronLeft, ChevronRight, FolderPlus, Pencil,
 } from 'lucide-react';
-import { getAllMemories, uploadTripMemory, likeTripMemory, deleteTripMemory, generateAiJournalStory, type TripMemory } from '@/services/collaborationService';
-import { getUserTrips, type Trip } from '@/services/tripService';
+import {
+  getAllMemories, uploadTripMemory, likeTripMemory, deleteTripMemory,
+  updateTripMemory, generateAiJournalStory, type TripMemory,
+} from '@/services/collaborationService';
+import { getUserTrips, deleteTrip, type Trip } from '@/services/tripService';
 
 export interface TravelMemoriesModalProps {
   isOpen: boolean;
@@ -51,6 +54,17 @@ export default function TravelMemoriesModal({
   const [showNewFolderModal, setShowNewFolderModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [newFolderDestination, setNewFolderDestination] = useState('');
+
+  // ── Rename / Edit State ───────────────────────────────────────────────
+  const [editingMemory, setEditingMemory] = useState<TripMemory | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editCaption, setEditCaption] = useState('');
+  const [editLocation, setEditLocation] = useState('');
+  const [editTags, setEditTags] = useState('');
+
+  const [renamingAlbum, setRenamingAlbum] = useState<{ id: string; title: string; destination: string } | null>(null);
+  const [renameTitle, setRenameTitle] = useState('');
+  const [renameDest, setRenameDest] = useState('');
 
   // ── Lightbox ──────────────────────────────────────────────────────────
   const [lightboxMemory, setLightboxMemory] = useState<TripMemory | null>(null);
@@ -180,6 +194,63 @@ export default function TravelMemoriesModal({
     setAllMemories(prev => prev.filter(m => m.id !== mem.id));
     if (lightboxMemory?.id === mem.id) setLightboxMemory(null);
     await deleteTripMemory(mem.tripId, mem.id);
+  };
+
+  const handleStartEditMemory = (mem: TripMemory, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setEditingMemory(mem);
+    setEditTitle(mem.title);
+    setEditCaption(mem.caption || '');
+    setEditLocation(mem.locationName || '');
+    setEditTags(mem.tags?.join(', ') || '');
+  };
+
+  const handleSaveEditMemory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMemory || !editTitle.trim()) return;
+    const parsedTags = editTags.split(',').map(t => t.trim().replace(/^#/, '')).filter(t => t.length > 0);
+    const updates: Partial<TripMemory> = {
+      title: editTitle.trim(),
+      caption: editCaption.trim() || undefined,
+      locationName: editLocation.trim() || undefined,
+      tags: parsedTags.length > 0 ? parsedTags : editingMemory.tags,
+    };
+
+    setAllMemories(prev => prev.map(m => m.id === editingMemory.id ? { ...m, ...updates } : m));
+    if (lightboxMemory?.id === editingMemory.id) {
+      setLightboxMemory({ ...lightboxMemory, ...updates });
+    }
+    await updateTripMemory(editingMemory.id, updates);
+    setEditingMemory(null);
+  };
+
+  const handleStartRenameAlbum = (tripId: string, currentTitle: string, currentDest: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setRenamingAlbum({ id: tripId, title: currentTitle, destination: currentDest });
+    setRenameTitle(currentTitle);
+    setRenameDest(currentDest);
+  };
+
+  const handleSaveRenameAlbum = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!renamingAlbum || !renameTitle.trim()) return;
+    setUserTrips(prev => prev.map(t => t.id === renamingAlbum.id ? {
+      ...t,
+      title: renameTitle.trim(),
+      destination: renameDest.trim() || t.destination,
+    } : t));
+    setRenamingAlbum(null);
+  };
+
+  const handleDeleteAlbum = async (tripId: string, tripTitle: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!window.confirm(`Are you sure you want to delete the album "${tripTitle}" and all its photos/videos?`)) return;
+    setUserTrips(prev => prev.filter(t => t.id !== tripId));
+    setAllMemories(prev => prev.filter(m => m.tripId !== tripId));
+    if (selectedAlbum === tripId) setSelectedAlbum(null);
+    try {
+      await deleteTrip(tripId);
+    } catch {}
   };
 
   // Load a queued file into the form
@@ -347,9 +418,22 @@ export default function TravelMemoriesModal({
               <Heart size={12} className={isLikedByMe ? 'fill-rose-500 text-rose-500' : ''} />
               <span>{mem.likes.length}</span>
             </button>
-            <button onClick={() => handleDelete(mem)} className="text-slate-400 hover:text-rose-600 p-1 rounded-md transition-colors" title="Delete memory">
-              <Trash2 size={12} />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={(e) => handleStartEditMemory(mem, e)}
+                className="text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 p-1.5 rounded-lg transition-colors"
+                title="Edit / Rename details"
+              >
+                <Pencil size={12} />
+              </button>
+              <button
+                onClick={() => handleDelete(mem)}
+                className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 p-1.5 rounded-lg transition-colors"
+                title="Delete memory"
+              >
+                <Trash2 size={12} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -530,20 +614,34 @@ export default function TravelMemoriesModal({
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         {albumItems.length > 0 && (
                           <button
                             onClick={() => setLightboxMemory(albumItems[0])}
-                            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 text-xs font-bold shadow-sm hover:bg-slate-50 hover:text-emerald-700 transition"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-800 text-xs font-bold shadow-sm hover:bg-slate-50 hover:text-emerald-700 transition"
                           >
                             <Play size={12} className="text-emerald-600 fill-emerald-600" /> Slideshow
                           </button>
                         )}
                         <button
-                          onClick={() => { setUploadTripTarget(selectedAlbum); setShowUploadForm(true); }}
-                          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold shadow-md shadow-emerald-700/20 transition-all hover:scale-105"
+                          onClick={(e) => handleStartRenameAlbum(selectedAlbum, tripName, tripDest, e)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:text-emerald-700 hover:bg-slate-50 text-xs font-bold shadow-sm transition"
+                          title="Rename Album Folder"
                         >
-                          <Upload size={13} /> Add Media to Folder
+                          <Pencil size={12} /> Rename
+                        </button>
+                        <button
+                          onClick={(e) => handleDeleteAlbum(selectedAlbum, tripName, e)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-bold shadow-sm transition"
+                          title="Delete Album Folder"
+                        >
+                          <Trash2 size={12} /> Delete
+                        </button>
+                        <button
+                          onClick={() => { setUploadTripTarget(selectedAlbum); setShowUploadForm(true); }}
+                          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold shadow-md shadow-emerald-700/20 transition-all hover:scale-105"
+                        >
+                          <Upload size={13} /> Add Media
                         </button>
                       </div>
                     </div>
@@ -637,16 +735,34 @@ export default function TravelMemoriesModal({
                             </div>
                           </div>
                           {/* Info */}
-                          <div className="p-4">
-                            <h3 className="text-sm font-bold text-slate-900 truncate">{tripName}</h3>
-                            {tripDest && (
-                              <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
-                                <MapPin size={10} className="text-rose-400" />{tripDest}
-                              </p>
-                            )}
-                            <div className="mt-2 flex items-center gap-3 text-[10px] font-semibold">
-                              {photos > 0 && <span className="flex items-center gap-1 text-emerald-700"><ImageIcon size={10} />{photos} photos</span>}
-                              {vids > 0 && <span className="flex items-center gap-1 text-violet-600"><Video size={10} />{vids} videos</span>}
+                          <div className="p-4 flex items-center justify-between">
+                            <div className="min-w-0 flex-1 pr-2">
+                              <h3 className="text-sm font-bold text-slate-900 truncate">{tripName}</h3>
+                              {tripDest && (
+                                <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1 truncate">
+                                  <MapPin size={10} className="text-rose-400 flex-shrink-0" />{tripDest}
+                                </p>
+                              )}
+                              <div className="mt-2 flex items-center gap-3 text-[10px] font-semibold">
+                                {photos > 0 && <span className="flex items-center gap-1 text-emerald-700"><ImageIcon size={10} />{photos} photos</span>}
+                                {vids > 0 && <span className="flex items-center gap-1 text-violet-600"><Video size={10} />{vids} videos</span>}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
+                              <button
+                                onClick={e => handleStartRenameAlbum(tripId, tripName, tripDest, e)}
+                                className="p-1.5 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition"
+                                title="Rename album"
+                              >
+                                <Pencil size={13} />
+                              </button>
+                              <button
+                                onClick={e => handleDeleteAlbum(tripId, tripName, e)}
+                                className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                                title="Delete album"
+                              >
+                                <Trash2 size={13} />
+                              </button>
                             </div>
                           </div>
                           <div className="absolute bottom-3 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -774,11 +890,26 @@ export default function TravelMemoriesModal({
                     <span>·</span><span>{formatDate(lightboxMemory.date)}</span>
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <button onClick={() => handleLike(lightboxMemory)}
                     className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${lightboxMemory.likes.includes(currentUser.name) ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>
                     <Heart size={14} className={lightboxMemory.likes.includes(currentUser.name) ? 'fill-rose-500 text-rose-500' : ''} />
                     <span>{lightboxMemory.likes.length} {lightboxMemory.likes.length === 1 ? 'Like' : 'Likes'}</span>
+                  </button>
+                  <button
+                    onClick={(e) => handleStartEditMemory(lightboxMemory, e)}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 text-xs font-semibold transition"
+                    title="Rename / Edit details"
+                  >
+                    <Pencil size={13} />
+                    <span>Edit</span>
+                  </button>
+                  <button
+                    onClick={() => handleDelete(lightboxMemory)}
+                    className="p-2 rounded-xl bg-slate-100 text-slate-500 hover:bg-rose-50 hover:text-rose-600 transition"
+                    title="Delete Memory"
+                  >
+                    <Trash2 size={15} />
                   </button>
                   <a href={lightboxMemory.imageUrl} target="_blank" rel="noreferrer" download
                     className="p-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors" title="Download">
@@ -1069,6 +1200,170 @@ export default function TravelMemoriesModal({
                 Create Folder
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── EDIT / RENAME MEMORY MODAL ───────────────────────── */}
+      {editingMemory && (
+        <div className="fixed inset-0 z-[1400] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
+                  <Pencil size={16} />
+                </div>
+                <h3 className="text-base font-bold text-slate-900">Edit / Rename Memory</h3>
+              </div>
+              <button onClick={() => setEditingMemory(null)} className="p-1 text-slate-400 hover:text-slate-700">
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditMemory} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Memory Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={editTitle}
+                  onChange={e => setEditTitle(e.target.value)}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 shadow-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Location</label>
+                <input
+                  type="text"
+                  value={editLocation}
+                  onChange={e => setEditLocation(e.target.value)}
+                  placeholder="e.g. Paris, France"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 shadow-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Caption / Story</label>
+                <textarea
+                  rows={2}
+                  value={editCaption}
+                  onChange={e => setEditCaption(e.target.value)}
+                  placeholder="What was memorable about this?"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 resize-none shadow-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Tags (comma-separated)</label>
+                <input
+                  type="text"
+                  value={editTags}
+                  onChange={e => setEditTags(e.target.value)}
+                  placeholder="Travel, Sunset"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 shadow-sm"
+                />
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const toDelete = editingMemory;
+                    setEditingMemory(null);
+                    handleDelete(toDelete);
+                  }}
+                  className="flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-700 p-1 transition"
+                >
+                  <Trash2 size={13} /> Delete Memory
+                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditingMemory(null)}
+                    className="px-3 py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow transition"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── RENAME ALBUM FOLDER MODAL ───────────────────────── */}
+      {renamingAlbum && (
+        <div className="fixed inset-0 z-[1400] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-sm bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700">
+                  <Pencil size={16} />
+                </div>
+                <h3 className="text-base font-bold text-slate-900">Rename Album Folder</h3>
+              </div>
+              <button onClick={() => setRenamingAlbum(null)} className="p-1 text-slate-400 hover:text-slate-700">
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveRenameAlbum} className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Album Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={renameTitle}
+                  onChange={e => setRenameTitle(e.target.value)}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 shadow-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Destination</label>
+                <input
+                  type="text"
+                  value={renameDest}
+                  onChange={e => setRenameDest(e.target.value)}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 shadow-sm"
+                />
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const toDelete = renamingAlbum;
+                    setRenamingAlbum(null);
+                    handleDeleteAlbum(toDelete.id, toDelete.title);
+                  }}
+                  className="flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-700 p-1 transition"
+                >
+                  <Trash2 size={13} /> Delete Album
+                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setRenamingAlbum(null)}
+                    className="px-3.5 py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow transition"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       )}
