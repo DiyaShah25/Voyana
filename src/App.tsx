@@ -41,7 +41,7 @@ const AdminDashboardModal = lazy(() => import('@/pages/AdminDashboardModal'));
 const DestinationDetailsModal = lazy(() => import('@/components/Destinations/DestinationDetailsModal'));
 const JourneyDetailsModal = lazy(() => import('@/components/Journeys/JourneyDetailsModal'));
 type Modal = 'flight' | 'hotel' | 'transport' | 'bundle' | 'bookings' | 'chat' | 'budget' | 'packing' | 'trips' | 'reviews' | 'memories' | 'profile' | 'admin';
-const postBookingTools: Modal[] = ['budget', 'packing', 'memories'];
+const postBookingTools: Modal[] = ['budget', 'packing'];
 const readRoute = () => window.location.hash.replace(/^#\/?/, '').split('?')[0];
 
 function MainAppContent() {
@@ -124,7 +124,7 @@ function MainAppContent() {
     setDestinationDetails(null); setJourneyDetails(null);
     if (name === 'admin' && !isAdmin) { setNotice('Administrator access is required.'); return; }
     if (['trips', 'profile', 'flight', 'hotel', 'transport', 'bundle', 'bookings', ...postBookingTools].includes(name) && !isAuthenticated) { window.location.hash = '/login'; return; }
-    if (!['trips', 'profile', 'admin', 'bookings'].includes(name) && (!current.selected || !current.destination)) { setNotice('Choose a destination in the search bar or on the globe first.'); return; }
+    if (!['trips', 'profile', 'admin', 'bookings', 'memories'].includes(name) && (!current.selected || !current.destination)) { setNotice('Choose a destination in the search bar or on the globe first.'); return; }
     if (['flight','hotel','transport','bundle'].includes(name) && !modeChosen) { setPendingBooking(name); return; }
     const booking = bookings.find(item => item.status === 'confirmed' && item.paymentStatus === 'paid' && item.tripId && matchesDestination(current.destination, item.destination || ''));
     const sharedAccess = Boolean(current.trip?.hasConfirmedBooking || (sharedTrip?.hasConfirmedBooking && sharedTrip.id === current.id));
@@ -134,11 +134,21 @@ function MainAppContent() {
       if (!bookedTrip) { setNotice('Your booking workspace could not be loaded.'); return; }
       selectPlanningTrip(bookedTrip);
     }
-    if (name === 'memories') { const trip = getPlanningContext().trip; if(trip) { setWorkspaceTrip(trip); setModal(null); } else setNotice('Open the trip workspace to create your AI travel memories.'); return; }
+    if (name === 'memories') { setWorkspaceTrip(null); setNotice(''); setModal('memories'); return; }
     if (name === 'trips') { setWorkspaceTrip(null); setNotice(''); setModal('trips'); return; }
     if (name === 'flight' && !resolveAirportCode(current.destination)) { setNotice('No supported airport for this destination. Choose a nearby city.'); return; }
     setNotice(''); setModal(name);
   };
+
+  useEffect(() => {
+    const handler = () => {
+      setWorkspaceTrip(null);
+      setNotice('');
+      setModal('memories');
+    };
+    window.addEventListener('voyana:open-memories', handler);
+    return () => window.removeEventListener('voyana:open-memories', handler);
+  }, []);
 
   const serviceRequest = useRef(requestService);
   serviceRequest.current = requestService;
@@ -204,7 +214,7 @@ function MainAppContent() {
       {modal === 'trips' && user && <WorkspaceLobby onClose={close} onOpen={trip => { selectPlanningTrip(trip); setWorkspaceTrip(trip); setModal(null); }} />}
       {workspaceTrip && user && <TripWorkspaceModal onBook={service => { selectPlanningTrip(workspaceTrip); setWorkspaceTrip(null); void requestService(service, true); }} key={workspaceTrip.id} bookingConfirmed={workspaceTrip.hasConfirmedBooking || bookings.some(item => item.tripId === workspaceTrip.id && item.status === 'confirmed' && item.paymentStatus === 'paid')} isOpen onClose={() => { setWorkspaceTrip(null); if (readRoute() === 'trips' || readRoute() === 'trip-share') window.location.hash = '/'; }} trip={workspaceTrip} onTripChange={trip => { setWorkspaceTrip(trip); selectPlanningTrip(trip); }} currentUser={userContext} />}
       {modal === 'reviews' && selected && <TravelReviewsModal isOpen onClose={close} initialTargetId={planning.destination.toLowerCase()} initialTargetTitle={planning.destination} currentUser={userContext} />}
-      {modal === 'memories' && canCollaborate && <TravelMemoriesModal isOpen onClose={close} currentUser={userContext} initialTripId={planning.id} />}
+      {modal === 'memories' && <TravelMemoriesModal isOpen onClose={close} currentUser={userContext} initialTripId={planning.id} />}
       {modal === 'profile' && user && <ProfileModal isOpen onClose={close} />}
       {modal === 'admin' && isAdmin && <AdminDashboardModal isOpen onClose={close} />}
       {destinationDetails && <DestinationDetailsModal isOpen destination={destinationDetails} onClose={() => setDestinationDetails(null)} onBookFlight={city => void selectAndBook(city, 'flight')} onBookHotel={city => void selectAndBook(city, 'hotel')} onBookTransport={city => void selectAndBook(city, 'transport')} onViewReviews={city => void selectAndBook(city, 'reviews')} onPlanTripInWorkspace={(_title, city) => void selectAndBook(city)} onAskAiGuide={(city, text) => { setPrompt(text); void selectAndBook(city, 'chat'); }} onFocusOnGlobe={city => void selectAndBook(city)} />}
