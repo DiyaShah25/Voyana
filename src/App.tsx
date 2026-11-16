@@ -63,6 +63,7 @@ function MainAppContent() {
   const [destinationDetails, setDestinationDetails] = useState<DestinationItem | null>(null);
   const [journeyDetails, setJourneyDetails] = useState<FeaturedJourney | null>(null);
   const globe = useRef<VoyanaGlobeHandle>(null);
+  const globeRef = globe;
   const selected = Boolean(planning.selected && planning.destination && !planning.destination.includes('°') && planning.destination !== 'Finding place…');
   const confirmed = bookings.find(booking => booking.status === 'confirmed' && booking.paymentStatus === 'paid' && booking.tripId && (!planning.trip || booking.tripId === planning.trip.id) && matchesDestination(planning.destination, booking.destination || ''));
   const canCollaborate = Boolean(user && (planning.trip?.hasConfirmedBooking || confirmed || (sharedTrip?.hasConfirmedBooking && sharedTrip.id === planning.id)));
@@ -117,6 +118,21 @@ function MainAppContent() {
     setModal(null);
     setNotice('');
   };
+
+  const handleSelectLocation = (loc: GlobeLocation) => selectLocation(loc);
+  const handleSelectRoute = (newRoutes: GlobeRoute[], startLocation: GlobeLocation) => {
+    setRoutes(newRoutes);
+    selectLocation(startLocation);
+  };
+  const selectedDestination: GlobeLocation = selectedLocation || {
+    name: 'Paris',
+    city: 'Paris',
+    country: 'France',
+    latitude: 48.8566,
+    longitude: 2.3522,
+    type: 'city',
+  };
+  const activeRoutes = routes;
 
   const close = () => { setModal(null); setPrompt(undefined); if (['flight', 'hotel', 'transport', 'bundle', 'bookings', 'chat', 'budget', 'packing', 'trips', 'reviews', 'memories', 'profile', 'admin'].includes(readRoute())) window.location.hash = '/'; };
   const requestService = async (name: Modal, modeChosen = false) => {
