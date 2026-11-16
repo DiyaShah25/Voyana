@@ -4,6 +4,26 @@
 -- and staging environments across bookings, payments, transports, trips, and reviews.
 -- ==============================================================================
 
+-- 0. SEED MOCK AUTH USERS (Satisfies foreign key constraints for demo users)
+INSERT INTO auth.users (
+    instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+    raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+) VALUES 
+('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000001', 'authenticated', 'authenticated', 'admin@voyana.com', '', NOW(), '{"provider":"email","providers":["email"]}', '{"name":"Admin"}', NOW(), NOW()),
+('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000002', 'authenticated', 'authenticated', 'organizer@voyana.com', '', NOW(), '{"provider":"email","providers":["email"]}', '{"name":"Organizer"}', NOW(), NOW()),
+('00000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000003', 'authenticated', 'authenticated', 'alex@voyana.com', '', NOW(), '{"provider":"email","providers":["email"]}', '{"name":"Alex Morgan"}', NOW(), NOW()),
+('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000004', 'authenticated', 'authenticated', 'diya@voyana.com', '', NOW(), '{"provider":"email","providers":["email"]}', '{"name":"Diya Shah"}', NOW(), NOW()),
+('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000005', 'authenticated', 'authenticated', 'bhavika@voyana.com', '', NOW(), '{"provider":"email","providers":["email"]}', '{"name":"Bhavika Sainani"}', NOW(), NOW()),
+('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000006', 'authenticated', 'authenticated', 'jagrat@voyana.com', '', NOW(), '{"provider":"email","providers":["email"]}', '{"name":"Jagrat Kumar"}', NOW(), NOW()),
+('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000007', 'authenticated', 'authenticated', 'megha@voyana.com', '', NOW(), '{"provider":"email","providers":["email"]}', '{"name":"Megha Lalwani"}', NOW(), NOW()),
+('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000008', 'authenticated', 'authenticated', 'tirth@voyana.com', '', NOW(), '{"provider":"email","providers":["email"]}', '{"name":"Tirth Gandhi"}', NOW(), NOW())
+ON CONFLICT (id) DO NOTHING;
+
+-- Temporarily bypass triggers during bulk seed
+ALTER TABLE public.trips DISABLE TRIGGER ALL;
+ALTER TABLE public.bookings DISABLE TRIGGER ALL;
+ALTER TABLE public.payments DISABLE TRIGGER ALL;
+
 -- 1. CLEANUP (Idempotent seed preparation)
 TRUNCATE TABLE public.travel_reviews CASCADE;
 TRUNCATE TABLE public.payments CASCADE;
@@ -211,4 +231,10 @@ INSERT INTO public.travel_reviews (
     19,
     true
 );
+
+-- Re-enable triggers and foreign key checks
+ALTER TABLE public.trips ENABLE TRIGGER ALL;
+ALTER TABLE public.bookings ENABLE TRIGGER ALL;
+ALTER TABLE public.payments ENABLE TRIGGER ALL;
+
 
