@@ -17,6 +17,7 @@ import {
   updateTripMemory, generateAiJournalStory, type TripMemory,
 } from '@/services/collaborationService';
 import { getUserTrips, deleteTrip, type Trip } from '@/services/tripService';
+import { uploadMemoryMedia } from '@/services/supabaseStorage';
 
 export interface TravelMemoriesModalProps {
   isOpen: boolean;
@@ -309,13 +310,23 @@ export default function TravelMemoriesModal({
     if (!uploadTitle.trim() || !uploadImageUrl.trim()) return;
     setIsSubmitting(true);
     try {
+      let finalImageUrl = uploadImageUrl.trim();
+      const currentQueueItem = uploadQueue[uploadQueueIndex];
+      if (currentQueueItem?.file) {
+        // Direct binary upload to Supabase Storage bucket 'trip-memories'
+        const uploaded = await uploadMemoryMedia(uploadTripTarget, currentQueueItem.file);
+        if (uploaded.url) {
+          finalImageUrl = uploaded.url;
+        }
+      }
+
       const parsedTags = uploadTags.split(',').map(t => t.trim().replace(/^#/, '')).filter(t => t.length > 0);
       const saved = await uploadTripMemory(uploadTripTarget, {
         uploadedBy: currentUser.name,
         title: uploadTitle.trim(),
         caption: uploadCaption.trim() || undefined,
         locationName: uploadLocation.trim() || undefined,
-        imageUrl: uploadImageUrl.trim(),
+        imageUrl: finalImageUrl,
         date: new Date().toISOString().split('T')[0],
         tags: parsedTags.length > 0 ? parsedTags : ['Travel', 'Moments'],
         mediaType: uploadMediaType,
