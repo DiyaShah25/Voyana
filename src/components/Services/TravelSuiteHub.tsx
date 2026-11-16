@@ -10,7 +10,7 @@ interface Props {
 export default function TravelSuiteHub(props: Props) {
   const { destination, hasBooking, services } = props;
   const cards = destination ? [
-    ...(services.flights ? [{ title: 'Flights', text: `Choose your departure airport. Every flight arrives in ${destination}.`, icon: Plane, action: props.onOpenFlight, label: `Book flights to ${destination}` }] : []),
+    ...(services.flights ? [{ title: 'Transport options', text: `Compare flights, trains, and buses arriving in ${destination}.`, icon: Plane, action: props.onOpenFlight, label: `Find transport to ${destination}` }] : []),
     ...(services.hotels ? [{ title: 'Stay somewhere lovely', text: `Browse the sample hotel collection in ${destination}.`, icon: Building2, action: props.onOpenHotel, label: `Find hotels in ${destination}` }] : []),
     ...(services.transport ? [{ title: 'Arrive with a plan', text: `Transfers and ground transport for ${destination}.`, icon: Car, action: props.onOpenTransport, label: `Find transport in ${destination}` }] : []),
     ...(hasBooking ? [{ title: 'Your people, one workspace', text: 'Invite your group, arrange activities, vote on ideas and keep the conversation together.', icon: Users, action: props.onOpenTrips, label: 'Open trip workspace' }, { title: 'Every expense, accounted for', text: 'Your confirmed bookings are already in the ledger. Add your group and split costs clearly.', icon: Wallet, action: props.onOpenBudget, label: 'Split trip expenses' }, { title: 'Ready when you are', text: 'Keep a separate packing list for this trip and assign shared items to your group.', icon: Briefcase, action: props.onOpenPacking, label: 'Open packing checklist' }] : []),
