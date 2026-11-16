@@ -94,6 +94,7 @@ export interface TripMemory {
   date: string;
   likes: string[];
   tags: string[];
+  mediaType?: 'photo' | 'video';
 }
 
 // ---------------------------------------------------------------------------
@@ -254,6 +255,7 @@ const INITIAL_MEMORIES: Record<string, TripMemory[]> = {
       date: '2026-10-12',
       likes: ['Diya Shah', 'Bhavika Sainani', 'Jagrat Kumar'],
       tags: ['Sunset', 'Sightseeing', 'MustSee'],
+      mediaType: 'photo',
     },
     {
       id: 'mem-02',
@@ -266,6 +268,7 @@ const INITIAL_MEMORIES: Record<string, TripMemory[]> = {
       date: '2026-10-13',
       likes: ['Megha Lalwani', 'Bhavika Sainani'],
       tags: ['Food', 'Bakery', 'Nightlife'],
+      mediaType: 'photo',
     },
     {
       id: 'mem-03',
@@ -278,6 +281,89 @@ const INITIAL_MEMORIES: Record<string, TripMemory[]> = {
       date: '2026-10-14',
       likes: ['Megha Lalwani', 'Diya Shah', 'Jagrat Kumar'],
       tags: ['Museum', 'Art', 'Architecture'],
+      mediaType: 'photo',
+    },
+    {
+      id: 'mem-04',
+      tripId: 'trip-user-01',
+      uploadedBy: 'Alex Morgan',
+      title: 'Seine River Twilight Cruise',
+      locationName: 'Pont Alexandre III, Paris',
+      caption: 'Cruising past the illuminated bridges of Paris as the city lights twinkled.',
+      imageUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+      date: '2026-10-15',
+      likes: ['Diya Shah', 'Megha Lalwani'],
+      tags: ['Cruise', 'Nightlife', 'Video'],
+      mediaType: 'video',
+    },
+  ],
+  'trip-user-02': [
+    {
+      id: 'mem-05',
+      tripId: 'trip-user-02',
+      uploadedBy: 'Alex Morgan',
+      title: 'Shibuya Crossing Neon Rush',
+      locationName: 'Shibuya Scramble, Tokyo',
+      caption: 'Electric vibes under the mega screens in the world’s busiest pedestrian crossing!',
+      imageUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4',
+      date: '2026-09-18',
+      likes: ['Bhavika Sainani', 'Diya Shah'],
+      tags: ['Tokyo', 'CityVibes', 'Video'],
+      mediaType: 'video',
+    },
+    {
+      id: 'mem-06',
+      tripId: 'trip-user-02',
+      uploadedBy: 'Diya Shah',
+      title: 'Senso-ji Lantern Morning Glow',
+      locationName: 'Asakusa, Tokyo',
+      caption: 'Incense smoke and tranquil morning chants at Tokyo’s oldest temple.',
+      imageUrl: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=1000&auto=format&fit=crop&q=80',
+      date: '2026-09-19',
+      likes: ['Alex Morgan', 'Megha Lalwani'],
+      tags: ['Culture', 'Temples', 'Tokyo'],
+      mediaType: 'photo',
+    },
+    {
+      id: 'mem-07',
+      tripId: 'trip-user-02',
+      uploadedBy: 'Megha Lalwani',
+      title: 'Tonkotsu Ramen in Shinjuku Alley',
+      locationName: 'Omoide Yokocho, Tokyo',
+      caption: 'Rich 18-hour broth, handmade noodles, and warm chatter in a cozy 6-seat tavern.',
+      imageUrl: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=1000&auto=format&fit=crop&q=80',
+      date: '2026-09-20',
+      likes: ['Bhavika Sainani'],
+      tags: ['Foodie', 'Ramen', 'Tokyo'],
+      mediaType: 'photo',
+    },
+  ],
+  'trip-user-03': [
+    {
+      id: 'mem-08',
+      tripId: 'trip-user-03',
+      uploadedBy: 'Bhavika Sainani',
+      title: 'Glacier Express Alpine Panorama',
+      locationName: 'Zermatt, Switzerland',
+      caption: 'Snowcapped peaks, alpine wooden chalets, and crisp fresh mountain air.',
+      imageUrl: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1000&auto=format&fit=crop&q=80',
+      date: '2026-08-05',
+      likes: ['Diya Shah', 'Alex Morgan', 'Megha Lalwani'],
+      tags: ['Mountains', 'Nature', 'Alps'],
+      mediaType: 'photo',
+    },
+    {
+      id: 'mem-09',
+      tripId: 'trip-user-03',
+      uploadedBy: 'Diya Shah',
+      title: 'Lauterbrunnen Valley Waterfall Walk',
+      locationName: 'Lauterbrunnen, Switzerland',
+      caption: 'Cascading waterfalls against emerald green cliffs — looks straight out of a fairy tale.',
+      imageUrl: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1000&auto=format&fit=crop&q=80',
+      date: '2026-08-07',
+      likes: ['Bhavika Sainani', 'Alex Morgan'],
+      tags: ['Waterfalls', 'Hiking', 'Switzerland'],
+      mediaType: 'photo',
     },
   ],
 };
