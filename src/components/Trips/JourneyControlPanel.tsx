@@ -465,6 +465,30 @@ export default function JourneyControlPanel({
         <summary>
           AI travel memories · {current.photoCount || 0}/50 photos
         </summary>
+        <div style={{ margin: '0.75rem 0', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('voyana:open-memories', { detail: { tripId: current.id } }));
+            }}
+            style={{
+              background: 'linear-gradient(135deg, #059669, #0d9488)',
+              color: '#ffffff',
+              fontWeight: 700,
+              fontSize: '0.8125rem',
+              padding: '0.5rem 1rem',
+              borderRadius: '0.75rem',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              boxShadow: '0 2px 8px rgba(5, 150, 105, 0.25)',
+            }}
+          >
+            📸 Open Full Photo & Video Travel Memories Gallery
+          </button>
+        </div>
         {!completed ? (
           <p className="journey-muted">
             After your trip is completed, upload up to 50 photos. AI will write
