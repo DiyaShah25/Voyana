@@ -7,8 +7,8 @@ import { getPlanningContext } from '@/services/planningContext';
  * amenity filters, and payment integration.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Building2, MapPin, Calendar, Users, ArrowRight, Search, Filter, X, CheckCircle2, Star, Sparkles, BedDouble } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { Building2, MapPin, Calendar, Users, ArrowRight, Search, Filter, X, CheckCircle2, Star, Sparkles, BedDouble, ChevronDown } from 'lucide-react';
 import {
   searchHotels,
   bookHotel,
@@ -203,7 +203,28 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
     }
   }, [initialDestination]);
 
-  const nights = calculateNights(checkInDate, checkOutDate);
+  const [isDestOpen, setIsDestOpen] = useState(false);
+  const [destSearch, setDestSearch] = useState('');
+  const destDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleOutside = (e: MouseEvent) => {
+      if (destDropdownRef.current && !destDropdownRef.current.contains(e.target as Node)) {
+        setIsDestOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, []);
+
+  const hotelCities = useMemo(() => {
+    const seedKeys = Object.keys(SEED_HOTELS);
+    const extraCities = ['Ahmedabad', 'Mumbai', 'New Delhi', 'Srinagar', 'Jaipur', 'Goa', 'Bengaluru', 'Chandigarh', 'Pune', 'Kolkata', 'Chennai', 'Paris', 'Tokyo', 'London', 'Dubai', 'Rome', 'Singapore', 'New York'];
+    const merged = Array.from(new Set([...seedKeys, ...extraCities]));
+    const q = (destSearch || location).toLowerCase().trim();
+    if (!q) return merged.slice(0, 15);
+    return merged.filter(c => c.toLowerCase().includes(q)).slice(0, 12);
+  }, [destSearch, location]);
   const today = new Date().toISOString().split('T')[0];
 
   const handleSearch = useCallback(async () => {
@@ -343,25 +364,63 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
           {step === 'search' && (
             <div className="p-5 space-y-5">
               {/* Destination Input */}
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 relative" ref={destDropdownRef}>
                 <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
                   <MapPin size={11} className="text-emerald-700" /> Destination City
                 </label>
                 <div className="relative">
                   <input
-                    value={location}
-                    readOnly
+                    value={isDestOpen ? destSearch : location}
+                    onChange={(e) => {
+                      setDestSearch(e.target.value);
+                      setLocation(e.target.value);
+                      if (!isDestOpen) setIsDestOpen(true);
+                    }}
+                    onFocus={() => {
+                      setDestSearch(location);
+                      setIsDestOpen(true);
+                    }}
                     aria-label="Selected hotel destination"
                     placeholder="Enter city name (e.g. Paris, Tokyo, Dubai, New York, Ahmedabad)"
-                    list="hotel-dest-list"
-                    className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-600 focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition"
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-600 focus:bg-white rounded-xl pl-4 pr-9 py-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition"
                   />
-                  <datalist id="hotel-dest-list">
-                    {Object.keys(SEED_HOTELS).map((city) => (
-                      <option key={city} value={city} />
-                    ))}
-                  </datalist>
+                  <button
+                    type="button"
+                    onClick={() => setIsDestOpen(!isDestOpen)}
+                    aria-label="Toggle hotel destination dropdown"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                  >
+                    <ChevronDown size={15} className={`transition-transform duration-200 ${isDestOpen ? 'rotate-180' : ''}`} />
+                  </button>
                 </div>
+
+                {isDestOpen && (
+                  <div className="absolute z-50 left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-52 overflow-y-auto divide-y divide-slate-100 animate-in fade-in zoom-in-95 duration-100">
+                    {hotelCities.length > 0 ? (
+                      hotelCities.map((city) => (
+                        <button
+                          key={city}
+                          type="button"
+                          onClick={() => {
+                            setLocation(city);
+                            setDestSearch('');
+                            setIsDestOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-2 px-3.5 py-2.5 text-xs text-left hover:bg-emerald-50 transition-colors ${
+                            location.toLowerCase() === city.toLowerCase() ? 'bg-emerald-50 text-emerald-800 font-bold' : 'text-slate-700'
+                          }`}
+                        >
+                          <Building2 size={12} className="text-emerald-600 flex-shrink-0" />
+                          <span>{city}</span>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="p-3 text-xs text-slate-500 text-center">
+                        Type custom destination city
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Check-In / Check-Out Dates */}

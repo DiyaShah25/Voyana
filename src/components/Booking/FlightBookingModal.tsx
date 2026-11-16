@@ -7,11 +7,11 @@ import { getPlanningContext } from '@/services/planningContext';
  * and integration with payment processing.
  */
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   Plane, MapPin, Calendar, Users, ArrowRight, Search,
   Filter, X, CheckCircle2,
-  Luggage, Wifi, Coffee, Sparkles, Train, Bus,
+  Luggage, Wifi, Coffee, Sparkles, Train, Bus, ChevronDown,
 } from 'lucide-react';
 import {
   generateMockFlights,
@@ -425,6 +425,162 @@ const POPULAR_ROUTES = [
   { from: 'JFK', to: 'LHR', fromCity: 'New York', toCity: 'London' },
 ];
 
+const POPULAR_CITIES = [
+  // India
+  { name: 'Ahmedabad', code: 'AMD', region: 'India' },
+  { name: 'Chandigarh', code: 'IXC', region: 'India' },
+  { name: 'New Delhi', code: 'DEL', region: 'India' },
+  { name: 'Mumbai', code: 'BOM', region: 'India' },
+  { name: 'Srinagar', code: 'SXR', region: 'India' },
+  { name: 'Bengaluru', code: 'BLR', region: 'India' },
+  { name: 'Jaipur', code: 'JAI', region: 'India' },
+  { name: 'Goa', code: 'GOI', region: 'India' },
+  { name: 'Pune', code: 'PNQ', region: 'India' },
+  { name: 'Kolkata', code: 'CCU', region: 'India' },
+  { name: 'Chennai', code: 'MAA', region: 'India' },
+  { name: 'Hyderabad', code: 'HYD', region: 'India' },
+  { name: 'Amritsar', code: 'ATQ', region: 'India' },
+  { name: 'Port Blair', code: 'IXZ', region: 'India' },
+  { name: 'Jammu', code: 'IXJ', region: 'India' },
+  { name: 'Katra', code: 'KTRA', region: 'India' },
+  { name: 'Agra', code: 'AGR', region: 'India' },
+  { name: 'Varanasi', code: 'VNS', region: 'India' },
+  { name: 'Udaipur', code: 'UDR', region: 'India' },
+  { name: 'Surat', code: 'STV', region: 'India' },
+  { name: 'Vadodara', code: 'BDQ', region: 'India' },
+  { name: 'Lucknow', code: 'LKO', region: 'India' },
+  { name: 'Shimla', code: 'SLV', region: 'India' },
+  { name: 'Manali', code: 'KUU', region: 'India' },
+  { name: 'Dehradun', code: 'DED', region: 'India' },
+  { name: 'Kochi', code: 'COK', region: 'India' },
+  // International
+  { name: 'Paris', code: 'CDG', region: 'Europe' },
+  { name: 'London', code: 'LHR', region: 'Europe' },
+  { name: 'Rome', code: 'FCO', region: 'Europe' },
+  { name: 'Zurich', code: 'ZRH', region: 'Europe' },
+  { name: 'Barcelona', code: 'BCN', region: 'Europe' },
+  { name: 'Amsterdam', code: 'AMS', region: 'Europe' },
+  { name: 'Berlin', code: 'BER', region: 'Europe' },
+  { name: 'Tokyo', code: 'HND', region: 'Japan' },
+  { name: 'Kyoto', code: 'UKY', region: 'Japan' },
+  { name: 'Osaka', code: 'KIX', region: 'Japan' },
+  { name: 'Dubai', code: 'DXB', region: 'Middle East' },
+  { name: 'Singapore', code: 'SIN', region: 'Asia' },
+  { name: 'Bangkok', code: 'BKK', region: 'Asia' },
+  { name: 'Bali', code: 'DPS', region: 'Asia' },
+  { name: 'New York', code: 'JFK', region: 'USA' },
+  { name: 'Los Angeles', code: 'LAX', region: 'USA' },
+  { name: 'San Francisco', code: 'SFO', region: 'USA' },
+  { name: 'Sydney', code: 'SYD', region: 'Australia' },
+  { name: 'Rio de Janeiro', code: 'GIG', region: 'South America' },
+];
+
+function CitySearchDropdown({
+  value,
+  onChange,
+  placeholder,
+  icon: Icon,
+  label,
+  id,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  placeholder: string;
+  icon: React.ElementType;
+  label: string;
+  id: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const filtered = useMemo(() => {
+    const q = (searchTerm || value).toLowerCase().trim();
+    if (!q) return POPULAR_CITIES.slice(0, 16);
+    return POPULAR_CITIES.filter(
+      c => c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q) || c.region.toLowerCase().includes(q)
+    ).slice(0, 14);
+  }, [searchTerm, value]);
+
+  return (
+    <div className="space-y-1.5 relative" ref={containerRef}>
+      <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+        <Icon size={11} className="text-emerald-700" /> {label}
+      </label>
+      <div className="relative">
+        <input
+          id={id}
+          value={isOpen ? searchTerm : value}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            onChange(e.target.value);
+            if (!isOpen) setIsOpen(true);
+          }}
+          onFocus={() => {
+            setSearchTerm(value);
+            setIsOpen(true);
+          }}
+          placeholder={placeholder}
+          autoComplete="off"
+          className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-600 focus:bg-white rounded-xl pl-4 pr-9 py-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition"
+        />
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          aria-label={`Toggle ${label} options dropdown`}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+        >
+          <ChevronDown size={15} className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        </button>
+      </div>
+
+      {isOpen && (
+        <div className="absolute z-50 left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto divide-y divide-slate-100 animate-in fade-in zoom-in-95 duration-100">
+          {filtered.length > 0 ? (
+            filtered.map((item) => (
+              <button
+                key={`${item.name}-${item.code}`}
+                type="button"
+                onClick={() => {
+                  onChange(item.name);
+                  setSearchTerm('');
+                  setIsOpen(false);
+                }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs text-left hover:bg-emerald-50 transition-colors ${
+                  value.toLowerCase() === item.name.toLowerCase() ? 'bg-emerald-50/70 font-bold text-emerald-800' : 'text-slate-700'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <MapPin size={12} className="text-emerald-600 flex-shrink-0" />
+                  <span className="font-medium text-slate-900">{item.name}</span>
+                  <span className="text-[10px] text-slate-400">({item.region})</span>
+                </div>
+                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
+                  {item.code}
+                </span>
+              </button>
+            ))
+          ) : (
+            <div className="p-3 text-xs text-slate-500 text-center">
+              No matching cities. Press enter or keep typing custom city.
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
   isOpen, onClose, initialDestination,
 }) => {
@@ -689,43 +845,22 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
             <div className="p-5 space-y-5">
               {/* Origin/Destination */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
-                    <MapPin size={11} className="text-emerald-700" /> From
-                  </label>
-                  <div className="relative">
-                    <input
-                      value={origin}
-                      onChange={e => setOrigin(e.target.value)}
-                      placeholder="City or Airport code"
-                      list="origin-list"
-                      className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-600 focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition"
-                    />
-                    <datalist id="origin-list">
-                      {Object.keys(CITY_TO_AIRPORT).map(c => (
-                        <option key={c} value={c.charAt(0).toUpperCase() + c.slice(1)} />
-                      ))}
-                    </datalist>
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
-                    <Plane size={11} className="text-emerald-700" /> To
-                  </label>
-                  <input
-                    value={destination}
-                    onChange={e => setDestination(e.target.value)}
-                    aria-label="Selected destination airport"
-                    placeholder="City or Airport code"
-                    list="destination-list"
-                    className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-600 focus:bg-white rounded-xl px-4 py-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition"
-                  />
-                  <datalist id="destination-list">
-                    {Object.keys(CITY_TO_AIRPORT).map(c => (
-                      <option key={c} value={c.charAt(0).toUpperCase() + c.slice(1)} />
-                    ))}
-                  </datalist>
-                </div>
+                <CitySearchDropdown
+                  id="flight-origin"
+                  value={origin}
+                  onChange={setOrigin}
+                  placeholder="City or Airport code"
+                  icon={MapPin}
+                  label="From"
+                />
+                <CitySearchDropdown
+                  id="flight-destination"
+                  value={destination}
+                  onChange={setDestination}
+                  placeholder="City or Airport code"
+                  icon={Plane}
+                  label="To"
+                />
               </div>
 
               {/* Date + Passengers */}

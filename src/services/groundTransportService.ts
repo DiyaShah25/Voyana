@@ -142,97 +142,210 @@ export function getAvailableModes(origin: string, destination: string): Transpor
 }
 
 
-interface RegionalOperators {
-  train1: string; train1Name: string; train1Class: string; train1Url: string; train1Currency: string; train1PriceMul: number;
-  train2: string; train2Name: string; train2Class: string; train2Url: string;
-  bus1: string; bus1Name: string; bus1Class: string; bus1Url: string;
-  bus2: string; bus2Name: string; bus2Class: string;
+// ─── Extended operator catalog per region ────────────────────────────────────
+interface TrainOperatorEntry {
+  operator: string;
+  nameTemplate: string;
+  classType: string;
+  bookingUrl: string;
+  speedMultiplier: number;   // 1.0 = base speed, >1 = faster, <1 = slower
+  priceMultiplier: number;   // relative to base price
+}
+
+interface BusOperatorEntry {
+  operator: string;
+  nameTemplate: string;
+  classType: string;
+  bookingUrl: string;
+  speedMultiplier: number;
+  priceMultiplier: number;
+}
+
+interface RegionConfig {
+  trains: TrainOperatorEntry[];
+  buses: BusOperatorEntry[];
   currency: string;
-  speedKmH: number;
-  busSpeedKmH: number;
-  pricePer100km: number;
+  baseTrainSpeedKmH: number;
+  baseBusSpeedKmH: number;
+  trainPricePer100km: number;
   busPricePer100km: number;
 }
 
-function getRegionalOperators(region: string, normOrigin: string, normDest: string): RegionalOperators {
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function getRegionConfig(region: string, normOrigin: string, normDest: string): RegionConfig {
+  const o = capitalize(normOrigin);
+  const d = capitalize(normDest);
+
   switch (region) {
     case 'europe':
       return {
-        train1: 'Eurostar / TGV', train1Name: `${normOrigin.charAt(0).toUpperCase() + normOrigin.slice(1)}-${normDest.charAt(0).toUpperCase() + normDest.slice(1)} TGV`,
-        train1Class: 'Standard Premier', train1Url: 'https://www.raileurope.com', train1Currency: 'EUR', train1PriceMul: 1,
-        train2: 'FlixTrain / Frecciarossa', train2Name: `${normOrigin.charAt(0).toUpperCase() + normOrigin.slice(1)}-${normDest.charAt(0).toUpperCase() + normDest.slice(1)} Intercity`,
-        train2Class: 'Comfort Class', train2Url: 'https://www.raileurope.com',
-        bus1: 'FlixBus', bus1Name: 'FlixBus Premium Express', bus1Class: 'Business Class Seat',
-        bus1Url: `https://global.flixbus.com`,
-        bus2: 'Eurolines / Blablabus', bus2Name: 'Eurolines Coach', bus2Class: 'Standard Seat',
-        currency: 'EUR', speedKmH: 200, busSpeedKmH: 80, pricePer100km: 10, busPricePer100km: 4,
+        trains: [
+          { operator: 'Eurostar / TGV', nameTemplate: `${o}-${d} TGV InOui`, classType: 'Standard Premier', bookingUrl: 'https://www.raileurope.com', speedMultiplier: 1.2, priceMultiplier: 1.3 },
+          { operator: 'FlixTrain', nameTemplate: `FlixTrain ${o}-${d}`, classType: 'Economy', bookingUrl: 'https://www.flixtrain.com', speedMultiplier: 0.8, priceMultiplier: 0.6 },
+          { operator: 'Frecciarossa', nameTemplate: `Frecciarossa ${o}-${d}`, classType: 'Standard', bookingUrl: 'https://www.raileurope.com', speedMultiplier: 1.1, priceMultiplier: 1.0 },
+          { operator: 'ICE (Deutsche Bahn)', nameTemplate: `ICE ${o}-${d} Express`, classType: '2nd Class', bookingUrl: 'https://www.bahn.com', speedMultiplier: 1.0, priceMultiplier: 0.9 },
+          { operator: 'Thalys', nameTemplate: `Thalys ${o}-${d}`, classType: 'Comfort 2', bookingUrl: 'https://www.thalys.com', speedMultiplier: 1.15, priceMultiplier: 1.1 },
+          { operator: 'Renfe (AVE)', nameTemplate: `AVE ${o}-${d}`, classType: 'Turista Plus', bookingUrl: 'https://www.renfe.com', speedMultiplier: 1.2, priceMultiplier: 1.05 },
+          { operator: 'Trenitalia Intercity', nameTemplate: `Intercity ${o}-${d}`, classType: '1st Class', bookingUrl: 'https://www.trenitalia.com', speedMultiplier: 0.85, priceMultiplier: 0.75 },
+          { operator: 'OBB Nightjet', nameTemplate: `Nightjet ${o}-${d}`, classType: 'Couchette', bookingUrl: 'https://www.nightjet.com', speedMultiplier: 0.5, priceMultiplier: 0.7 },
+        ],
+        buses: [
+          { operator: 'FlixBus', nameTemplate: `FlixBus ${o}-${d} Express`, classType: 'Business Seat', bookingUrl: 'https://global.flixbus.com', speedMultiplier: 1.0, priceMultiplier: 1.0 },
+          { operator: 'Eurolines', nameTemplate: `Eurolines ${o}-${d}`, classType: 'Standard Seat', bookingUrl: 'https://www.eurolines.com', speedMultiplier: 0.9, priceMultiplier: 0.85 },
+          { operator: 'BlaBlaBus', nameTemplate: `BlaBlaBus ${o}-${d}`, classType: 'Comfort', bookingUrl: 'https://www.blablabus.com', speedMultiplier: 0.95, priceMultiplier: 0.75 },
+          { operator: 'OUIBUS', nameTemplate: `OUIBUS ${o}-${d}`, classType: 'Standard', bookingUrl: 'https://www.ouibus.com', speedMultiplier: 0.85, priceMultiplier: 0.65 },
+          { operator: 'RegioJet', nameTemplate: `RegioJet ${o}-${d}`, classType: 'Fun Relax', bookingUrl: 'https://www.regiojet.com', speedMultiplier: 0.9, priceMultiplier: 0.7 },
+          { operator: 'Megabus Europe', nameTemplate: `Megabus ${o}-${d}`, classType: 'Standard', bookingUrl: 'https://www.megabus.com', speedMultiplier: 0.85, priceMultiplier: 0.55 },
+          { operator: 'Marino Bus', nameTemplate: `MarinoBus ${o}-${d}`, classType: 'Grand Comfort', bookingUrl: 'https://www.marinobus.it', speedMultiplier: 0.88, priceMultiplier: 0.8 },
+        ],
+        currency: 'EUR', baseTrainSpeedKmH: 200, baseBusSpeedKmH: 80, trainPricePer100km: 10, busPricePer100km: 4,
       };
+
     case 'japan':
       return {
-        train1: 'JR Central (Shinkansen)', train1Name: `${normOrigin.charAt(0).toUpperCase() + normOrigin.slice(1)}-${normDest.charAt(0).toUpperCase() + normDest.slice(1)} Shinkansen Nozomi`,
-        train1Class: 'Green Car (1st Class)', train1Url: 'https://www.jrpass.com', train1Currency: 'JPY', train1PriceMul: 1,
-        train2: 'JR West (Hikari)', train2Name: `${normOrigin.charAt(0).toUpperCase() + normOrigin.slice(1)}-${normDest.charAt(0).toUpperCase() + normDest.slice(1)} Hikari`,
-        train2Class: 'Ordinary Car', train2Url: 'https://www.jrpass.com',
-        bus1: 'Willer Express', bus1Name: 'Willer Night Bus', bus1Class: 'Premium Comfort Seat',
-        bus1Url: `https://willerexpress.com`,
-        bus2: 'JR Bus (Highway)', bus2Name: 'JR Bus Highway Express', bus2Class: 'Standard Seat',
-        currency: 'JPY', speedKmH: 250, busSpeedKmH: 70, pricePer100km: 1200, busPricePer100km: 400,
+        trains: [
+          { operator: 'JR Central (Nozomi)', nameTemplate: `Shinkansen Nozomi ${o}-${d}`, classType: 'Green Car (1st Class)', bookingUrl: 'https://www.jrpass.com', speedMultiplier: 1.2, priceMultiplier: 1.4 },
+          { operator: 'JR West (Hikari)', nameTemplate: `Shinkansen Hikari ${o}-${d}`, classType: 'Ordinary Car', bookingUrl: 'https://www.jrpass.com', speedMultiplier: 1.0, priceMultiplier: 1.0 },
+          { operator: 'JR Kodama', nameTemplate: `Shinkansen Kodama ${o}-${d}`, classType: 'Non-Reserved', bookingUrl: 'https://www.jrpass.com', speedMultiplier: 0.7, priceMultiplier: 0.75 },
+          { operator: 'JR Sakura', nameTemplate: `Shinkansen Sakura ${o}-${d}`, classType: 'Reserved Seat', bookingUrl: 'https://www.jrpass.com', speedMultiplier: 1.05, priceMultiplier: 1.1 },
+          { operator: 'JR Mizuho', nameTemplate: `Shinkansen Mizuho ${o}-${d}`, classType: 'Green Car', bookingUrl: 'https://www.jrpass.com', speedMultiplier: 1.2, priceMultiplier: 1.35 },
+          { operator: 'Tobu Railway Limited Express', nameTemplate: `Tobu Ltd Express ${o}-${d}`, classType: 'Reserved', bookingUrl: 'https://www.tobu.co.jp', speedMultiplier: 0.6, priceMultiplier: 0.5 },
+          { operator: 'Kintetsu Railway', nameTemplate: `Kintetsu Express ${o}-${d}`, classType: 'Premium', bookingUrl: 'https://www.kintetsu.co.jp', speedMultiplier: 0.55, priceMultiplier: 0.55 },
+        ],
+        buses: [
+          { operator: 'Willer Express', nameTemplate: `Willer Night Bus ${o}-${d}`, classType: 'Premium Comfort', bookingUrl: 'https://willerexpress.com', speedMultiplier: 1.0, priceMultiplier: 1.0 },
+          { operator: 'JR Bus Kanto', nameTemplate: `JR Highway Bus ${o}-${d}`, classType: 'Standard Seat', bookingUrl: 'https://www.jrbuskanto.co.jp', speedMultiplier: 0.9, priceMultiplier: 0.8 },
+          { operator: 'Kosoku Bus', nameTemplate: `Kosoku Express ${o}-${d}`, classType: 'Super Seat', bookingUrl: 'https://www.kosokubus.com', speedMultiplier: 0.95, priceMultiplier: 0.85 },
+          { operator: 'VIP Liner', nameTemplate: `VIP Liner ${o}-${d}`, classType: '3-Row Reclining', bookingUrl: 'https://vipliner.biz', speedMultiplier: 0.85, priceMultiplier: 1.1 },
+          { operator: 'Jamjam Liner', nameTemplate: `JAM JAM ${o}-${d}`, classType: '4-Row Relax', bookingUrl: 'https://www.jamjamliner.jp', speedMultiplier: 0.9, priceMultiplier: 0.6 },
+          { operator: 'Orion Bus', nameTemplate: `Orion Tour ${o}-${d}`, classType: 'Standard Night', bookingUrl: 'https://www.orion-bus.jp', speedMultiplier: 0.85, priceMultiplier: 0.55 },
+        ],
+        currency: 'JPY', baseTrainSpeedKmH: 250, baseBusSpeedKmH: 70, trainPricePer100km: 1200, busPricePer100km: 400,
       };
+
     case 'north_america':
       return {
-        train1: 'Amtrak', train1Name: `${normOrigin.charAt(0).toUpperCase() + normOrigin.slice(1)}-${normDest.charAt(0).toUpperCase() + normDest.slice(1)} Amtrak Service`,
-        train1Class: 'Business Class', train1Url: 'https://www.amtrak.com', train1Currency: 'USD', train1PriceMul: 1,
-        train2: 'VIA Rail (Canada)', train2Name: `${normOrigin.charAt(0).toUpperCase() + normOrigin.slice(1)}-${normDest.charAt(0).toUpperCase() + normDest.slice(1)} VIA Rail`,
-        train2Class: 'Economy Plus', train2Url: 'https://www.amtrak.com',
-        bus1: 'Greyhound', bus1Name: 'Greyhound Express', bus1Class: 'Business Seat',
-        bus1Url: `https://www.greyhound.com`,
-        bus2: 'FlixBus USA', bus2Name: 'FlixBus Interstate', bus2Class: 'Standard Seat',
-        currency: 'USD', speedKmH: 110, busSpeedKmH: 90, pricePer100km: 7, busPricePer100km: 3,
+        trains: [
+          { operator: 'Amtrak Acela', nameTemplate: `Acela Express ${o}-${d}`, classType: 'Business Class', bookingUrl: 'https://www.amtrak.com', speedMultiplier: 1.3, priceMultiplier: 1.5 },
+          { operator: 'Amtrak Northeast Regional', nameTemplate: `NE Regional ${o}-${d}`, classType: 'Coach', bookingUrl: 'https://www.amtrak.com', speedMultiplier: 1.0, priceMultiplier: 0.8 },
+          { operator: 'Amtrak Silver Service', nameTemplate: `Silver Meteor ${o}-${d}`, classType: 'Roomette', bookingUrl: 'https://www.amtrak.com', speedMultiplier: 0.7, priceMultiplier: 1.2 },
+          { operator: 'Amtrak Capitol Limited', nameTemplate: `Capitol Ltd ${o}-${d}`, classType: 'Coach', bookingUrl: 'https://www.amtrak.com', speedMultiplier: 0.75, priceMultiplier: 0.9 },
+          { operator: 'VIA Rail (Canada)', nameTemplate: `VIA Rail ${o}-${d}`, classType: 'Economy Plus', bookingUrl: 'https://www.viarail.ca', speedMultiplier: 0.85, priceMultiplier: 0.85 },
+          { operator: 'VIA Rail Business', nameTemplate: `VIA Rail Business ${o}-${d}`, classType: 'Business', bookingUrl: 'https://www.viarail.ca', speedMultiplier: 0.85, priceMultiplier: 1.3 },
+          { operator: 'Brightline', nameTemplate: `Brightline ${o}-${d}`, classType: 'Smart', bookingUrl: 'https://www.gobrightline.com', speedMultiplier: 1.1, priceMultiplier: 1.0 },
+        ],
+        buses: [
+          { operator: 'Greyhound', nameTemplate: `Greyhound Express ${o}-${d}`, classType: 'Business Seat', bookingUrl: 'https://www.greyhound.com', speedMultiplier: 1.0, priceMultiplier: 1.0 },
+          { operator: 'FlixBus USA', nameTemplate: `FlixBus ${o}-${d}`, classType: 'Standard', bookingUrl: 'https://www.flixbus.com', speedMultiplier: 0.95, priceMultiplier: 0.7 },
+          { operator: 'Megabus', nameTemplate: `Megabus ${o}-${d}`, classType: 'Standard', bookingUrl: 'https://us.megabus.com', speedMultiplier: 0.9, priceMultiplier: 0.55 },
+          { operator: 'BoltBus', nameTemplate: `BoltBus ${o}-${d}`, classType: 'Reserved', bookingUrl: 'https://www.boltbus.com', speedMultiplier: 0.95, priceMultiplier: 0.65 },
+          { operator: 'Peter Pan Bus', nameTemplate: `Peter Pan ${o}-${d}`, classType: 'Express', bookingUrl: 'https://peterpanbus.com', speedMultiplier: 0.9, priceMultiplier: 0.75 },
+          { operator: 'Red Coach', nameTemplate: `RedCoach ${o}-${d}`, classType: 'First Class', bookingUrl: 'https://www.redcoachusa.com', speedMultiplier: 1.0, priceMultiplier: 1.3 },
+          { operator: 'OurBus', nameTemplate: `OurBus ${o}-${d}`, classType: 'Standard', bookingUrl: 'https://www.ourbus.com', speedMultiplier: 0.88, priceMultiplier: 0.6 },
+        ],
+        currency: 'USD', baseTrainSpeedKmH: 110, baseBusSpeedKmH: 90, trainPricePer100km: 7, busPricePer100km: 3,
       };
+
     case 'southeast_asia':
       return {
-        train1: 'KTM / State Railways', train1Name: `${normOrigin.charAt(0).toUpperCase() + normOrigin.slice(1)}-${normDest.charAt(0).toUpperCase() + normDest.slice(1)} Express`,
-        train1Class: 'First Class AC', train1Url: 'https://easybook.com/train', train1Currency: 'USD', train1PriceMul: 1,
-        train2: 'Thai Railways (SRT)', train2Name: `${normOrigin.charAt(0).toUpperCase() + normOrigin.slice(1)}-${normDest.charAt(0).toUpperCase() + normDest.slice(1)} Rapid',`,
-        train2Class: 'Fan Car', train2Url: 'https://easybook.com/train',
-        bus1: 'BusOnlineTicket / 12Go', bus1Name: 'Premium Coach Express', bus1Class: 'VIP Bus Seat',
-        bus1Url: `https://12go.asia`,
-        bus2: 'AirAsia Bus / Transnasional', bus2Name: 'Express Liner', bus2Class: 'Standard Seat',
-        currency: 'USD', speedKmH: 70, busSpeedKmH: 55, pricePer100km: 3, busPricePer100km: 1.5,
+        trains: [
+          { operator: 'KTM ETS', nameTemplate: `ETS Gold ${o}-${d}`, classType: 'Business', bookingUrl: 'https://easybook.com/train', speedMultiplier: 1.1, priceMultiplier: 1.2 },
+          { operator: 'Thai Railways (SRT)', nameTemplate: `SRT Rapid ${o}-${d}`, classType: '1st Class AC', bookingUrl: 'https://12go.asia', speedMultiplier: 0.8, priceMultiplier: 0.9 },
+          { operator: 'Vietnam Railways', nameTemplate: `Reunification Express ${o}-${d}`, classType: 'Soft Sleeper AC', bookingUrl: 'https://12go.asia', speedMultiplier: 0.6, priceMultiplier: 0.7 },
+          { operator: 'KTM Intercity', nameTemplate: `Intercity ${o}-${d}`, classType: 'Superior Night', bookingUrl: 'https://easybook.com/train', speedMultiplier: 0.7, priceMultiplier: 0.65 },
+          { operator: 'Cambodia Royal Railway', nameTemplate: `Royal Railway ${o}-${d}`, classType: 'Standard', bookingUrl: 'https://12go.asia', speedMultiplier: 0.5, priceMultiplier: 0.4 },
+          { operator: 'SRT Special Express', nameTemplate: `SRT Special Express ${o}-${d}`, classType: '2nd Class AC', bookingUrl: 'https://12go.asia', speedMultiplier: 0.75, priceMultiplier: 0.8 },
+        ],
+        buses: [
+          { operator: 'BusOnlineTicket / 12Go', nameTemplate: `Premium Coach ${o}-${d}`, classType: 'VIP Bus', bookingUrl: 'https://12go.asia', speedMultiplier: 1.0, priceMultiplier: 1.0 },
+          { operator: 'Transnasional', nameTemplate: `Transnasional ${o}-${d}`, classType: 'Executive', bookingUrl: 'https://easybook.com', speedMultiplier: 0.9, priceMultiplier: 0.8 },
+          { operator: 'Nakhonchai Air', nameTemplate: `NCA Gold ${o}-${d}`, classType: 'First Class', bookingUrl: 'https://12go.asia', speedMultiplier: 0.95, priceMultiplier: 1.1 },
+          { operator: 'The Sinh Tourist', nameTemplate: `Sinh Tourist ${o}-${d}`, classType: 'Sleeper', bookingUrl: 'https://thesinhtourist.vn', speedMultiplier: 0.8, priceMultiplier: 0.6 },
+          { operator: 'Giant Ibis', nameTemplate: `Giant Ibis ${o}-${d}`, classType: 'Night Bus', bookingUrl: 'https://giantibis.com', speedMultiplier: 0.85, priceMultiplier: 0.7 },
+          { operator: 'Grassland Express', nameTemplate: `Grassland ${o}-${d}`, classType: 'Standard', bookingUrl: 'https://easybook.com', speedMultiplier: 0.8, priceMultiplier: 0.5 },
+        ],
+        currency: 'USD', baseTrainSpeedKmH: 70, baseBusSpeedKmH: 55, trainPricePer100km: 3, busPricePer100km: 1.5,
       };
+
     case 'china':
       return {
-        train1: 'China Railway (CRH)', train1Name: `${normOrigin.charAt(0).toUpperCase() + normOrigin.slice(1)}-${normDest.charAt(0).toUpperCase() + normDest.slice(1)} G-Series HSR`,
-        train1Class: 'First Class', train1Url: 'https://www.trip.com/trains/', train1Currency: 'CNY', train1PriceMul: 1,
-        train2: 'D-Series Express', train2Name: `${normOrigin.charAt(0).toUpperCase() + normOrigin.slice(1)}-${normDest.charAt(0).toUpperCase() + normDest.slice(1)} D-Series',`,
-        train2Class: 'Second Class', train2Url: 'https://www.trip.com/trains/',
-        bus1: 'Hao Yi Xing Coach', bus1Name: 'Highway Sleeper Coach', bus1Class: 'Sleeper Berth',
-        bus1Url: `https://www.trip.com`,
-        bus2: 'Regional Bus Express', bus2Name: 'Inter-City Bus', bus2Class: 'Standard Seat',
-        currency: 'CNY', speedKmH: 300, busSpeedKmH: 80, pricePer100km: 50, busPricePer100km: 15,
+        trains: [
+          { operator: 'China Railway (G-Series)', nameTemplate: `G-Series HSR ${o}-${d}`, classType: 'First Class', bookingUrl: 'https://www.trip.com/trains/', speedMultiplier: 1.2, priceMultiplier: 1.4 },
+          { operator: 'China Railway (D-Series)', nameTemplate: `D-Series ${o}-${d}`, classType: 'Second Class', bookingUrl: 'https://www.trip.com/trains/', speedMultiplier: 0.8, priceMultiplier: 0.7 },
+          { operator: 'China Railway (C-Series)', nameTemplate: `C-Series Intercity ${o}-${d}`, classType: 'First Class', bookingUrl: 'https://www.trip.com/trains/', speedMultiplier: 1.0, priceMultiplier: 1.1 },
+          { operator: 'China Railway (Z-Series)', nameTemplate: `Z Direct Express ${o}-${d}`, classType: 'Soft Sleeper', bookingUrl: 'https://www.trip.com/trains/', speedMultiplier: 0.5, priceMultiplier: 0.8 },
+          { operator: 'China Railway (T-Series)', nameTemplate: `T Express ${o}-${d}`, classType: 'Hard Sleeper', bookingUrl: 'https://www.trip.com/trains/', speedMultiplier: 0.45, priceMultiplier: 0.5 },
+          { operator: 'China Railway (K-Series)', nameTemplate: `K Fast Train ${o}-${d}`, classType: 'Hard Seat', bookingUrl: 'https://www.trip.com/trains/', speedMultiplier: 0.35, priceMultiplier: 0.3 },
+          { operator: 'CRH Business', nameTemplate: `G-Series Business ${o}-${d}`, classType: 'Business Class', bookingUrl: 'https://www.trip.com/trains/', speedMultiplier: 1.2, priceMultiplier: 2.0 },
+        ],
+        buses: [
+          { operator: 'Hao Yi Xing Coach', nameTemplate: `Highway Sleeper ${o}-${d}`, classType: 'Sleeper Berth', bookingUrl: 'https://www.trip.com', speedMultiplier: 1.0, priceMultiplier: 1.0 },
+          { operator: 'Regional Bus Express', nameTemplate: `Inter-City Bus ${o}-${d}`, classType: 'Standard Seat', bookingUrl: 'https://www.trip.com', speedMultiplier: 0.9, priceMultiplier: 0.7 },
+          { operator: 'Changtu Coach', nameTemplate: `Changtu Coach ${o}-${d}`, classType: 'Business Seat', bookingUrl: 'https://www.trip.com', speedMultiplier: 0.95, priceMultiplier: 0.85 },
+          { operator: 'Provincial Express', nameTemplate: `Provincial Bus ${o}-${d}`, classType: 'Luxury Seat', bookingUrl: 'https://www.trip.com', speedMultiplier: 0.85, priceMultiplier: 0.6 },
+          { operator: 'Airport Shuttle Bus', nameTemplate: `Airport Shuttle ${o}-${d}`, classType: 'Standard', bookingUrl: 'https://www.trip.com', speedMultiplier: 0.8, priceMultiplier: 0.5 },
+          { operator: 'Kuai Ke Express', nameTemplate: `Kuai Ke ${o}-${d}`, classType: 'Night Sleeper', bookingUrl: 'https://www.trip.com', speedMultiplier: 0.75, priceMultiplier: 0.65 },
+        ],
+        currency: 'CNY', baseTrainSpeedKmH: 300, baseBusSpeedKmH: 80, trainPricePer100km: 50, busPricePer100km: 15,
       };
+
     default: // india
       return {
-        train1: 'Indian Railways', train1Name: `${normOrigin.charAt(0).toUpperCase() + normOrigin.slice(1)}-${normDest.charAt(0).toUpperCase() + normDest.slice(1)} Superfast Express`,
-        train1Class: '3A AC / Sleeper', train1Url: 'https://www.irctc.co.in/nget/train-search', train1Currency: 'INR', train1PriceMul: 1,
-        train2: 'Indian Railways (Vande Bharat)', train2Name: `Vande Bharat: ${normOrigin.charAt(0).toUpperCase() + normOrigin.slice(1)}-${normDest.charAt(0).toUpperCase() + normDest.slice(1)}`,
-        train2Class: 'Chair Car (CC)', train2Url: 'https://www.irctc.co.in/nget/train-search',
-        bus1: 'Zingbus Premium', bus1Name: 'Zingbus Multi-Axle Volvo AC Sleeper', bus1Class: 'AC Sleeper (2+1)',
-        bus1Url: `https://www.redbus.in/bus-tickets/${encodeURIComponent(normOrigin)}-to-${encodeURIComponent(normDest)}`,
-        bus2: 'IntrCity Travels', bus2Name: 'IntrCity SmartBus Scania AC', bus2Class: 'Luxury AC Sleeper',
-        currency: 'INR', speedKmH: 65, busSpeedKmH: 50, pricePer100km: 115, busPricePer100km: 145,
+        trains: [
+          { operator: 'Indian Railways', nameTemplate: `${o}-${d} Rajdhani Express`, classType: '1A First AC', bookingUrl: 'https://www.irctc.co.in/nget/train-search', speedMultiplier: 1.2, priceMultiplier: 1.8 },
+          { operator: 'Indian Railways', nameTemplate: `${o}-${d} Shatabdi Express`, classType: 'Executive Chair (EC)', bookingUrl: 'https://www.irctc.co.in/nget/train-search', speedMultiplier: 1.15, priceMultiplier: 1.5 },
+          { operator: 'Indian Railways (Vande Bharat)', nameTemplate: `Vande Bharat ${o}-${d}`, classType: 'Chair Car (CC)', bookingUrl: 'https://www.irctc.co.in/nget/train-search', speedMultiplier: 1.3, priceMultiplier: 1.4 },
+          { operator: 'Indian Railways', nameTemplate: `${o}-${d} Duronto Express`, classType: '3A AC Three Tier', bookingUrl: 'https://www.irctc.co.in/nget/train-search', speedMultiplier: 1.1, priceMultiplier: 1.0 },
+          { operator: 'Indian Railways', nameTemplate: `${o}-${d} Superfast Express`, classType: '2A AC Two Tier', bookingUrl: 'https://www.irctc.co.in/nget/train-search', speedMultiplier: 0.9, priceMultiplier: 1.2 },
+          { operator: 'Indian Railways', nameTemplate: `${o}-${d} Garib Rath Express`, classType: '3A AC Economy', bookingUrl: 'https://www.irctc.co.in/nget/train-search', speedMultiplier: 0.85, priceMultiplier: 0.65 },
+          { operator: 'Indian Railways', nameTemplate: `${o}-${d} Humsafar Express`, classType: '3A AC (Humsafar)', bookingUrl: 'https://www.irctc.co.in/nget/train-search', speedMultiplier: 0.9, priceMultiplier: 0.85 },
+          { operator: 'Indian Railways', nameTemplate: `${o}-${d} Jan Shatabdi Express`, classType: '2S Second Sitting', bookingUrl: 'https://www.irctc.co.in/nget/train-search', speedMultiplier: 0.8, priceMultiplier: 0.4 },
+        ],
+        buses: [
+          { operator: 'Zingbus Premium', nameTemplate: `Zingbus Volvo AC Sleeper ${o}-${d}`, classType: 'AC Sleeper (2+1)', bookingUrl: `https://www.redbus.in/bus-tickets/${encodeURIComponent(normOrigin)}-to-${encodeURIComponent(normDest)}`, speedMultiplier: 1.0, priceMultiplier: 1.1 },
+          { operator: 'IntrCity SmartBus', nameTemplate: `IntrCity Scania AC ${o}-${d}`, classType: 'Luxury AC Sleeper', bookingUrl: `https://www.redbus.in/bus-tickets/${encodeURIComponent(normOrigin)}-to-${encodeURIComponent(normDest)}`, speedMultiplier: 1.05, priceMultiplier: 1.2 },
+          { operator: 'VRL Travels', nameTemplate: `VRL Multi-Axle Volvo ${o}-${d}`, classType: 'AC Seater/Sleeper', bookingUrl: `https://www.redbus.in/bus-tickets/${encodeURIComponent(normOrigin)}-to-${encodeURIComponent(normDest)}`, speedMultiplier: 0.95, priceMultiplier: 0.9 },
+          { operator: 'Neeta Travels', nameTemplate: `Neeta Volvo B11R ${o}-${d}`, classType: 'AC Sleeper (2+1)', bookingUrl: `https://www.redbus.in/bus-tickets/${encodeURIComponent(normOrigin)}-to-${encodeURIComponent(normDest)}`, speedMultiplier: 0.9, priceMultiplier: 0.85 },
+          { operator: 'GSRTC Volvo', nameTemplate: `GSRTC Volvo AC ${o}-${d}`, classType: 'AC Seater', bookingUrl: 'https://gsrtc.in', speedMultiplier: 0.85, priceMultiplier: 0.6 },
+          { operator: 'RSRTC / MSRTC', nameTemplate: `State Transport ${o}-${d}`, classType: 'Semi-Deluxe', bookingUrl: 'https://rsrtc.rajasthan.gov.in', speedMultiplier: 0.75, priceMultiplier: 0.4 },
+          { operator: 'Shrinath Travels', nameTemplate: `Shrinath AC Sleeper ${o}-${d}`, classType: 'AC Sleeper', bookingUrl: `https://www.redbus.in/bus-tickets/${encodeURIComponent(normOrigin)}-to-${encodeURIComponent(normDest)}`, speedMultiplier: 0.9, priceMultiplier: 0.75 },
+          { operator: 'Patel Travels', nameTemplate: `Patel Travels Volvo ${o}-${d}`, classType: 'AC Seater', bookingUrl: `https://www.redbus.in/bus-tickets/${encodeURIComponent(normOrigin)}-to-${encodeURIComponent(normDest)}`, speedMultiplier: 0.88, priceMultiplier: 0.7 },
+        ],
+        currency: 'INR', baseTrainSpeedKmH: 65, baseBusSpeedKmH: 50, trainPricePer100km: 115, busPricePer100km: 145,
       };
   }
+}
+
+// Departure time slots spread across the day
+const TRAIN_DEPARTURE_TIMES = ['04:45', '06:00', '08:20', '10:30', '13:15', '16:00', '19:30', '22:00'];
+const BUS_DEPARTURE_TIMES = ['06:00', '08:30', '11:00', '14:00', '17:30', '20:00', '21:30', '23:00'];
+
+function computeArrival(depTime: string, durationMinutes: number): string {
+  const [h, m] = depTime.split(':').map(Number);
+  const totalMin = h * 60 + m + durationMinutes;
+  const arrH = Math.floor(totalMin / 60) % 24;
+  const arrM = totalMin % 60;
+  return `${String(arrH).padStart(2, '0')}:${String(arrM).padStart(2, '0')}`;
+}
+
+function formatDurationStr(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return `${h}h ${String(m).padStart(2, '0')}m`;
 }
 
 /**
  * Returns train and bus options for a given route.
  * Pulls from groundTransport.json and generates realistic regional alternatives.
+ * Now generates 6-8 options per mode for a realistic travel search experience.
  */
 export function getGroundTransportOptions(
   origin: string,
   destination: string,
-  _departureDate: string,
+  departureDate: string,
   passengers: number = 1
 ): { trains: GroundTransportItem[]; buses: GroundTransportItem[] } {
   const normOrigin = normalizeCity(origin);
@@ -252,53 +365,51 @@ export function getGroundTransportOptions(
 
     if (rawTrains.length > 0) {
       trains.push(...rawTrains.map(t => ({ ...t, mode: 'train' as const })));
-    } else {
-      const region = detectRegion(normOrigin);
-      const ops = getRegionalOperators(region, normOrigin, normDest);
-      const dist = routeDistanceKm(normOrigin, normDest);
-      const estHours = Math.max(1, Math.round(dist / ops.speedKmH));
-      const price1 = Math.max(500, Math.round((dist / 100) * ops.pricePer100km * passengers));
-      const price2 = Math.max(300, Math.round((dist / 100) * ops.pricePer100km * passengers * 0.75));
-
-      trains.push(
-        {
-          id: `trn-${normOrigin.slice(0, 3)}-${normDest.slice(0, 3)}-01`,
-          mode: 'train',
-          origin: origin.trim(),
-          originCode: origin.slice(0, 3).toUpperCase(),
-          destination: destination.trim(),
-          destinationCode: destination.slice(0, 3).toUpperCase(),
-          name: ops.train1Name,
-          operator: ops.train1,
-          departureTime: '06:30',
-          arrivalTime: `${String((6 + estHours) % 24).padStart(2, '0')}:45`,
-          duration: `${estHours}h 15m`,
-          durationMinutes: estHours * 60 + 15,
-          price: price1,
-          currency: ops.currency,
-          classType: ops.train1Class,
-          bookingUrl: ops.train1Url,
-        },
-        {
-          id: `trn-${normOrigin.slice(0, 3)}-${normDest.slice(0, 3)}-02`,
-          mode: 'train',
-          origin: origin.trim(),
-          originCode: origin.slice(0, 3).toUpperCase(),
-          destination: destination.trim(),
-          destinationCode: destination.slice(0, 3).toUpperCase(),
-          name: ops.train2Name,
-          operator: ops.train2,
-          departureTime: '14:15',
-          arrivalTime: `${String((14 + Math.round(estHours * 1.1)) % 24).padStart(2, '0')}:30`,
-          duration: `${Math.round(estHours * 1.1)}h 15m`,
-          durationMinutes: Math.round(estHours * 1.1) * 60 + 15,
-          price: price2,
-          currency: ops.currency,
-          classType: ops.train2Class,
-          bookingUrl: ops.train2Url,
-        }
-      );
     }
+
+    // Always generate additional options to fill up to 6-8 results
+    const region = detectRegion(normOrigin);
+    const config = getRegionConfig(region, normOrigin, normDest);
+    const dist = routeDistanceKm(normOrigin, normDest);
+
+    const remainingSlots = Math.max(0, 8 - trains.length);
+    const operatorsToUse = config.trains.slice(0, remainingSlots);
+
+    operatorsToUse.forEach((op, idx) => {
+      const speedKmH = config.baseTrainSpeedKmH * op.speedMultiplier;
+      const estMinutes = Math.max(45, Math.round((dist / speedKmH) * 60));
+      // add some variance: ±10 minutes
+      const variance = (idx % 3 - 1) * 10;
+      const finalMinutes = Math.max(45, estMinutes + variance);
+      const basePrice = Math.max(200, Math.round((dist / 100) * config.trainPricePer100km * op.priceMultiplier));
+      const totalPrice = basePrice * passengers;
+
+      const depTime = TRAIN_DEPARTURE_TIMES[idx % TRAIN_DEPARTURE_TIMES.length];
+      const arrTime = computeArrival(depTime, finalMinutes);
+
+      // Don't add if we already have this exact operator from JSON
+      const existingOp = trains.find(t => t.operator === op.operator && t.departureTime === depTime);
+      if (existingOp) return;
+
+      trains.push({
+        id: `trn-${normOrigin.slice(0, 3)}-${normDest.slice(0, 3)}-${String(idx + 1).padStart(2, '0')}`,
+        mode: 'train',
+        origin: origin.trim(),
+        originCode: origin.slice(0, 3).toUpperCase(),
+        destination: destination.trim(),
+        destinationCode: destination.slice(0, 3).toUpperCase(),
+        name: op.nameTemplate,
+        operator: op.operator,
+        departureTime: depTime,
+        arrivalTime: arrTime,
+        duration: formatDurationStr(finalMinutes),
+        durationMinutes: finalMinutes,
+        price: totalPrice,
+        currency: config.currency,
+        classType: op.classType,
+        bookingUrl: op.bookingUrl,
+      });
+    });
   }
 
   // 2. Fetch matching buses from local sample JSON if Bus mode is available
@@ -311,55 +422,50 @@ export function getGroundTransportOptions(
 
     if (rawBuses.length > 0) {
       buses.push(...rawBuses.map(b => ({ ...b, mode: 'bus' as const })));
-    } else {
-      const region = detectRegion(normOrigin);
-      const ops = getRegionalOperators(region, normOrigin, normDest);
-      const dist = routeDistanceKm(normOrigin, normDest);
-      const estHours = Math.max(2, Math.round(dist / ops.busSpeedKmH));
-      const busPrice1 = Math.max(500, Math.round((dist / 100) * ops.busPricePer100km * passengers * 1.1));
-      const busPrice2 = Math.max(300, Math.round((dist / 100) * ops.busPricePer100km * passengers * 0.9));
-
-      buses.push(
-        {
-          id: `bus-${normOrigin.slice(0, 3)}-${normDest.slice(0, 3)}-01`,
-          mode: 'bus',
-          origin: origin.trim(),
-          originCode: origin.slice(0, 3).toUpperCase(),
-          destination: destination.trim(),
-          destinationCode: destination.slice(0, 3).toUpperCase(),
-          name: ops.bus1Name,
-          operator: ops.bus1,
-          departureTime: '18:30',
-          arrivalTime: `${String((18 + estHours) % 24).padStart(2, '0')}:30`,
-          duration: `${estHours}h 00m`,
-          durationMinutes: estHours * 60,
-          price: busPrice1,
-          currency: ops.currency,
-          classType: ops.bus1Class,
-          bookingUrl: ops.bus1Url,
-        },
-        {
-          id: `bus-${normOrigin.slice(0, 3)}-${normDest.slice(0, 3)}-02`,
-          mode: 'bus',
-          origin: origin.trim(),
-          originCode: origin.slice(0, 3).toUpperCase(),
-          destination: destination.trim(),
-          destinationCode: destination.slice(0, 3).toUpperCase(),
-          name: ops.bus2Name,
-          operator: ops.bus2,
-          departureTime: '20:15',
-          arrivalTime: `${String((20 + estHours + 1) % 24).padStart(2, '0')}:15`,
-          duration: `${estHours + 1}h 00m`,
-          durationMinutes: (estHours + 1) * 60,
-          price: busPrice2,
-          currency: ops.currency,
-          classType: ops.bus2Class,
-          bookingUrl: ops.bus1Url,
-        }
-      );
     }
+
+    // Generate additional options to fill up to 6-8 results
+    const region = detectRegion(normOrigin);
+    const config = getRegionConfig(region, normOrigin, normDest);
+    const dist = routeDistanceKm(normOrigin, normDest);
+
+    const remainingSlots = Math.max(0, 8 - buses.length);
+    const operatorsToUse = config.buses.slice(0, remainingSlots);
+
+    operatorsToUse.forEach((op, idx) => {
+      const speedKmH = config.baseBusSpeedKmH * op.speedMultiplier;
+      const estMinutes = Math.max(60, Math.round((dist / speedKmH) * 60));
+      const variance = (idx % 3 - 1) * 15;
+      const finalMinutes = Math.max(60, estMinutes + variance);
+      const basePrice = Math.max(150, Math.round((dist / 100) * config.busPricePer100km * op.priceMultiplier));
+      const totalPrice = basePrice * passengers;
+
+      const depTime = BUS_DEPARTURE_TIMES[idx % BUS_DEPARTURE_TIMES.length];
+      const arrTime = computeArrival(depTime, finalMinutes);
+
+      const existingOp = buses.find(b => b.operator === op.operator && b.departureTime === depTime);
+      if (existingOp) return;
+
+      buses.push({
+        id: `bus-${normOrigin.slice(0, 3)}-${normDest.slice(0, 3)}-${String(idx + 1).padStart(2, '0')}`,
+        mode: 'bus',
+        origin: origin.trim(),
+        originCode: origin.slice(0, 3).toUpperCase(),
+        destination: destination.trim(),
+        destinationCode: destination.slice(0, 3).toUpperCase(),
+        name: op.nameTemplate,
+        operator: op.operator,
+        departureTime: depTime,
+        arrivalTime: arrTime,
+        duration: formatDurationStr(finalMinutes),
+        durationMinutes: finalMinutes,
+        price: totalPrice,
+        currency: config.currency,
+        classType: op.classType,
+        bookingUrl: op.bookingUrl,
+      });
+    });
   }
 
   return { trains, buses };
 }
-

@@ -129,7 +129,7 @@ export default function TripWorkspaceModal({
       getTripPolls(trip.id),
       bookingConfirmed ? getTripExpenses(trip.id) : Promise.resolve([]),
       bookingConfirmed ? getTripDocuments(trip.id) : Promise.resolve([]),
-      bookingConfirmed ? getTripMemories(trip.id) : Promise.resolve([]),
+      getTripMemories(trip.id),
     ]);
     setChatMessages(previous => [...new Map([...c, ...previous].map(message => [message.id, message])).values()]);
     setTasks(t);

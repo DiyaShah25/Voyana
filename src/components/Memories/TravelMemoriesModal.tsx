@@ -18,6 +18,7 @@ import {
 } from '@/services/collaborationService';
 import { getUserTrips, deleteTrip, type Trip } from '@/services/tripService';
 import { uploadMemoryMedia } from '@/services/supabaseStorage';
+import { compressImageFile, saveMediaBlob } from '@/services/mediaStorageHelper';
 
 export interface TravelMemoriesModalProps {
   isOpen: boolean;
@@ -90,10 +91,9 @@ export default function TravelMemoriesModal({
     try {
       const [trips, mems] = await Promise.all([
         getUserTrips(),
-        getAllMemories({ tripId: initialTripId }),
+        getAllMemories(),
       ]);
-      const activeTrips = initialTripId ? trips.filter(trip => trip.id === initialTripId) : trips;
-      const defaultTripsList: Trip[] = activeTrips.length > 0 ? activeTrips : [
+      const defaultTripsList: Trip[] = trips.length > 0 ? trips : [
         { id: 'trip-user-01', title: 'Autumn in Paris & Provence', destination: 'Paris, France' } as any,
         { id: 'trip-user-02', title: 'Tokyo Cyberpunk & Ancient Temples', destination: 'Tokyo, Japan' } as any,
         { id: 'trip-user-03', title: 'Swiss Alps & Scenic Lakes', destination: 'Zermatt, Switzerland' } as any,
@@ -101,7 +101,14 @@ export default function TravelMemoriesModal({
       setUserTrips(defaultTripsList);
       setUploadTripTarget(initialTripId || defaultTripsList[0]?.id || 'trip-user-01');
       setSelectedTripId(initialTripId || 'all');
-      setAllMemories(mems);
+      if (initialTripId) {
+        setSelectedAlbum(initialTripId);
+      }
+      setAllMemories(prev => {
+        const remoteIds = new Set(mems.map(m => m.id));
+        const localCustom = prev.filter(p => !remoteIds.has(p.id));
+        return [...localCustom, ...mems];
+      });
     } catch (err) {
       console.error('[TravelMemoriesModal] Error loading memories from Atlas:', err);
     } finally {
@@ -150,7 +157,8 @@ export default function TravelMemoriesModal({
 
   const totalLikes = allMemories.reduce((sum, m) => sum + (m.likes?.length || 0), 0);
   const videoCount = allMemories.filter(m => (m as any).mediaType === 'video').length;
-  const albumCount = new Set(allMemories.map(m => m.tripId)).size;
+  const allAlbumIds = Array.from(new Set([...userTrips.map(t => t.id), ...allMemories.map(m => m.tripId)]));
+  const albumCount = allAlbumIds.length;
 
   // ── Helpers ───────────────────────────────────────────────────────────
   const getTripNameById = (tripId: string) => {
@@ -269,25 +277,34 @@ export default function TravelMemoriesModal({
     setUploadTags('Travel, Moments');
   };
 
-  const processFiles = (files: File[]) => {
+  const processFiles = async (files: File[]) => {
     if (!files.length) return;
     const queue: typeof uploadQueue = [];
-    let processed = 0;
-    files.forEach(file => {
+    
+    for (const file of files) {
       const isVid = file.type.startsWith('video/');
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (typeof reader.result === 'string') {
-          queue.push({ file, dataUrl: reader.result, mediaType: isVid ? 'video' : 'photo' });
-          processed++;
-          if (processed === files.length) {
-            setUploadQueue(queue);
-            loadQueueItem(0, queue);
-          }
+      try {
+        if (isVid) {
+          // Store raw video blob in IndexedDB for permanent local persistence and instant playback
+          const mediaKey = `vid-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+          const blobUrl = await saveMediaBlob(mediaKey, file);
+          queue.push({ file, dataUrl: blobUrl, mediaType: 'video' });
+        } else {
+          // Client-side compress photos to ~100KB so uploads are ultra-fast and fit storage
+          const compressedDataUrl = await compressImageFile(file);
+          queue.push({ file, dataUrl: compressedDataUrl, mediaType: 'photo' });
         }
-      };
-      reader.readAsDataURL(file);
-    });
+      } catch (err) {
+        console.warn('Error preparing media file:', err);
+        const fallbackUrl = URL.createObjectURL(file);
+        queue.push({ file, dataUrl: fallbackUrl, mediaType: isVid ? 'video' : 'photo' });
+      }
+    }
+
+    if (queue.length > 0) {
+      setUploadQueue(queue);
+      loadQueueItem(0, queue);
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -312,11 +329,25 @@ export default function TravelMemoriesModal({
     try {
       let finalImageUrl = uploadImageUrl.trim();
       const currentQueueItem = uploadQueue[uploadQueueIndex];
+      
       if (currentQueueItem?.file) {
-        // Direct binary upload to Supabase Storage bucket 'trip-memories'
-        const uploaded = await uploadMemoryMedia(uploadTripTarget, currentQueueItem.file);
-        if (uploaded.url) {
-          finalImageUrl = uploaded.url;
+        // 1. Try Supabase Storage bucket 'trip-memories' if remote configured
+        try {
+          const uploaded = await uploadMemoryMedia(uploadTripTarget, currentQueueItem.file);
+          if (uploaded.url) {
+            finalImageUrl = uploaded.url;
+          }
+        } catch {}
+
+        // 2. Persist to local IndexedDB
+        if (!finalImageUrl.startsWith('http://') && !finalImageUrl.startsWith('https://')) {
+          try {
+            const mediaKey = `media-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+            const blobUrl = await saveMediaBlob(mediaKey, currentQueueItem.file);
+            if (currentQueueItem.mediaType === 'video') {
+              finalImageUrl = blobUrl;
+            }
+          } catch {}
         }
       }
 
@@ -332,6 +363,7 @@ export default function TravelMemoriesModal({
         mediaType: uploadMediaType,
       } as any);
 
+      // Immediately append to local memory state so user sees it instantly
       setAllMemories(prev => [saved, ...prev.filter(m => m.id !== saved.id)]);
 
       const nextIdx = uploadQueueIndex + 1;
@@ -701,7 +733,7 @@ export default function TravelMemoriesModal({
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-                    {Array.from(new Set(allMemories.map(m => m.tripId))).map(tripId => {
+                    {allAlbumIds.map(tripId => {
                       const albumMems = allMemories.filter(m => m.tripId === tripId);
                       const vids = albumMems.filter(m => (m as any).mediaType === 'video').length;
                       const photos = albumMems.length - vids;

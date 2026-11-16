@@ -77,6 +77,15 @@ export const AIRPORTS: Record<string, Airport> = {
   DEL: { code: 'DEL', city: 'New Delhi', country: 'India', name: 'Indira Gandhi International Airport' },
   SXR: { code: 'SXR', city: 'Srinagar', country: 'India', name: 'Sheikh ul-Alam International Airport' },
   IXZ: { code: 'IXZ', city: 'Port Blair', country: 'India', name: 'Veer Savarkar International Airport' },
+  IXC: { code: 'IXC', city: 'Chandigarh', country: 'India', name: 'Shaheed Bhagat Singh International Airport' },
+  BLR: { code: 'BLR', city: 'Bengaluru', country: 'India', name: 'Kempegowda International Airport' },
+  JAI: { code: 'JAI', city: 'Jaipur', country: 'India', name: 'Jaipur International Airport' },
+  GOI: { code: 'GOI', city: 'Goa', country: 'India', name: 'Dabolim Airport' },
+  PNQ: { code: 'PNQ', city: 'Pune', country: 'India', name: 'Pune Airport' },
+  CCU: { code: 'CCU', city: 'Kolkata', country: 'India', name: 'Netaji Subhash Chandra Bose International Airport' },
+  HYD: { code: 'HYD', city: 'Hyderabad', country: 'India', name: 'Rajiv Gandhi International Airport' },
+  MAA: { code: 'MAA', city: 'Chennai', country: 'India', name: 'Chennai International Airport' },
+  ATQ: { code: 'ATQ', city: 'Amritsar', country: 'India', name: 'Sri Guru Ram Dass Jee International Airport' },
 };
 
 // City name to primary airport mapping
@@ -100,6 +109,16 @@ export const CITY_TO_AIRPORT: Record<string, string> = {
   'kashmir': 'SXR',
   'port blair': 'IXZ',
   'andaman': 'IXZ',
+  'chandigarh': 'IXC',
+  'bengaluru': 'BLR',
+  'bangalore': 'BLR',
+  'jaipur': 'JAI',
+  'goa': 'GOI',
+  'pune': 'PNQ',
+  'kolkata': 'CCU',
+  'hyderabad': 'HYD',
+  'chennai': 'MAA',
+  'amritsar': 'ATQ',
 };
 
 // ---------------------------------------------------------------------------

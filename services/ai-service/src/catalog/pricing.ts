@@ -7,6 +7,7 @@ const CITIES: Record<string, [number, number, string]> = {
   pune: [18.5204, 73.8567, "IN"],
   bengaluru: [12.9716, 77.5946, "IN"],
   jaipur: [26.9124, 75.7873, "IN"],
+  chandigarh: [30.7333, 76.7794, "IN"],
   srinagar: [34.0837, 74.7973, "IN"],
   kashmir: [34.0837, 74.7973, "IN"],
   jammu: [32.7266, 74.8570, "IN"],

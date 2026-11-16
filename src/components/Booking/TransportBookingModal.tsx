@@ -6,12 +6,144 @@ import { getPlanningContext } from '@/services/planningContext';
  * and airport transfers with route, vehicle type, and price selection.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Car, MapPin, Calendar, Users, ArrowRight, Search, X, CheckCircle2, Star, ShieldCheck, Clock, Navigation, Shield, Luggage, SlidersHorizontal, RefreshCw, Sparkles } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { Car, MapPin, Calendar, Users, ArrowRight, Search, X, CheckCircle2, Star, ShieldCheck, Clock, Navigation, Shield, Luggage, SlidersHorizontal, RefreshCw, Sparkles, ChevronDown } from 'lucide-react';
 import { searchTransport, bookTransport, getTransportTypeLabel, getTransportIcon, formatTransportDuration, type TransportItem, type TransportType, type TransportModeFilter, type TransportBookingDetails } from '@/services/transportService';
 import { PaymentView } from '@/components/Payment/PaymentModal';
 import { useCurrency } from '@/context/CurrencyContext';
 import { downloadTransportVoucher } from '@/services/ticketService';
+
+// ─── City list for autocomplete dropdown ────────────────────────────────────
+const ALL_CITIES = [
+  // India
+  'Ahmedabad', 'Mumbai', 'Delhi', 'New Delhi', 'Pune', 'Bengaluru', 'Jaipur',
+  'Srinagar', 'Jammu', 'Katra', 'Kolkata', 'Chennai', 'Hyderabad', 'Amritsar',
+  'Chandigarh', 'Agra', 'Varanasi', 'Udaipur', 'Surat', 'Vadodara', 'Lucknow',
+  'Goa', 'Shimla', 'Manali', 'Dehradun', 'Bhopal', 'Indore', 'Patna', 'Nagpur',
+  'Kochi', 'Coimbatore',
+  // Europe
+  'Paris', 'London', 'Rome', 'Milan', 'Venice', 'Florence', 'Barcelona', 'Madrid',
+  'Berlin', 'Munich', 'Amsterdam', 'Brussels', 'Zurich', 'Geneva', 'Vienna',
+  'Prague', 'Budapest', 'Warsaw', 'Lisbon', 'Athens', 'Stockholm', 'Oslo',
+  'Copenhagen', 'Helsinki', 'Dublin', 'Edinburgh', 'Rotterdam', 'Frankfurt',
+  'Cologne', 'Hamburg', 'Lyon', 'Marseille', 'Nice', 'Salzburg', 'Krakow',
+  // Japan
+  'Tokyo', 'Kyoto', 'Osaka', 'Hiroshima', 'Nagoya', 'Sapporo', 'Fukuoka',
+  // North America
+  'New York', 'Los Angeles', 'Chicago', 'San Francisco', 'Seattle', 'Boston',
+  'Washington DC', 'Miami', 'Dallas', 'Houston', 'Denver', 'Las Vegas',
+  'Orlando', 'Philadelphia', 'Atlanta', 'Toronto', 'Montreal', 'Vancouver',
+  // Southeast Asia
+  'Bangkok', 'Chiang Mai', 'Singapore', 'Kuala Lumpur', 'Bali', 'Jakarta',
+  'Hanoi', 'Ho Chi Minh City', 'Manila',
+  // China
+  'Beijing', 'Shanghai', 'Guangzhou', 'Shenzhen', 'Chengdu', 'Hangzhou',
+  // Others
+  'Dubai', 'Sydney', 'Rio de Janeiro',
+];
+
+// ─── City Autocomplete Dropdown Component ───────────────────────────────────
+function CityAutocomplete({
+  value,
+  onChange,
+  placeholder,
+  icon: Icon,
+  iconClass,
+  label,
+  readOnly,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  placeholder: string;
+  icon: React.ElementType;
+  iconClass: string;
+  label: string;
+  readOnly?: boolean;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  const filtered = useMemo(() => {
+    const q = (query || value).toLowerCase();
+    if (!q) return ALL_CITIES.slice(0, 15);
+    return ALL_CITIES.filter(c => c.toLowerCase().includes(q)).slice(0, 12);
+  }, [query, value]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  if (readOnly) {
+    return (
+      <div className="relative">
+        <label className="block text-[11px] font-medium text-slate-700 mb-1">{label}</label>
+        <div className="relative flex items-center">
+          <Icon size={15} className={`absolute left-3 ${iconClass} pointer-events-none`} />
+          <input
+            type="text"
+            value={value}
+            readOnly
+            aria-label={label}
+            placeholder={placeholder}
+            className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative" ref={wrapperRef}>
+      <label className="block text-[11px] font-medium text-slate-700 mb-1">{label}</label>
+      <div className="relative flex items-center">
+        <Icon size={15} className={`absolute left-3 ${iconClass} pointer-events-none`} />
+        <input
+          type="text"
+          value={isOpen ? query : value}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            if (!isOpen) setIsOpen(true);
+          }}
+          onFocus={() => {
+            setQuery(value);
+            setIsOpen(true);
+          }}
+          placeholder={placeholder}
+          className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-8 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
+        />
+        <ChevronDown size={14} className="absolute right-2.5 text-slate-400 pointer-events-none" />
+      </div>
+      {isOpen && filtered.length > 0 && (
+        <div className="absolute z-50 top-full mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+          {filtered.map((city) => (
+            <button
+              key={city}
+              type="button"
+              onClick={() => {
+                onChange(city);
+                setQuery('');
+                setIsOpen(false);
+              }}
+              className={`w-full text-left px-3 py-2 text-xs hover:bg-emerald-50 hover:text-emerald-800 transition-colors ${
+                city === value ? 'bg-emerald-50 text-emerald-800 font-semibold' : 'text-slate-700'
+              }`}
+            >
+              <MapPin size={11} className="inline mr-1.5 text-slate-400" />
+              {city}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ─── Step types matching FlightBookingModal & HotelBookingModal ─────────────
 type Step = 'search' | 'results' | 'passenger' | 'payment' | 'confirming' | 'success';
@@ -394,35 +526,25 @@ export default function TransportBookingModal({
           {/* Form Input Grid */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             {/* Origin */}
-            <div className="relative">
-              <label className="block text-[11px] font-medium text-slate-700 mb-1">Pick-up / Origin</label>
-              <div className="relative flex items-center">
-                <MapPin size={15} className="absolute left-3 text-emerald-700 pointer-events-none" />
-                <input
-                  type="text"
-                  value={origin}
-                  onChange={(e) => setOrigin(e.target.value)}
-                  placeholder="e.g. Paris, Tokyo, CDG Airport"
-                  className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
-                />
-              </div>
-            </div>
+            <CityAutocomplete
+              value={origin}
+              onChange={setOrigin}
+              placeholder="e.g. Paris, Tokyo, CDG Airport"
+              icon={MapPin}
+              iconClass="text-emerald-700"
+              label="Pick-up / Origin"
+            />
 
             {/* Destination */}
-            <div className="relative">
-              <label className="block text-[11px] font-medium text-slate-700 mb-1">Drop-off / Destination</label>
-              <div className="relative flex items-center">
-                <Navigation size={15} className="absolute left-3 text-emerald-700 pointer-events-none" />
-                <input
-                  type="text"
-                  value={destination}
-                  readOnly
-                  aria-label="Selected transport destination"
-                  placeholder="e.g. London, Kyoto, Hotel"
-                  className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
-                />
-              </div>
-            </div>
+            <CityAutocomplete
+              value={destination}
+              onChange={setDestination}
+              placeholder="e.g. London, Kyoto, Hotel"
+              icon={Navigation}
+              iconClass="text-emerald-700"
+              label="Drop-off / Destination"
+              readOnly
+            />
 
             {/* Date */}
             <div className="relative">

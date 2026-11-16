@@ -903,14 +903,55 @@ export async function getAllMemories(params?: {
     console.warn('[collaborationService] getAllMemories API failed, falling back to local store:', err);
   }
 
-  // Fallback to local storage
+  // Fallback to local storage (always ensuring seed memories exist)
   try {
     const raw = localStorage.getItem(MEMORIES_KEY);
-    const store: Record<string, TripMemory[]> = raw ? JSON.parse(raw) : INITIAL_MEMORIES;
-    const all = params?.tripId ? (store[params.tripId] || []) : [];
-    return all;
+    let store: Record<string, TripMemory[]> = INITIAL_MEMORIES;
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          // Merge so initial trip folders are never lost even if local state was partially cleared
+          store = { ...INITIAL_MEMORIES, ...parsed };
+          // Ensure default trips have their initial items if empty
+          for (const k of Object.keys(INITIAL_MEMORIES)) {
+            if (!store[k] || store[k].length === 0) {
+              store[k] = INITIAL_MEMORIES[k];
+            }
+          }
+        }
+      } catch {}
+    }
+
+    let list: TripMemory[] = [];
+    if (params?.tripId && params.tripId !== 'all') {
+      list = store[params.tripId] || INITIAL_MEMORIES[params.tripId] || [];
+    } else {
+      list = Object.values(store).flat();
+    }
+
+    if (list.length === 0) {
+      list = Object.values(INITIAL_MEMORIES).flat();
+      try {
+        localStorage.setItem(MEMORIES_KEY, JSON.stringify(INITIAL_MEMORIES));
+      } catch {}
+    }
+
+    if (params?.tag && params.tag !== 'all') {
+      list = list.filter((m) => m.tags?.includes(params.tag!));
+    }
+    if (params?.search && params.search.trim()) {
+      const q = params.search.toLowerCase();
+      list = list.filter(
+        (m) =>
+          m.title.toLowerCase().includes(q) ||
+          m.locationName?.toLowerCase().includes(q) ||
+          m.caption?.toLowerCase().includes(q)
+      );
+    }
+    return list;
   } catch {
-    return [];
+    return Object.values(INITIAL_MEMORIES).flat();
   }
 }
 
@@ -1051,7 +1092,11 @@ export async function uploadTripMemory(
   };
 
   store[tripId].unshift(newMem);
-  localStorage.setItem(MEMORIES_KEY, JSON.stringify(store));
+  try {
+    localStorage.setItem(MEMORIES_KEY, JSON.stringify(store));
+  } catch (quotaErr) {
+    console.warn('[collaborationService] Storage quota warning on memory save, holding in session:', quotaErr);
+  }
   return newMem;
 }
 
