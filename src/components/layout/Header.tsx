@@ -26,9 +26,9 @@ export function Header(props: HeaderProps) {
       <nav className={`workflow-nav-links ${expanded ? 'expanded' : ''}`} aria-label="Main navigation">
         <a href="#destinations" onClick={() => setExpanded(false)}>Explore</a>
         {props.canBook && <details className="workflow-nav-menu"><summary>Book {props.destination}</summary><div>
-          {props.services?.flights && <button onClick={() => act(props.onOpenFlight)}>Flights</button>}
+          {props.services?.flights && <button onClick={() => act(props.onOpenFlight)}>Transport options</button>}
           {props.services?.hotels && <button onClick={() => act(props.onOpenHotel)}>Hotels & stays</button>}
-          {props.services?.transport && <button onClick={() => act(props.onOpenTransport)}>Ground transport</button>}
+          {props.services?.transport && <button onClick={() => act(props.onOpenTransport)}>Car rentals & transfers</button>}
           {props.services?.bundles && <button onClick={() => act(props.onOpenBundle)}>Travel bundle</button>}
         </div></details>}
         {props.hasBookings && <button onClick={() => act(props.onOpenMyBookings)}>My bookings</button>}

@@ -113,7 +113,7 @@ export const DestinationCard: React.FC<DestinationCardProps> = ({
             <button
               type="button"
               className="btn-card-icon"
-              title={`Book Flight to ${destination.name}`}
+              title={`Transport to ${destination.name}`}
               onClick={(e) => {
                 e.stopPropagation();
                 onBookFlight(destination.name);

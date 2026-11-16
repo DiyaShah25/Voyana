@@ -38,7 +38,7 @@ import { useCurrency } from '@/context/CurrencyContext';
 import { downloadFlightTicket } from '@/services/ticketService';
 
 // ─── Step types ─────────────────────────────────────────────────────────────
-type Step = 'search' | 'results' | 'passenger' | 'payment' | 'confirming' | 'success';
+type Step = 'search' | 'modes' | 'results' | 'passenger' | 'payment' | 'confirming' | 'success';
 
 // ─── Cabin Badge ─────────────────────────────────────────────────────────────
 const CABIN_COLORS: Record<CabinClass, string> = {
@@ -476,7 +476,8 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
     // 1. Determine available transport modes
     const modes = getAvailableModes(originCity, destCity);
     setAvailableModes(modes);
-    setSelectedMode('all');
+    // Default selectedMode to first available mode
+    setSelectedMode(modes.includes('flight') ? 'flight' : modes[0] || 'flight');
 
     // 2. Flights
     if (AIRPORTS[resolvedOriginCode] && AIRPORTS[resolvedDestCode]) {
@@ -497,7 +498,8 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
     setTrains(ground.trains);
     setBuses(ground.buses);
 
-    setStep('results');
+    // Proceed to mode selection step
+    setStep('modes');
   }, [origin, destination, departureDate, passengers, cabin]);
 
   // Overall min price & min duration across all modes for the route (for Fastest/Cheapest badges)
@@ -639,8 +641,9 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
             </div>
             <div>
               <h2 className="text-base font-bold text-slate-900 tracking-wide">
-                {step === 'search' && 'Search Transport & Flights'}
-                {step === 'results' && 'Available Transport Options'}
+                {step === 'search' && 'Where are you going?'}
+                {step === 'modes' && 'How do you want to travel?'}
+                {step === 'results' && (selectedMode === 'flight' ? 'Available Flights' : selectedMode === 'train' ? 'Train Options' : 'Bus Options')}
                 {step === 'passenger' && 'Passenger Details'}
                 {step === 'payment' && 'Payment & Checkout'}
                 {step === 'confirming' && 'Confirming Booking...'}
@@ -648,7 +651,8 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
               </h2>
               <p className="text-xs text-slate-500">
                 {step === 'search' && 'Find flights, trains, and buses worldwide'}
-                {step === 'results' && `${unifiedOptions.length} options found · ${formatDate(departureDate)}`}
+                {step === 'modes' && `${origin} → ${destination} · ${formatDate(departureDate)}`}
+                {step === 'results' && `${unifiedOptions.length} options · ${formatDate(departureDate)}`}
                 {step === 'passenger' && `${selectedFlight?.airline} ${selectedFlight?.flightNumber}`}
                 {step === 'payment' && `Pay securely for ${selectedFlight?.airline} ${selectedFlight?.flightNumber}`}
                 {step === 'confirming' && 'Securing your reservation...'}
@@ -658,11 +662,12 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            {(step === 'results' || step === 'passenger' || step === 'payment') && (
+            {(step === 'modes' || step === 'results' || step === 'passenger' || step === 'payment') && (
               <button
                 onClick={() => {
                   if (step === 'payment') setStep('passenger');
                   else if (step === 'passenger') setStep('results');
+                  else if (step === 'results') setStep('modes');
                   else setStep('search');
                 }}
                 className="text-xs font-semibold text-slate-600 hover:text-slate-900 transition px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200"
@@ -749,27 +754,6 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
                 </div>
               </div>
 
-              {/* Cabin Class */}
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Cabin Class</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {CABIN_OPTIONS.map(opt => (
-                    <button
-                      key={opt.value}
-                      onClick={() => setCabin(opt.value)}
-                      className={`py-2.5 px-2 rounded-xl border text-xs font-semibold transition-all text-center ${
-                        cabin === opt.value
-                          ? 'bg-emerald-700 border-emerald-700 text-white shadow-md shadow-emerald-700/20'
-                          : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                      }`}
-                    >
-                      <div className="text-base">{opt.icon}</div>
-                      <div className="mt-0.5 leading-tight">{opt.label}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* Popular Routes */}
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Popular Routes</p>
@@ -809,68 +793,91 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
             </div>
           )}
 
-          {/* ─── STEP: RESULTS ─── */}
-          {step === 'results' && (
-            <div className="flex flex-col h-full">
-              {/* Transport Mode Tabs */}
-              <div className="flex items-center gap-2 px-5 pt-3 pb-2 border-b border-slate-100 bg-white flex-shrink-0">
-                <span className="text-xs font-semibold text-slate-500 mr-1">Modes:</span>
-                <button
-                  type="button"
-                  onClick={() => setSelectedMode('all')}
-                  className={`text-xs px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 ${
-                    selectedMode === 'all'
-                      ? 'bg-emerald-700 text-white shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900 bg-slate-100 border border-slate-200'
-                  }`}
-                >
-                  All ({flights.length + trains.length + buses.length})
-                </button>
+          {/* ─── STEP: MODES ─── */}
+          {step === 'modes' && (
+            <div className="p-5 space-y-5">
+              {/* Route summary */}
+              <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                <span className="text-sm font-bold text-slate-900">{origin}</span>
+                <ArrowRight size={16} className="text-slate-400" />
+                <span className="text-sm font-bold text-slate-900">{destination}</span>
+                <span className="ml-auto text-xs text-slate-500">{formatDate(departureDate)} · {passengers} pax</span>
+              </div>
 
+              <p className="text-sm font-semibold text-slate-700">Choose how you want to travel:</p>
+
+              <div className="space-y-3">
                 {availableModes.includes('flight') && (
-                  <button
-                    type="button"
-                    onClick={() => setSelectedMode('flight')}
-                    className={`text-xs px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 ${
-                      selectedMode === 'flight'
-                        ? 'bg-emerald-700 text-white shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900 bg-slate-100 border border-slate-200'
-                    }`}
-                  >
-                    <Plane size={13} />
-                    Flight ({flights.length})
-                  </button>
+                  <div className="rounded-2xl border-2 border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 transition-all">
+                    <button
+                      onClick={() => { setSelectedMode('flight'); setStep('results'); }}
+                      className="w-full flex items-center gap-4 p-4 text-left"
+                    >
+                      <div className="p-3 rounded-xl bg-sky-100 text-sky-700 flex-shrink-0"><Plane size={22} /></div>
+                      <div className="flex-1">
+                        <div className="font-bold text-slate-900">Flight</div>
+                        <div className="text-xs text-slate-500">{flights.length} options · Fastest way to travel</div>
+                      </div>
+                      <div className="flex flex-col gap-1 items-end" onClick={e => e.stopPropagation()}>
+                        <span className="text-xs text-slate-500">Cabin class</span>
+                        <select
+                          value={cabin}
+                          onChange={e => setCabin(e.target.value as CabinClass)}
+                          className="text-xs border border-slate-200 rounded-lg px-2 py-1 bg-white text-slate-700 font-semibold"
+                        >
+                          {CABIN_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
+                      </div>
+                      <ArrowRight size={16} className="text-slate-400 flex-shrink-0" />
+                    </button>
+                  </div>
                 )}
 
                 {availableModes.includes('train') && (
                   <button
-                    type="button"
-                    onClick={() => setSelectedMode('train')}
-                    className={`text-xs px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 ${
-                      selectedMode === 'train'
-                        ? 'bg-emerald-700 text-white shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900 bg-slate-100 border border-slate-200'
-                    }`}
+                    onClick={() => { setSelectedMode('train'); setStep('results'); }}
+                    className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 transition-all text-left"
                   >
-                    <Train size={13} />
-                    Train ({trains.length})
+                    <div className="p-3 rounded-xl bg-amber-100 text-amber-700 flex-shrink-0"><Train size={22} /></div>
+                    <div className="flex-1">
+                      <div className="font-bold text-slate-900">Train</div>
+                      <div className="text-xs text-slate-500">{trains.length} options · Book via IRCTC</div>
+                    </div>
+                    <ArrowRight size={16} className="text-slate-400 flex-shrink-0" />
                   </button>
                 )}
 
                 {availableModes.includes('bus') && (
                   <button
-                    type="button"
-                    onClick={() => setSelectedMode('bus')}
-                    className={`text-xs px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 ${
-                      selectedMode === 'bus'
-                        ? 'bg-emerald-700 text-white shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900 bg-slate-100 border border-slate-200'
-                    }`}
+                    onClick={() => { setSelectedMode('bus'); setStep('results'); }}
+                    className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 transition-all text-left"
                   >
-                    <Bus size={13} />
-                    Bus ({buses.length})
+                    <div className="p-3 rounded-xl bg-violet-100 text-violet-700 flex-shrink-0"><Bus size={22} /></div>
+                    <div className="flex-1">
+                      <div className="font-bold text-slate-900">Bus</div>
+                      <div className="text-xs text-slate-500">{buses.length} options · Book via RedBus</div>
+                    </div>
+                    <ArrowRight size={16} className="text-slate-400 flex-shrink-0" />
                   </button>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* ─── STEP: RESULTS ─── */}
+          {step === 'results' && (
+            <div className="flex flex-col h-full">
+              {/* Mode indicator bar */}
+              <div className="flex items-center gap-2 px-5 pt-3 pb-2 border-b border-slate-100 bg-white flex-shrink-0">
+                <span className="text-xs font-semibold text-slate-500">Showing:</span>
+                <span className={`text-xs px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 ${
+                  selectedMode === 'flight' ? 'bg-sky-100 text-sky-800' :
+                  selectedMode === 'train' ? 'bg-amber-100 text-amber-800' : 'bg-violet-100 text-violet-800'
+                }`}>
+                  {selectedMode === 'flight' && <><Plane size={13} /> Flights ({flights.length})</>}
+                  {selectedMode === 'train' && <><Train size={13} /> Trains ({trains.length})</>}
+                  {selectedMode === 'bus' && <><Bus size={13} /> Buses ({buses.length})</>}
+                </span>
               </div>
 
               {/* Filter / Sort Bar */}
@@ -900,8 +907,10 @@ export const FlightBookingModal: React.FC<FlightBookingModalProps> = ({
               <div className="p-4 space-y-3 overflow-y-auto bg-slate-50/40">
                 {unifiedOptions.length === 0 ? (
                   <div className="py-12 text-center text-slate-500">
-                    <Plane size={36} className="mx-auto mb-3 opacity-30 text-slate-400" />
-                    <p className="font-medium">No transport options found for this route on the selected date.</p>
+                    {selectedMode === 'train' ? <Train size={36} className="mx-auto mb-3 opacity-30 text-slate-400" /> :
+                     selectedMode === 'bus' ? <Bus size={36} className="mx-auto mb-3 opacity-30 text-slate-400" /> :
+                     <Plane size={36} className="mx-auto mb-3 opacity-30 text-slate-400" />}
+                    <p className="font-medium">No {selectedMode === 'flight' ? 'flights' : selectedMode === 'train' ? 'trains' : 'buses'} found for this route on the selected date.</p>
                   </div>
                 ) : (
                   unifiedOptions.map(item => (

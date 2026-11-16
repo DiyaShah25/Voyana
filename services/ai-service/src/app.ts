@@ -38,6 +38,24 @@ export function createApp(): Express {
   app.use('/', healthRouter);
   app.use('/api', healthRouter);
 
+  // Root route: redirect browser to frontend UI, return status for API clients
+  app.get('/', (req: Request, res: Response) => {
+    const frontendUrl = (process.env.FRONTEND_ORIGINS || 'http://localhost:5173').split(',')[0].trim();
+    if (req.accepts('html')) {
+      res.redirect(frontendUrl);
+      return;
+    }
+    res.status(200).json({
+      name: 'Voyana Backend API',
+      status: 'healthy',
+      frontendUrl,
+      endpoints: {
+        health: '/health',
+        api: '/api',
+        aiChat: '/ai/chat',
+      },
+    });
+  });
   // AI Assistant routes (preserving existing /ai mount)
   app.use('/ai', chatRouter);
   app.use('/api/ai', chatRouter);

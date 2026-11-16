@@ -313,8 +313,8 @@ export const DestinationDetailsModal: React.FC<DestinationDetailsModalProps> = (
                     <Plane size={16} />
                   </div>
                   <div>
-                    <div className="font-bold">Book Flights to {destination.name}</div>
-                    <div className="text-[10px] text-sky-700">Compare airlines & instant boarding passes</div>
+                    <div className="font-bold">Transport to {destination.name}</div>
+                    <div className="text-[10px] text-sky-700">Flights, trains & buses with real-time routes</div>
                   </div>
                 </div>
                 <ArrowRight size={15} />

@@ -37,7 +37,7 @@ function getRequestOrigin(req: { get(name: string): string | undefined }): strin
   if (referer) {
     try {
       return new URL(referer).origin.trim().replace(/\/+$/, '').toLowerCase();
-    } catch {}
+    } catch { }
   }
   return undefined;
 }
@@ -180,7 +180,7 @@ authRouter.post('/signup', async (req: AuthenticatedRequest, res: Response): Pro
       },
     });
   } catch (caught) {
-      const err = toError(caught);
+    const err = toError(caught);
     console.error('[Auth API] Signup error:', err);
     res.status(500).json({
       ok: false,
@@ -243,7 +243,7 @@ authRouter.post('/login', async (req: AuthenticatedRequest, res: Response): Prom
       },
     });
   } catch (caught) {
-      const err = toError(caught);
+    const err = toError(caught);
     console.error('[Auth API] Login error:', err);
     res.status(500).json({
       ok: false,
@@ -265,7 +265,7 @@ authRouter.get('/me', requireAuth, async (req: AuthenticatedRequest, res: Respon
     }
     res.status(200).json({ ok: true, user: user.toJSON() });
   } catch (caught) {
-      const err = toError(caught);
+    const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to load user profile.', error: err?.message });
   }
 });
@@ -301,7 +301,7 @@ authRouter.put('/profile', requireAuth, async (req: AuthenticatedRequest, res: R
       user: user.toJSON(),
     });
   } catch (caught) {
-      const err = toError(caught);
+    const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to update profile.', error: err?.message });
   }
 });
@@ -315,7 +315,7 @@ authRouter.get('/users', requireAuth, async (req: AuthenticatedRequest, res: Res
     const users = await UserModel.find({}, { passwordHash: 0 }).limit(50);
     res.status(200).json({ ok: true, users });
   } catch (caught) {
-      const err = toError(caught);
+    const err = toError(caught);
     res.status(500).json({ ok: false, message: 'Failed to list users.', error: err?.message });
   }
 });
