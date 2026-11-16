@@ -24,7 +24,10 @@ export const config = {
   razorpayKeyId: process.env.RAZORPAY_KEY_ID || '',
   razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET || '',
   paymentProvider: process.env.PAYMENT_PROVIDER?.trim().toLowerCase() || 'demo',
-  frontendOrigins: (process.env.FRONTEND_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173').split(',').map(value => value.trim()),
+  frontendOrigins: (process.env.FRONTEND_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173')
+    .split(',')
+    .map(value => value.trim().replace(/^['"]|['"]$/g, '').replace(/\/+$/, '').toLowerCase())
+    .filter(Boolean),
   requestTimeoutMs: parseInt(process.env.REQUEST_TIMEOUT_MS || '30000', 10),
 };
 

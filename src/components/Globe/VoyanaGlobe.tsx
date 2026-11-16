@@ -1,4 +1,4 @@
-import { reverseLocation } from '@/services/locationService';
+import { reverseLocation, getClosestKnownLocation } from '@/services/locationService';
 /**
  * Voyana 3D Interactive Globe Component
  * Renders an interactive Three.js Earth globe with location markers,
@@ -62,19 +62,30 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
   const [findingPlace, setFindingPlace] = useState(false);
   const lookupChangeRef = useRef(onPlaceLookupChange);
   lookupChangeRef.current = onPlaceLookupChange;
-  const findPlace = useCallback((latitude:number,longitude:number) => {
+  const findPlace = useCallback((latitude: number, longitude: number) => {
     lookupAbort.current?.abort();
-    const controller=new AbortController();lookupAbort.current=controller;
-    setFindingPlace(true);lookupChangeRef.current?.(true);
-    void reverseLocation(latitude,longitude,controller.signal).then(location=>{
-      if(controller.signal.aborted)return;
-      setFindingPlace(false);lookupChangeRef.current?.(false);onLocationSelectRef.current?.(location);
-    }).catch(()=>{
-      if(controller.signal.aborted)return;
-      setFindingPlace(false);lookupChangeRef.current?.(false);
-      onLocationSelectRef.current?.({name:'Place name unavailable',latitude,longitude,type:'region',bookable:false});
-    });
-  },[]);
+    const controller = new AbortController();
+    lookupAbort.current = controller;
+    setFindingPlace(true);
+    lookupChangeRef.current?.(true);
+    void reverseLocation(latitude, longitude, controller.signal)
+      .then((location) => {
+        if (controller.signal.aborted) return;
+        setFindingPlace(false);
+        lookupChangeRef.current?.(false);
+        const resolved =
+          !location || location.name === 'Place name unavailable' || !location.name
+            ? getClosestKnownLocation(latitude, longitude)
+            : location;
+        onLocationSelectRef.current?.(resolved);
+      })
+      .catch(() => {
+        if (controller.signal.aborted) return;
+        setFindingPlace(false);
+        lookupChangeRef.current?.(false);
+        onLocationSelectRef.current?.(getClosestKnownLocation(latitude, longitude));
+      });
+  }, []);
 
   // Floating label projected coordinates on 2D screen
   const [labelPos, setLabelPos] = useState<{ x: number; y: number; visible: boolean } | null>(null);
@@ -597,7 +608,7 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
 
       {findingPlace && <p className="globe-place-status" role="status">Finding city, state and country…</p>}
       {/* Projected Editorial 2D Location Pin Label */}
-      {labelPos && labelPos.visible && selectedLocation && !findingPlace && !selectedLocation.name.includes('°') && (
+      {labelPos && labelPos.visible && selectedLocation && !findingPlace && !selectedLocation.name.includes('°') && selectedLocation.name !== 'Place name unavailable' && (
         <div
           className="editorial-globe-label animate-fade-in"
           style={{
@@ -608,7 +619,7 @@ const VoyanaGlobe = forwardRef<VoyanaGlobeHandle, VoyanaGlobeExtendedProps>(func
           <div className="label-stem" />
           <div className="label-content">
             <div className="label-city">{selectedLocation.name}</div>
-            <div className="label-country">{selectedLocation.country || 'No country assigned'}</div>
+            <div className="label-country">{selectedLocation.country || 'Global Destination'}</div>
             {selectedLocation.city && selectedLocation.city!==selectedLocation.name && <div className="label-state">{selectedLocation.city}</div>}
             {selectedLocation.state && <div className="label-state">{selectedLocation.state}</div>}
             {metadata?.temperature && (

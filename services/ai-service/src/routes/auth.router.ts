@@ -30,12 +30,34 @@ function createToken(user: { id: string; email: string; role: string; name: stri
   );
 }
 
+function getRequestOrigin(req: { get(name: string): string | undefined }): string | undefined {
+  const origin = req.get('origin');
+  if (origin) return origin.trim().replace(/\/+$/, '').toLowerCase();
+  const referer = req.get('referer');
+  if (referer) {
+    try {
+      return new URL(referer).origin.trim().replace(/\/+$/, '').toLowerCase();
+    } catch {}
+  }
+  return undefined;
+}
+
+function isOriginAllowed(origin: string | undefined): boolean {
+  if (!origin) return false;
+  return config.frontendOrigins.some(allowed => {
+    const norm = allowed.trim().replace(/^['"]|['"]$/g, '').replace(/\/+$/, '').toLowerCase();
+    if (norm === '*' || norm === origin) return true;
+    if (norm.startsWith('*.') && origin.endsWith(norm.slice(1))) return true;
+    return false;
+  });
+}
+
 // A short-lived challenge binds Google's ID token to this browser's sign-in attempt.
 const googleChallenges = new Map<string, number>();
 authRouter.get('/google/config', (req, res) => {
   if (!config.googleClientId) { res.json({ enabled: false }); return; }
-  const origin = req.get('origin');
-  if (!origin || !config.frontendOrigins.includes(origin)) { res.status(403).json({ message: 'Sign-in origin is not allowed.' }); return; }
+  const origin = getRequestOrigin(req);
+  if (!origin || !isOriginAllowed(origin)) { res.status(403).json({ message: 'Sign-in origin is not allowed.' }); return; }
   const now = Date.now();
   for (const [nonce, expiry] of googleChallenges) if (expiry < now) googleChallenges.delete(nonce);
   if (googleChallenges.size >= 1000) { res.status(429).json({ message: 'Please retry sign-in shortly.' }); return; }
@@ -47,8 +69,8 @@ authRouter.get('/google/config', (req, res) => {
 
 authRouter.post('/google', async (req, res): Promise<void> => {
   if (!config.googleClientId) { res.status(503).json({ message: 'Google sign-in is awaiting app setup.' }); return; }
-  const origin = req.get('origin');
-  if (!origin || !config.frontendOrigins.includes(origin)) { res.status(403).json({ message: 'Sign-in origin is not allowed.' }); return; }
+  const origin = getRequestOrigin(req);
+  if (!origin || !isOriginAllowed(origin)) { res.status(403).json({ message: 'Sign-in origin is not allowed.' }); return; }
   const { credential, challenge } = req.body;
   if (typeof credential !== 'string' || credential.length > 16000 || typeof challenge !== 'string') { res.status(400).json({ message: 'Google credential and challenge are required.' }); return; }
   let nonce: string;
