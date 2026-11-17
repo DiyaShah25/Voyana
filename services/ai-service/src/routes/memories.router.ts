@@ -17,6 +17,11 @@ memoriesRouter.use(async (req: AuthenticatedRequest, res, next) => {
   try {
     let tripId = req.method === 'GET' ? req.query.tripId : req.body.tripId;
     const memoryId = req.path.split('/')[1];
+    // The gallery requests the collection endpoint without a trip filter to
+    // show memories across albums. Keep item and write operations trip-scoped.
+    if (req.method === 'GET' && req.path === '/' && (tripId === undefined || tripId === 'all')) {
+      return next();
+    }
     if (memoryId) {
       const memory = await MemoryModel.findOne({ id: memoryId });
       if (!memory) { res.status(404).json({ message: 'Memory not found.' }); return; }
