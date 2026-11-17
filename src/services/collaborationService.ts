@@ -956,35 +956,7 @@ export async function getAllMemories(params?: {
 }
 
 export async function getTripMemories(tripId: string): Promise<TripMemory[]> {
-  // 1. Try Supabase PostgreSQL first if available
-  if (supabase) {
-    try {
-      const { data, error } = await supabase
-        .from('trip_memories')
-        .select('*')
-        .eq('trip_id', tripId)
-        .order('created_at', { ascending: false });
-
-      if (!error && data && data.length > 0) {
-        const mapped: TripMemory[] = data.map((row: any) => ({
-          id: row.id,
-          tripId: row.trip_id,
-          uploadedBy: row.uploaded_by,
-          title: row.title,
-          caption: row.caption || undefined,
-          locationName: row.location_name || undefined,
-          imageUrl: row.image_url,
-          date: row.date,
-          likes: row.likes || [],
-          tags: row.tags || [],
-          mediaType: row.media_type || 'photo',
-        }));
-        return mapped;
-      }
-    } catch { /* Retain fallback flow */ }
-  }
-
-  // 2. Try REST API
+  // MongoDB is the source of truth for trips and their memories.
   try {
     const res = await apiRequest<{ ok: boolean; memories: TripMemory[] }>(`/api/collaboration/${tripId}/memories`);
     if (res.ok && res.data?.memories && res.data.memories.length > 0) {
@@ -1009,53 +981,7 @@ export async function uploadTripMemory(
   tripId: string,
   memory: Omit<TripMemory, 'id' | 'tripId' | 'likes'>
 ): Promise<TripMemory> {
-  // 1. Persist to Supabase if configured
-  if (supabase) {
-    try {
-      const { data, error } = await supabase
-        .from('trip_memories')
-        .insert([{
-          trip_id: tripId,
-          uploaded_by: memory.uploadedBy,
-          title: memory.title,
-          caption: memory.caption || null,
-          location_name: memory.locationName || null,
-          image_url: memory.imageUrl,
-          media_type: memory.mediaType || 'photo',
-          date: memory.date || new Date().toISOString().split('T')[0],
-          likes: [],
-          tags: memory.tags || ['Travel', 'Moments'],
-        }])
-        .select()
-        .single();
-
-      if (!error && data) {
-        const saved: TripMemory = {
-          id: data.id,
-          tripId: data.trip_id,
-          uploadedBy: data.uploaded_by,
-          title: data.title,
-          caption: data.caption || undefined,
-          locationName: data.location_name || undefined,
-          imageUrl: data.image_url,
-          mediaType: data.media_type,
-          date: data.date,
-          likes: data.likes || [],
-          tags: data.tags || [],
-        };
-        const raw = localStorage.getItem(MEMORIES_KEY);
-        const store = raw ? JSON.parse(raw) : INITIAL_MEMORIES;
-        if (!store[tripId]) store[tripId] = [];
-        store[tripId].unshift(saved);
-        localStorage.setItem(MEMORIES_KEY, JSON.stringify(store));
-        return saved;
-      }
-    } catch (err) {
-      console.warn('[collaborationService] Supabase memory save fallback:', err);
-    }
-  }
-
-  // 2. Persist directly to MongoDB Atlas backend
+  // Persist memory metadata and the compressed media data URL in MongoDB.
   try {
     const res = await apiRequest<{ ok: boolean; memory: TripMemory }>(`/api/collaboration/${tripId}/memories`, {
       method: 'POST',

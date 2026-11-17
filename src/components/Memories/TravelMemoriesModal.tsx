@@ -17,8 +17,7 @@ import {
   updateTripMemory, generateAiJournalStory, type TripMemory,
 } from '@/services/collaborationService';
 import { getUserTrips, deleteTrip, type Trip } from '@/services/tripService';
-import { uploadMemoryMedia } from '@/services/supabaseStorage';
-import { compressImageFile, saveMediaBlob } from '@/services/mediaStorageHelper';
+import { compressImageFile } from '@/services/mediaStorageHelper';
 
 export interface TravelMemoriesModalProps {
   isOpen: boolean;
@@ -285,10 +284,16 @@ export default function TravelMemoriesModal({
       const isVid = file.type.startsWith('video/');
       try {
         if (isVid) {
-          // Store raw video blob in IndexedDB for permanent local persistence and instant playback
-          const mediaKey = `vid-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-          const blobUrl = await saveMediaBlob(mediaKey, file);
-          queue.push({ file, dataUrl: blobUrl, mediaType: 'video' });
+          // MongoDB stores each memory in one document (16 MB BSON limit).
+          // Keep video small enough for base64 plus metadata to fit safely.
+          if (file.size > 10 * 1024 * 1024) throw new Error('Videos must be 10 MB or smaller to save with MongoDB.');
+          const dataUrl = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result));
+            reader.onerror = () => reject(reader.error);
+            reader.readAsDataURL(file);
+          });
+          queue.push({ file, dataUrl, mediaType: 'video' });
         } else {
           // Client-side compress photos to ~100KB so uploads are ultra-fast and fit storage
           const compressedDataUrl = await compressImageFile(file);
@@ -296,6 +301,10 @@ export default function TravelMemoriesModal({
         }
       } catch (err) {
         console.warn('Error preparing media file:', err);
+        if (isVid && file.size > 10 * 1024 * 1024) {
+          window.alert('Videos must be 10 MB or smaller to publish.');
+          continue;
+        }
         const fallbackUrl = URL.createObjectURL(file);
         queue.push({ file, dataUrl: fallbackUrl, mediaType: isVid ? 'video' : 'photo' });
       }
@@ -327,29 +336,7 @@ export default function TravelMemoriesModal({
     if (!uploadTitle.trim() || !uploadImageUrl.trim()) return;
     setIsSubmitting(true);
     try {
-      let finalImageUrl = uploadImageUrl.trim();
-      const currentQueueItem = uploadQueue[uploadQueueIndex];
-      
-      if (currentQueueItem?.file) {
-        // 1. Try Supabase Storage bucket 'trip-memories' if remote configured
-        try {
-          const uploaded = await uploadMemoryMedia(uploadTripTarget, currentQueueItem.file);
-          if (uploaded.url) {
-            finalImageUrl = uploaded.url;
-          }
-        } catch {}
-
-        // 2. Persist to local IndexedDB
-        if (!finalImageUrl.startsWith('http://') && !finalImageUrl.startsWith('https://')) {
-          try {
-            const mediaKey = `media-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-            const blobUrl = await saveMediaBlob(mediaKey, currentQueueItem.file);
-            if (currentQueueItem.mediaType === 'video') {
-              finalImageUrl = blobUrl;
-            }
-          } catch {}
-        }
-      }
+      const finalImageUrl = uploadImageUrl.trim();
 
       const parsedTags = uploadTags.split(',').map(t => t.trim().replace(/^#/, '')).filter(t => t.length > 0);
       const saved = await uploadTripMemory(uploadTripTarget, {
