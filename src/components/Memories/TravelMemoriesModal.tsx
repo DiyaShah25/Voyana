@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import {
   getAllMemories, uploadTripMemory, likeTripMemory, deleteTripMemory,
-  updateTripMemory, generateAiJournalStory, type TripMemory,
+  updateTripMemory, generateAiJournalStory, type TripMemory, INITIAL_MEMORIES,
 } from '@/services/collaborationService';
 import { getUserTrips, deleteTrip, type Trip } from '@/services/tripService';
 import { compressImageFile } from '@/services/mediaStorageHelper';
@@ -106,7 +106,11 @@ export default function TravelMemoriesModal({
       setAllMemories(prev => {
         const remoteIds = new Set(mems.map(m => m.id));
         const localCustom = prev.filter(p => !remoteIds.has(p.id));
-        return [...localCustom, ...mems];
+        const combined = [...localCustom, ...mems];
+        if (combined.length === 0) {
+          return Object.values(INITIAL_MEMORIES).flat();
+        }
+        return combined;
       });
     } catch (err) {
       console.error('[TravelMemoriesModal] Error loading memories from Atlas:', err);

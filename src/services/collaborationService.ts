@@ -243,7 +243,7 @@ const INITIAL_DOCS: Record<string, TripDocument[]> = {
   ],
 };
 
-const INITIAL_MEMORIES: Record<string, TripMemory[]> = {
+export const INITIAL_MEMORIES: Record<string, TripMemory[]> = {
   'trip-user-01': [
     {
       id: 'mem-01',
@@ -875,6 +875,7 @@ export async function getAllMemories(params?: {
   search?: string;
   sortBy?: string;
 }): Promise<TripMemory[]> {
+  let remoteMemories: TripMemory[] = [];
   try {
     const query = new URLSearchParams();
     if (params?.tripId && params.tripId !== 'all') query.set('tripId', params.tripId);
@@ -884,75 +885,71 @@ export async function getAllMemories(params?: {
 
     const queryString = query.toString() ? `?${query.toString()}` : '';
     const res = await apiRequest<{ ok: boolean; memories: TripMemory[] }>(`/api/memories${queryString}`);
-    if (res.ok && Array.isArray(res.data?.memories)) {
-      const raw = localStorage.getItem(MEMORIES_KEY);
-      const store = raw ? JSON.parse(raw) : INITIAL_MEMORIES;
-      res.data.memories.forEach((mem) => {
-        if (!store[mem.tripId]) store[mem.tripId] = [];
-        const existingIdx = store[mem.tripId].findIndex((m: TripMemory) => m.id === mem.id);
-        if (existingIdx > -1) {
-          store[mem.tripId][existingIdx] = mem;
-        } else {
-          store[mem.tripId].push(mem);
-        }
-      });
-      localStorage.setItem(MEMORIES_KEY, JSON.stringify(store));
-      return res.data.memories;
+    if (res.ok && Array.isArray(res.data?.memories) && res.data.memories.length > 0) {
+      remoteMemories = res.data.memories;
     }
   } catch (err) {
-    console.warn('[collaborationService] getAllMemories API failed, falling back to local store:', err);
+    console.warn('[collaborationService] getAllMemories API call failed, using local/seed fallback:', err);
   }
 
-  // Fallback to local storage (always ensuring seed memories exist)
+  // Load from local store, initialized with seed memories so trips are never empty
+  let store: Record<string, TripMemory[]> = { ...INITIAL_MEMORIES };
   try {
     const raw = localStorage.getItem(MEMORIES_KEY);
-    let store: Record<string, TripMemory[]> = INITIAL_MEMORIES;
     if (raw) {
-      try {
-        const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed === 'object') {
-          // Merge so initial trip folders are never lost even if local state was partially cleared
-          store = { ...INITIAL_MEMORIES, ...parsed };
-          // Ensure default trips have their initial items if empty
-          for (const k of Object.keys(INITIAL_MEMORIES)) {
-            if (!store[k] || store[k].length === 0) {
-              store[k] = INITIAL_MEMORIES[k];
-            }
-          }
-        }
-      } catch {}
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        store = { ...INITIAL_MEMORIES, ...parsed };
+      }
     }
+  } catch {}
 
-    let list: TripMemory[] = [];
-    if (params?.tripId && params.tripId !== 'all') {
-      list = store[params.tripId] || INITIAL_MEMORIES[params.tripId] || [];
+  // Merge any remote memories into store
+  remoteMemories.forEach((mem) => {
+    if (!store[mem.tripId]) store[mem.tripId] = [];
+    const idx = store[mem.tripId].findIndex((m: TripMemory) => m.id === mem.id);
+    if (idx > -1) {
+      store[mem.tripId][idx] = mem;
     } else {
-      list = Object.values(store).flat();
+      store[mem.tripId].unshift(mem);
     }
+  });
 
-    if (list.length === 0) {
-      list = Object.values(INITIAL_MEMORIES).flat();
-      try {
-        localStorage.setItem(MEMORIES_KEY, JSON.stringify(INITIAL_MEMORIES));
-      } catch {}
+  // Ensure default seed memories always exist in store
+  for (const k of Object.keys(INITIAL_MEMORIES)) {
+    if (!store[k] || store[k].length === 0) {
+      store[k] = INITIAL_MEMORIES[k];
     }
-
-    if (params?.tag && params.tag !== 'all') {
-      list = list.filter((m) => m.tags?.includes(params.tag!));
-    }
-    if (params?.search && params.search.trim()) {
-      const q = params.search.toLowerCase();
-      list = list.filter(
-        (m) =>
-          m.title.toLowerCase().includes(q) ||
-          m.locationName?.toLowerCase().includes(q) ||
-          m.caption?.toLowerCase().includes(q)
-      );
-    }
-    return list;
-  } catch {
-    return Object.values(INITIAL_MEMORIES).flat();
   }
+
+  try {
+    localStorage.setItem(MEMORIES_KEY, JSON.stringify(store));
+  } catch {}
+
+  let list: TripMemory[] = [];
+  if (params?.tripId && params.tripId !== 'all') {
+    list = store[params.tripId] || INITIAL_MEMORIES[params.tripId] || [];
+  } else {
+    list = Object.values(store).flat();
+  }
+
+  if (list.length === 0) {
+    list = Object.values(INITIAL_MEMORIES).flat();
+  }
+
+  if (params?.tag && params.tag !== 'all') {
+    list = list.filter((m) => m.tags?.includes(params.tag!));
+  }
+  if (params?.search && params.search.trim()) {
+    const q = params.search.toLowerCase();
+    list = list.filter(
+      (m) =>
+        m.title.toLowerCase().includes(q) ||
+        m.locationName?.toLowerCase().includes(q) ||
+        m.caption?.toLowerCase().includes(q)
+    );
+  }
+  return list;
 }
 
 export async function getTripMemories(tripId: string): Promise<TripMemory[]> {

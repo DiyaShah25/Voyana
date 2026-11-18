@@ -170,6 +170,7 @@ export const HotelBookingModal: React.FC<HotelBookingModalProps> = ({
   const [guests, setGuests] = useState(() => getPlanningContext().trip?.travelMode === 'group' ? Math.min(20, Math.max(1, getPlanningContext().members.length)) : 1);
   const [rooms, setRooms] = useState(() => getPlanningContext().trip?.travelMode === 'group' ? Math.max(1, Math.ceil(getPlanningContext().members.length / 2)) : 1);
   const [roomType, setRoomType] = useState<RoomType>('Standard');
+  const nights = calculateNights(checkInDate, checkOutDate);
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
   const [bookingRef, setBookingRef] = useState('');

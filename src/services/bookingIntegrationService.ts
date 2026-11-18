@@ -1,6 +1,9 @@
 import { getPlanningContext } from "./planningContext";
 import { matchesDestination } from "./destinationPolicy";
 import { recordBooking } from "./bookingService";
+import { supabase } from "./supabaseClient";
+
+const UNIFIED_BOOKINGS_STORAGE_KEY = 'voyana.user_unified_bookings';
 /**
  * VPM-145: Booking API Integration Service
  * Assignee: Bhavika Sainani (202512053) <bhavikasainani2608@gmail.com>
@@ -17,7 +20,7 @@ import { searchTransport } from './transportService';
 import { createAlert } from './alertService';
 import { addTripActivity, getStoredTrips } from './tripService';
 import { addTripExpense } from './collaborationService';
-import { initiatePayment, confirmPayment } from './paymentService';
+import { initiatePayment, confirmPayment, type ReservationChoice } from './paymentService';
 import { convertFromUSD, formatCurrency } from './currencyService';
 
 // ---------------------------------------------------------------------------
@@ -398,9 +401,12 @@ export async function processUnifiedBundleCheckout(
     old_status: 'pending',
     new_status: 'confirmed',
   });
+  const choices = (req.items.map((i) => i.choice).filter(Boolean)) as ReservationChoice[];
+  const planningContext = getPlanningContext();
+  const destination = planningContext.trip?.destination || req.items[0]?.title || 'Voyana Trip';
   const booking = await recordBooking({
     choices,
-    destination: context.destination,
+    destination,
     details: { items: req.items },
     bookingReference: crypto.randomUUID(),
     bookingType: "package",
